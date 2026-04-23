@@ -3,7 +3,8 @@ import ProductGrid from "@/components/ProductGrid";
 
 export default function Home() {
   return (
-    <div className="pt-24 md:pt-28">
+    // AJUSTE: Padding-top removido para ser controlado pelo componente
+    <div>
       <CategoryCarousel />
       <main className="px-4 md:px-6">
         <ProductGrid />
