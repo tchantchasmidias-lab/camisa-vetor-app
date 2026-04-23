@@ -1,14 +1,15 @@
 import CategoryCarousel from "@/components/CategoryCarousel";
+import Footer from "@/components/Footer";
 import ProductGrid from "@/components/ProductGrid";
 
 export default function Home() {
   return (
-    // AJUSTE: Padding-top removido para ser controlado pelo componente
-    <div>
+    <div className="bg-white">
       <CategoryCarousel />
-      <main className="px-4 md:px-6">
+      <main className="px-4 md:px-[10%] lg:px-[15%] mt-12">
         <ProductGrid />
       </main>
+      <Footer />
     </div>
   );
 }
