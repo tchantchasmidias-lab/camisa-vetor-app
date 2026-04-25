@@ -4,11 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build --no-lint",
+    "build": "build": "next build"
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "@apphosting/adapter-nextjs": "^14.0.21",
     "lucide-react": "^1.8.0",
     "next": "14.2.3",
     "react": "^18",
