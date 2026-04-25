@@ -1,0 +1,9 @@
+# Configuração para o Firebase entender o Next.js
+runtime: nodejs18 # Ou 20, dependendo da sua versão
+
+runConfig:
+  concurrency: 80
+  cpu: 1
+  memoryMiB: 512
+
+# Se o build ainda falhar, a gente adiciona a rota da pasta aqui
