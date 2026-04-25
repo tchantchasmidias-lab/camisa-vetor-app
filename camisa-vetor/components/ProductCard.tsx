@@ -1,33 +1,43 @@
-import Image from 'next/image';
+'use client';
 
-interface ProductCardProps {
-  name: string;
-  price: string;
-  imageUrl: string;
-}
+import Link from 'next/link';
 
-export default function ProductCard({ name, price, imageUrl }: ProductCardProps) {
+export default function ProductCard({ id, name, price, imageUrl }: any) {
   return (
-    <div className="bg-white rounded-lg overflow-hidden group">
-      {/* AJUSTE: Proporção da imagem alterada para 4:5 */}
-      <div className="relative w-full aspect-[4/5]">
-        {imageUrl ? (
-            <Image 
-              src={imageUrl} 
-              alt={name} 
-              layout="fill" 
-              objectFit="cover" 
-              className="rounded-2xl group-hover:scale-105 transition-transform duration-300"
-            />
-        ) : (
-            <div className="w-full h-full bg-gray-200 object-cover rounded-2xl group-hover:scale-105 transition-transform duration-300"></div>
-        )}
+    <Link href={`/product/${id}`} className="group block">
+      <div className="bg-white rounded-xl overflow-hidden transition-all duration-300 hover:shadow-sm">
+        
+        {/* Container da Imagem com proporção 4:5 */}
+        <div className="aspect-[4/5] w-full bg-[#fcfcfc] relative overflow-hidden rounded-xl border border-gray-100">
+          <img 
+            src={imageUrl || 'https://placehold.co/400x500?text=Camisa+Vetor'} 
+            alt={name} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
+          />
+        </div>
+
+        {/* Informações Refinadas */}
+        <div className="pt-4 pb-3 px-3"> 
+          {/* AJUSTE: Título aumentado ~10% (de 10px para 11px), mantendo peso médio */}
+          <h3 className="text-[11px] font-medium text-gray-700 uppercase tracking-[0.12em] mb-1.5 truncate">
+            {name}
+          </h3>
+          
+          <div className="flex items-center justify-between">
+            {/* Valor mantido em 70% preto suave */}
+            <span className="text-[15px] font-bold text-gray-700 tracking-tight">
+              {price}
+            </span>
+            
+            {/* AJUSTE: VER MAIS com peso mais suave (de font-black para font-bold ou font-semibold) */}
+            <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <span className="text-[10px] font-semibold text-[#fe7302] uppercase tracking-wider">
+                Ver Mais
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
-      {/* AJUSTE: Espaçamento interno e tipografia refinados */}
-      <div className="p-2">
-        <h3 className="text-sm font-semibold text-gray-800 truncate mt-1">{name}</h3>
-        <p className="text-sm font-bold text-black mt-0.5">{price}</p>
-      </div>
-    </div>
+    </Link>
   );
 }

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -14,10 +13,10 @@ const getProductData = (id: string) => {
     price: 29.90,
     oldPrice: 59.90,
     images: [
-      { id: 1, url: '/placeholder-main.png' },
-      { id: 2, url: '/placeholder-thumb-1.png' },
-      { id: 3, url: '/placeholder-thumb-2.png' },
-      { id: 4, url: '/placeholder-thumb-3.png' },
+      { id: 1, url: 'https://placehold.co/600x600/e2e8f0/64748b?text=Vetor+Principal' },
+      { id: 2, url: 'https://placehold.co/600x600/e2e8f0/64748b?text=Thumb+1' },
+      { id: 3, url: 'https://placehold.co/600x600/e2e8f0/64748b?text=Thumb+2' },
+      { id: 4, url: 'https://placehold.co/600x600/e2e8f0/64748b?text=Thumb+3' },
     ],
     formats: ['CDR', 'PDF', 'SVG', 'PNG'],
     technicalDetails: [
@@ -38,24 +37,30 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   const [selectedImage, setSelectedImage] = useState(product.images[0]);
 
   return (
-    <main className="min-h-screen bg-white pt-[80px] md:pt-[120px]">
+    <main className="min-h-screen bg-white pt-[80px] md:pt-[120px] text-gray-900">
       <div className="max-w-7xl mx-auto px-4 pb-20">
         <div className="flex flex-col lg:flex-row lg:gap-x-12 xl:gap-x-16">
 
           {/* Coluna 1: Galeria Dinâmica e Sticky */}
           <div className="w-full lg:w-[45%] lg:sticky top-[120px] self-start">
-            <div key={selectedImage.id} className="aspect-square w-full bg-gray-100 rounded-[32px]">
-              {/* A imagem principal seria renderizada aqui */}
+            <div key={selectedImage.id} className="aspect-square w-full bg-gray-100 rounded-[32px] overflow-hidden">
+               <img 
+                src={selectedImage.url} 
+                alt={product.name} 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="grid grid-cols-4 gap-4 mt-4">
               {product.images.map((image) => (
                 <div
                   key={image.id}
                   onClick={() => setSelectedImage(image)}
-                  className={`cursor-pointer aspect-square bg-gray-100 rounded-xl ${
-                    selectedImage.id === image.id ? 'border-2 border-[#fe7302]' : ''
+                  className={`cursor-pointer aspect-square bg-gray-100 rounded-xl overflow-hidden border-2 transition-all ${
+                    selectedImage.id === image.id ? 'border-[#fe7302]' : 'border-transparent'
                   }`}
-                ></div>
+                >
+                  <img src={image.url} alt="Thumbnail" className="w-full h-full object-cover" />
+                </div>
               ))}
             </div>
           </div>
@@ -114,7 +119,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 </ul>
             </div>
           </div>
-  
+ 
           {/* Coluna 3: Sidebar de Produção (Oculta no Mobile) */}
           <aside className="hidden lg:block lg:w-[240px] flex-shrink-0 mt-8 lg:mt-0">
             <div className="w-full">
