@@ -1,7 +1,13 @@
-export default function ProductPage({ params }: { params: { id: string } }) {
-    return (
-        <main className="flex min-h-screen flex-col items-center justify-between p-24 bg-gray-900 text-white">
-            <h1 className="text-4xl">Produto {params.id}</h1>
-        </main>
-    );
+import ProductDetailView from "@/components/ProductDetailView";
+
+// Isso aqui PRECISA ser componente de servidor (sem 'use client')
+export async function generateStaticParams() {
+  const ids = ['1', '2', '3', '4', '5', '6'];
+  return ids.map((id) => ({
+    id: id,
+  }));
+}
+
+export default function Page({ params }: { params: { id: string } }) {
+  return <ProductDetailView params={params} />;
 }
