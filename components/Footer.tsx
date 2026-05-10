@@ -1,6 +1,8 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
+import { useGeo } from '@/lib/i18n/GeoContext';
+import Link from 'next/link';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
