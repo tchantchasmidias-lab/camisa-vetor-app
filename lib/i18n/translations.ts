@@ -1,6 +1,6 @@
 export type Language = 'pt' | 'en' | 'es' | 'fr' | 'de';
 
-export const translations: Record<Language, Record<string, string>> = {
+export const translations: Record<Language, Record<string, any>> = {
   pt: {
     // Navbar / Header
     search: 'Pesquisar Vetor',
