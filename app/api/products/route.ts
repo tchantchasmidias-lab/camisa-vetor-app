@@ -11,6 +11,7 @@ export async function GET() {
         name: data.name || 'Sem nome',
         price: Number(data.price) || 0,
         category: data.category || 'Geral',
+        slug: data.slug || doc.id,
         urls: { 
           capa: data.urls?.capa || data.urls?.destaque || '',
           destaque: data.urls?.destaque || '',

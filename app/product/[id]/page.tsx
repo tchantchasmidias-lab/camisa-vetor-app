@@ -1,57 +1,114 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebase';
-import { doc, getDoc } from 'firebase/firestore';
+import { adminDb } from '@/lib/firebaseAdmin';
 import { notFound } from 'next/navigation';
 import ProductDetailsWrapper from '@/components/ProductDetailsWrapper';
-import { useGeo } from '@/lib/i18n/GeoContext';
+import { Metadata, ResolvingMetadata } from 'next';
 
-export default function Page({ params }: { params: { id: string } }) {
-  const [product, setProduct] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const { t } = useGeo();
+interface Props {
+  params: { id: string };
+}
 
-  useEffect(() => {
-    async function loadProduct() {
-      if (!params.id) return;
+// 🚀 GERADOR DE METADATA (SEO PREMIUM)
+export async function generateMetadata(
+  { params }: Props,
+  parent: ResolvingMetadata
+): Promise<Metadata> {
+  const id = params.id;
+  
+  // Busca o produto (tenta por ID primeiro, depois por Slug)
+  let product: any = null;
+  const docRef = adminDb.collection('products').doc(id);
+  const docSnap = await docRef.get();
 
-      try {
-        // Referência direta ao documento no Firestore
-        const docRef = doc(db, 'products', params.id);
-        const docSnap = await getDoc(docRef);
-
-        if (docSnap.exists()) {
-          setProduct({ id: docSnap.id, ...docSnap.data() });
-        } else {
-          console.error("Produto não encontrado no banco.");
-          setError(true);
-        }
-      } catch (err) {
-        console.error("Erro ao buscar no Firestore:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
+  if (docSnap.exists) {
+    product = { id: docSnap.id, ...docSnap.data() };
+  } else {
+    // Tenta buscar por slug (RG)
+    const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
+    if (!slugQuery.empty) {
+      const doc = slugQuery.docs[0];
+      product = { id: doc.id, ...doc.data() };
     }
-
-    loadProduct();
-  }, [params.id]);
-
-  if (loading) {
-    return (
-      <div className="h-screen w-full bg-white flex flex-col items-center justify-center">
-        <div className="w-10 h-10 border-4 border-[#fe7302] border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p className="font-black text-gray-400 uppercase tracking-widest text-[10px]">{t('loadingDetails')}</p>
-      </div>
-    );
   }
 
-  // Se houver erro ou produto não existir, redireciona para página 404
-  if (error || !product) {
+  if (!product) {
+    return { title: 'Produto não encontrado | Camisa Vetor' };
+  }
+
+  const name = product.name || 'Vetor Profissional';
+  const category = product.category || 'Vetor';
+  const description = product.description || `Baixe agora o ${name} em alta resolução. Arte editável ideal para sublimação, serigrafia e transfer. Download imediato após a compra.`;
+  const image = product.urls?.capa || product.urls?.destaque || '/logo-social.png';
+
+  return {
+    title: `${name} | Vetor Editável Profissional`,
+    description: description,
+    openGraph: {
+      title: `${name} | Camisa Vetor`,
+      description: description,
+      images: [image],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: name,
+      description: description,
+      images: [image],
+    },
+    alternates: {
+      canonical: `https://camisa-vetor-app.web.app/product/${product.slug || product.id}`,
+    }
+  };
+}
+
+export default async function Page({ params }: Props) {
+  const id = params.id;
+  
+  let product: any = null;
+  const docRef = adminDb.collection('products').doc(id);
+  const docSnap = await docRef.get();
+
+  if (docSnap.exists) {
+    product = { id: docSnap.id, ...docSnap.data() };
+  } else {
+    // Tenta buscar por slug (RG)
+    const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
+    if (!slugQuery.empty) {
+      const doc = slugQuery.docs[0];
+      product = { id: doc.id, ...doc.data() };
+    }
+  }
+
+  if (!product) {
     return notFound();
   }
 
-  return <ProductDetailsWrapper product={product} />;
+  // Dados Estruturados (JSON-LD) para o Google
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    'name': product.name,
+    'image': product.urls?.capa || product.urls?.destaque,
+    'description': product.description || `Vetor editável de ${product.name}`,
+    'brand': {
+      '@type': 'Brand',
+      'name': 'Camisa Vetor'
+    },
+    'offers': {
+      '@type': 'Offer',
+      'price': product.price,
+      'priceCurrency': 'BRL',
+      'availability': 'https://schema.org/InStock',
+      'url': `https://camisa-vetor-app.web.app/product/${product.slug || product.id}`
+    }
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ProductDetailsWrapper product={product} />
+    </>
+  );
 }

@@ -8,6 +8,7 @@ import { collection, query, where, limit, getDocs } from 'firebase/firestore';
 
 interface RelatedProduct {
   id: string;
+  slug?: string;
   name: string;
   price: number;
   image: string;
@@ -47,6 +48,7 @@ export default function RelatedProducts({
             const data = doc.data();
             return {
               id: doc.id,
+              slug: data.slug || doc.id,
               name: data.name || 'Vetor sem nome',
               price: Number(data.price) || 0,
               // Mantém a lógica de separação: Prioriza a Capa para a vitrine
@@ -80,7 +82,7 @@ export default function RelatedProducts({
       {/* Grade Responsiva: 1 coluna no mobile, 4 no desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
         {products.map((rel) => (
-          <Link href={`/product/${rel.id}`} key={rel.id} className="group block">
+          <Link href={`/product/${rel.slug || rel.id}`} key={rel.id} className="group block">
             <div className="aspect-[4/5] bg-[#fbfbfb] rounded-[2rem] relative overflow-hidden border border-[#dadce0] mb-5 transition-all duration-500 group-hover:shadow-xl group-hover:shadow-gray-100 group-hover:border-[#fe7302]/30">
               <Image
                 src={rel.image}
