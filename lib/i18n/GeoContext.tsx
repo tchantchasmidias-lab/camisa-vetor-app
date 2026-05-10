@@ -135,7 +135,7 @@ export function GeoProvider({ children }: { children: ReactNode }) {
       const escapedPt = pt.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const regex = new RegExp(`(?<![a-zA-Z0-9áàâãéèêíïóôõöúçÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇ])${escapedPt}(?![a-zA-Z0-9áàâãéèêíïóôõöúçÁÀÂÃÉÈÊÍÏÓÔÕÖÚÇ])`, 'gi');
       if (regex.test(text)) {
-        translated = translated.replace(regex, target);
+        translated = translated.replace(regex, target as string);
         foundInDictionary = true;
       }
     });
