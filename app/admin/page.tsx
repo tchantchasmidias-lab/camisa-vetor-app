@@ -228,10 +228,13 @@ export default function AdminPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8f9fa]">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#050505]">
         <Loader2 className="animate-spin text-[#fe7302] mb-4" size={32} />
-        <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#5f6368]">Verificando acesso...</p>
+        <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-gray-500">Verificando acesso...</p>
       </div>
+    );
+  }
+
   if (!isAdmin) {
     return (
       <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 font-sans relative overflow-hidden">

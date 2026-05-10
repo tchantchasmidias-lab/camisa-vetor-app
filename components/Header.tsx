@@ -29,11 +29,6 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
 
     useEffect(() => {
         setIsMounted(true);
-        // ... (rest of the effect)
-    }, []);
-
-    // 🛡️ PROTEÇÃO ADMIN: Não renderiza o menu na página de admin
-    if (pathname === '/admin') return null;
 
         const fetchCategories = async () => {
             try {
@@ -63,6 +58,9 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
             window.removeEventListener('storage', updateCart);
         };
     }, []);
+
+    // 🛡️ PROTEÇÃO ADMIN: Não renderiza o menu na página de admin
+    if (pathname === '/admin') return null;
 
     const navigate = (type: 'search' | 'category', value: string) => {
         setDrawerOpen(false);
