@@ -1,23 +1,130 @@
 'use client';
 
-import CategoryCarousel from "@/components/CategoryCarousel";
-import Footer from "@/components/Footer";
-import ProductGrid from "@/components/ProductGrid";
+import { useState, useEffect, Suspense, useMemo } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useSearchParams } from 'next/navigation';
+import { useGeo } from '@/lib/i18n/GeoContext';
 
-export default function Home() {
+import ProductCard from '@/components/ProductCard';
+import ProductCardSkeleton from '@/components/ProductCardSkeleton';
+import CategoryCarousel from '@/components/CategoryCarousel';
+
+// Interface para garantir consistência dos dados
+interface Product {
+  id: string;
+  name: string;
+  price: number;
+  category: string;
+  urls: {
+    capa: string;
+    destaque: string;
+  };
+}
+
+function HomeContent() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const { t, tp } = useGeo();
+
+  // 1. Captura filtros da URL em tempo real
+  const searchQuery = searchParams.get('search') || '';
+  const categoryQuery = searchParams.get('category') || t('allCategories');
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // Busca TODOS os produtos sem orderBy no Firestore
+        // (orderBy exclui docs sem o campo — fazemos a ordenação no cliente)
+        const querySnapshot = await getDocs(collection(db, "products"));
+
+        const productsData = querySnapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            name: data.name || 'Sem nome',
+            price: Number(data.price) || 0,
+            category: data.category || 'Geral',
+            createdAt: data.createdAt?.toMillis?.() ?? 0,
+            urls: {
+              capa: data.urls?.capa || data.urls?.destaque || '',
+              destaque: data.urls?.destaque || '',
+            },
+          };
+        }) as Product[];
+
+        // Ordena no cliente: mais recentes primeiro (docs sem createdAt vão para o final)
+        productsData.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
+
+        setProducts(productsData);
+      } catch (err) {
+        console.error("Erro ao carregar produtos:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // 2. FILTRO REATIVO: Filtra a lista sem precisar recarregar a página
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = categoryQuery === t('allCategories') || product.category === categoryQuery;
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, categoryQuery]);
+
   return (
-    <div className="bg-white">
-      {/* Margem negativa sutil para subir o carrossel em direção ao header */}
-      <div className="-mt-2 md:mt-0"> 
-        <CategoryCarousel />
-      </div>
-      
-      {/* Reduzi o mt para o mínimo possível no mobile */}
-      <main className="px-2 md:px-[10%] lg:px-[15%] -mt-1 md:mt-2">
-        <ProductGrid />
+    <div className="bg-white min-h-screen font-sans">
+      {/* pt-16 no mobile para o mini pill + bottom tab bar, sem padding top no desktop */}
+      <main className="pt-[36px] md:pt-4 pb-24 md:pb-10">
+        <div className="w-full px-3 md:px-5">
+          
+          {/* Carrossel de Categorias */}
+          <CategoryCarousel />
+
+          {/* Seção de Produtos */}
+          <section className="mt-6 md:mt-4"> 
+            
+            {/* Mensagem de "Nada encontrado" com Tipografia Google */}
+            {!isLoading && filteredProducts.length === 0 && (
+              <div className="text-center py-32 animate-in fade-in duration-700">
+                <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#777]">
+                  {t('noResults')} "<span className="text-[#fe7302]">{searchQuery || tp(categoryQuery)}</span>"
+                </p>
+              </div>
+            )}
+
+            {/* Grid: 1 coluna no mobile, 3 no tablet e 5 no desktop */}
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-y-10 gap-x-6">
+              {isLoading ? (
+                // Skeletons enquanto carrega
+                [...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)
+              ) : (
+                // Lista Filtrada
+                filteredProducts.map(product => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              )}
+            </div>
+          </section>
+        </div>
       </main>
-      
-      <Footer />
     </div>
+  );
+}
+
+// Exportação com Boundary de Suspense (Obrigatório para useSearchParams)
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-6 h-6 border-2 border-[#fe7302] border-t-transparent rounded-full animate-spin" />
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }

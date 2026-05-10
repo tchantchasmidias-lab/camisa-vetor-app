@@ -1,62 +1,273 @@
+ProductGrid
+
+
+
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+
+
+import { useState, useEffect, useRef, useMemo } from 'react';
+
 import ProductCard from './ProductCard';
 
-const initialProducts = [
-  { id: 1, name: 'Vetor Abadá Carnaval 2026', price: 'R$ 29,90', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Abadá+Carnaval' },
-  { id: 2, name: 'Pack Estampas Gospel 50pçs', price: 'R$ 49,90', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Artes+Gospel' },
-  { id: 3, name: 'Vetor Camisa Interclasse', price: 'R$ 19,90', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Interclasse' },
-  { id: 4, name: 'Vetor Pesqueira - Especial', price: 'R$ 34,90', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Pesqueira+Vetor' },
-  { id: 5, name: 'Vetor Logo Super Heróis', price: 'R$ 15,00', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Heróis' },
-  { id: 6, name: 'Pack Vetores Futebol Europeu', price: 'R$ 59,90', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Futebol+Vetor' },
-  { id: 7, name: 'Vetor Estampa Minimalista', price: 'R$ 12,90', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Minimalista' },
-  { id: 8, name: 'Vetor Mockup Camiseta Pro', price: 'R$ 25,00', imageUrl: 'https://placehold.co/400x500/e2e8f0/64748b?text=Mockup+Vetor' },
-];
+import { db } from '@/lib/firebase'; // Certifique-se que o caminho está correto
 
-export default function ProductGrid() {
-  const [products, setProducts] = useState(initialProducts);
+import { collection, query, orderBy, getDocs, limit, startAfter, where } from 'firebase/firestore';
+
+
+
+export default function ProductGrid({
+
+  selectedCategory,
+
+  searchQuery = ''
+
+}: {
+
+  selectedCategory: string,
+
+  searchQuery?: string
+
+}) {
+
+  const [products, setProducts] = useState<any[]>([]);
+
   const [isLoading, setIsLoading] = useState(false);
+
+  const [lastDoc, setLastDoc] = useState<any>(null); // Para o Infinite Scroll real
+
+  const [hasMore, setHasMore] = useState(true);
+
   const loaderRef = useRef<HTMLDivElement>(null);
 
-  const loadMoreProducts = async () => {
-    if (isLoading) return;
+
+
+  // 1. Busca Inicial de Produtos do Firestore
+
+  const fetchInitialProducts = async () => {
+
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-    const newProducts = initialProducts.map(p => ({ 
-      ...p, 
-      id: p.id + products.length,
-      name: `${p.name}`
-    }));
-    setProducts(prev => [...prev, ...newProducts]);
-    setIsLoading(false);
+
+    try {
+
+      const productsRef = collection(db, 'products');
+
+      let q = query(productsRef, orderBy('createdAt', 'desc'), limit(8));
+
+
+
+      // Filtro de categoria direto na consulta do Firebase (Mais rápido)
+
+      if (selectedCategory && selectedCategory !== 'Todos') {
+
+        q = query(productsRef, where('category', '==', selectedCategory), orderBy('createdAt', 'desc'), limit(8));
+
+      }
+
+
+
+      const querySnapshot = await getDocs(q);
+
+      const items = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+     
+
+      setProducts(items);
+
+      setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+
+      setHasMore(querySnapshot.docs.length === 8);
+
+    } catch (error) {
+
+      console.error("Erro ao carregar artes:", error);
+
+    } finally {
+
+      setIsLoading(false);
+
+    }
+
   };
 
+
+
+  // Reiniciar busca quando mudar a categoria
+
   useEffect(() => {
+
+    fetchInitialProducts();
+
+  }, [selectedCategory]);
+
+
+
+  // 2. Lógica de Infinite Scroll Real com Firestore
+
+  const loadMoreProducts = async () => {
+
+    if (isLoading || !hasMore || searchQuery !== '' || (selectedCategory !== 'Todos' && selectedCategory !== '')) return;
+
+
+
+    setIsLoading(true);
+
+    try {
+
+      const productsRef = collection(db, 'products');
+
+      const q = query(
+
+        productsRef,
+
+        orderBy('createdAt', 'desc'),
+
+        startAfter(lastDoc),
+
+        limit(8)
+
+      );
+
+
+
+      const querySnapshot = await getDocs(q);
+
+      const newItems = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+
+
+      if (newItems.length > 0) {
+
+        setProducts(prev => [...prev, ...newItems]);
+
+        setLastDoc(querySnapshot.docs[querySnapshot.docs.length - 1]);
+
+        setHasMore(querySnapshot.docs.length === 8);
+
+      } else {
+
+        setHasMore(false);
+
+      }
+
+    } catch (error) {
+
+      console.error("Erro ao carregar mais artes:", error);
+
+    } finally {
+
+      setIsLoading(false);
+
+    }
+
+  };
+
+
+
+  // Filtro de Busca por Texto (Local no estado atual para ser instantâneo)
+
+  const filteredProducts = useMemo(() => {
+
+    return products.filter(product => {
+
+      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
+
+      return matchesSearch;
+
+    });
+
+  }, [products, searchQuery]);
+
+
+
+  // Observer para o scroll infinito
+
+  useEffect(() => {
+
     const observer = new IntersectionObserver(
+
       (entries) => {
-        if (entries[0].isIntersecting && !isLoading) {
+
+        if (entries[0].isIntersecting && !isLoading && hasMore) {
+
           loadMoreProducts();
+
         }
+
       },
+
       { threshold: 0.1 }
+
     );
+
     if (loaderRef.current) observer.observe(loaderRef.current);
+
     return () => { if (loaderRef.current) observer.unobserve(loaderRef.current); };
-  }, [isLoading, products.length]);
+
+  }, [isLoading, hasMore, searchQuery]);
+
+
 
   return (
+
     <div className="py-2">
-      {/* Título removido para um layout mais clean */}
+
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10">
-        {products.map(product => (
-          <ProductCard key={product.id} {...product} />
+
+        {filteredProducts.map(product => (
+
+          <ProductCard key={product.id} product={product} />
+
         ))}
+
       </div>
 
-      <div ref={loaderRef} className="flex justify-center items-center py-12">
-        {isLoading && <span className="text-[#fe7302] font-black animate-pulse uppercase tracking-[0.2em] text-xs">Carregando artes...</span>}
-      </div>
+
+
+      {/* Mensagem customizada para busca vazia */}
+
+      {filteredProducts.length === 0 && !isLoading && (
+
+        <div className="flex flex-col items-center py-20 text-gray-400">
+
+          <p className="font-bold uppercase tracking-widest text-[10px] text-center">
+
+            {searchQuery
+
+              ? `Nenhum resultado para "${searchQuery}"`
+
+              : `Nenhuma arte encontrada em ${selectedCategory}`}
+
+          </p>
+
+        </div>
+
+      )}
+
+
+
+      {/* Loader condicional */}
+
+      {searchQuery === '' && (selectedCategory === 'Todos' || selectedCategory === '') && hasMore && (
+
+        <div ref={loaderRef} className="flex justify-center items-center py-12">
+
+          {isLoading && (
+
+            <span className="text-[#fe7302] font-black animate-pulse uppercase tracking-[0.2em] text-[10px]">
+
+              Carregando artes...
+
+            </span>
+
+          )}
+
+        </div>
+
+      )}
+
     </div>
+
   );
+
 }

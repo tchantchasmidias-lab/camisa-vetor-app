@@ -10,15 +10,23 @@
   },
   "dependencies": {
     "@apphosting/adapter-nextjs": "^14.0.21",
-    "lucide-react": "^1.8.0",
+    "@google-cloud/translate": "^9.4.1",
+    "@paypal/react-paypal-js": "^9.2.0",
+    "firebase": "^11.0.1",
+    "firebase-admin": "^13.9.0",
+    "lucide-react": "^1.14.0",
+    "mercadopago": "^2.12.0",
     "next": "14.2.3",
     "react": "^18",
     "react-dom": "^18",
-    "tailwind-scrollbar-hide": "^4.0.0"
+    "resend": "^6.12.3",
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@types/node": "25.6.0",
-    "@types/react": "19.2.14",
+    "@types/react": "^18.3.28",
+    "@types/react-dom": "^18.3.7",
     "autoprefixer": "^10.4.19",
     "eslint": "^8",
     "eslint-config-next": "14.2.3",

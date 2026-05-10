@@ -1,23 +1,44 @@
+'use client';
+
 import Link from 'next/link';
+import { useGeo } from '@/lib/i18n/GeoContext';
 
 export default function Footer() {
+  const currentYear = new Date().getFullYear();
+  const { t } = useGeo();
+
   return (
     <footer className="bg-white border-t border-gray-100 py-10 mt-20">
-      <div className="mx-auto px-4 md:px-[10%] lg:px-[15%] flex flex-col md:flex-row justify-between items-center text-center md:text-left">
-        <p className="text-xs text-gray-400 mb-4 md:mb-0">
-          © 2026 Camisa Vetor. Todos os direitos reservados.
+      <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
+        
+        {/* COPYRIGHT */}
+        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] text-center md:text-left">
+          © {currentYear} CAMISA VETOR. {t('allRightsReserved')}.
         </p>
+
+        {/* LINKS SIMPLES */}
         <nav className="flex items-center space-x-6">
-          <Link href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-            Termos de Uso
+          <Link 
+            href="/termos" 
+            className="text-[10px] font-bold text-gray-400 hover:text-[#fe7302] transition-colors uppercase tracking-widest"
+          >
+            {t('termsOfUse')}
           </Link>
-          <Link href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-            Política de Privacidade
+          <Link 
+            href="/privacidade" 
+            className="text-[10px] font-bold text-gray-400 hover:text-[#fe7302] transition-colors uppercase tracking-widest"
+          >
+            {t('privacyPolicy')}
           </Link>
-          <Link href="#" className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
-            Suporte
+          <Link 
+            href="https://wa.me/558791425634" 
+            target="_blank"
+            className="text-[10px] font-bold text-gray-400 hover:text-[#fe7302] transition-colors uppercase tracking-widest"
+          >
+            {t('support')}
           </Link>
         </nav>
+
       </div>
     </footer>
   );

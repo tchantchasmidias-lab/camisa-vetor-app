@@ -1,85 +1,186 @@
 'use client';
 
-import { useRef } from 'react';
-import Link from 'next/link';
+import { useRef, useEffect, useState, Suspense } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { useGeo } from '@/lib/i18n/GeoContext';
 
-const categories = [
-  { id: 3, name: 'Formatura', imageUrl: '' },
-  { id: 2, name: 'Futebol', imageUrl: '' },
-  { id: 1, name: '9º Ano', imageUrl: '' },
-  { id: 4, name: 'Animais', imageUrl: '' },
-  { id: 5, name: 'Empresas', imageUrl: '' },
-  { id: 6, name: 'Games', imageUrl: '' },
-  { id: 7, name: 'Geek & Nerds', imageUrl: '' },
-  { id: 8, name: 'Heróis', imageUrl: '' },
-  { id: 9, name: 'Música', imageUrl: '' },
-  { id: 10, name: 'Profissões', imageUrl: '' },
-];
+interface Category {
+  id: string;
+  name: string;
+  imageUrl: string;
+}
 
-const CategoryStory = ({ name, imageUrl }: { name: string, imageUrl: string }) => (
-  <Link href="#" className="flex-shrink-0 flex flex-col items-center space-y-1 group w-32">
-    {/* AJUSTE: Degradê com as 4 cores específicas: #ff6600, #ff9933, #fe7302 e #000000 */}
-    <div 
-      className="p-[3px] rounded-full group-hover:scale-105 transition-transform duration-300 ease-in-out shadow-sm"
-      style={{
-        background: 'linear-gradient(45deg, #ff6600 0%, #ff9933 33%, #fe7302 66%, #000000 100%)'
-      }}
-    >
-      <div className="bg-white p-1 rounded-full">
-        {/* Tamanho mantido com a redução de 5% (w-[106px]) */}
-        <div className="w-[106px] h-[106px] relative rounded-full overflow-hidden bg-gray-50">
-          {imageUrl ? (
-            <img src={imageUrl} alt={name} className="w-full h-full object-cover rounded-full" />
-          ) : (
-            <div className="w-full h-full bg-gray-100 flex items-center justify-center text-gray-300 font-black text-4xl">
-              {name.charAt(0)}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-    <p className="text-[13px] font-semibold text-gray-700 w-full text-center truncate mt-2">{name}</p>
-  </Link>
-);
-
-export default function CategoryCarousel() {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const scrollLeft = () => {
-    scrollRef.current?.scrollBy({ left: -300, behavior: 'smooth' });
-  };
-
-  const scrollRight = () => {
-    scrollRef.current?.scrollBy({ left: 300, behavior: 'smooth' });
-  };
+function CategoryCard({ name, imageUrl, isActive, onClick }: { name: string; imageUrl: string; isActive: boolean; onClick: () => void }) {
+  const { tp } = useGeo();
+  const hasImage = imageUrl && imageUrl.trim() !== '';
 
   return (
-    <section className="w-full mt-20 mb-4 bg-white">
-      <div className="max-w-7xl mx-auto relative group px-4">
+    <button
+      onClick={onClick}
+      className={`
+        flex-shrink-0 relative overflow-hidden rounded-2xl transition-all duration-300
+        w-[145px] h-[82px] md:w-[185px] md:h-[100px]
+        group outline-none
+        ${isActive
+          ? 'ring-2 ring-[#fe7302] ring-offset-2 ring-offset-white shadow-lg shadow-orange-200/40 scale-[1.03]'
+          : 'hover:scale-[1.02] hover:shadow-xl'}
+      `}
+    >
+      {/* Background */}
+      <div className="absolute inset-0 bg-[#111]">
+        {hasImage && (
+          <img
+            src={imageUrl}
+            alt={name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+          />
+        )}
+      </div>
+
+      {/* Overlay escuro por padrão, some no hover/ativo (apenas para cards com imagem) */}
+      {hasImage ? (
+        <div
+          className={`absolute inset-0 bg-black transition-opacity duration-300
+            ${isActive ? 'opacity-0' : 'opacity-55 group-hover:opacity-0'}
+          `}
+        />
+      ) : null}
+
+      {/* Gradient base — sempre presente para legibilidade do texto */}
+      <div className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-300
+        ${hasImage
+          ? `from-black/80 via-black/20 to-transparent ${isActive ? 'opacity-70' : 'opacity-100 group-hover:opacity-60'}`
+          : 'from-black/75 via-black/25 to-black/10 opacity-100'
+        }`}
+      />
+
+      {/* Active ring glow */}
+      {isActive && (
+        <div className="absolute inset-0 bg-[#fe7302]/8 rounded-2xl" />
+      )}
+
+      {/* Category name */}
+      <div className="absolute inset-0 flex items-center justify-center px-3">
+        <span className="text-white font-black text-[12px] md:text-[13px] uppercase tracking-wider text-center leading-tight drop-shadow-lg">
+          {tp(name)}
+        </span>
+      </div>
+    </button>
+  );
+}
+
+function CategoryCarouselContent() {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  
+  const { t, tp } = useGeo();
+  const activeCategory = searchParams.get('category') || t('allCategories');
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
+        const snap = await getDocs(q);
+        const list = snap.docs.map(d => ({
+          id: d.id,
+          name: d.data().name || '',
+          imageUrl: d.data().imageUrl || '',
+        }));
+        setCategories(list);
+      } catch (err) {
+        console.error('Erro ao carregar categorias:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  const scroll = (offset: number) => {
+    scrollRef.current?.scrollBy({ left: offset, behavior: 'smooth' });
+  };
+
+  if (isLoading) {
+    return (
+      <section className="w-full py-3">
+        <div className="flex gap-3 overflow-hidden">
+          {[...Array(5)].map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-[145px] h-[82px] md:w-[185px] md:h-[100px] bg-gray-100 rounded-2xl animate-pulse" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (categories.length === 0) return null;
+
+  return (
+    <section className="w-full select-none overflow-hidden py-1 animate-in fade-in duration-700">
+      <div className="relative group/carousel pl-0 md:pl-0">
+
+        {/* Left arrow */}
         <button
-          onClick={scrollLeft}
-          className="hidden md:flex items-center justify-center absolute top-1/2 -translate-y-1/2 left-0 z-20 bg-white/80 hover:bg-white shadow-md text-gray-800 p-2 rounded-full transition-all border border-gray-100"
+          onClick={() => scroll(-600)}
+          aria-label="Scroll esquerda"
+          className="hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 z-20
+            w-9 h-9 bg-white shadow-xl rounded-full border border-gray-100 text-gray-700
+            opacity-0 group-hover/carousel:opacity-100 hover:bg-[#fe7302] hover:text-white hover:scale-110
+            transition-all duration-200"
         >
-          <ChevronLeft className="h-6 w-6" />
-        </button>
-        <button
-          onClick={scrollRight}
-          className="hidden md:flex items-center justify-center absolute top-1/2 -translate-y-1/2 right-0 z-20 bg-white/80 hover:bg-white shadow-md text-gray-800 p-2 rounded-full transition-all border border-gray-100"
-        >
-          <ChevronRight className="h-6 w-6" />
+          <ChevronLeft size={20} />
         </button>
 
-        <div 
-          ref={scrollRef}
-          className="flex items-start justify-start md:justify-center space-x-6 overflow-x-auto overflow-y-visible pt-4 pb-4 hide-scrollbar"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+        {/* Right arrow */}
+        <button
+          onClick={() => scroll(600)}
+          aria-label="Scroll direita"
+          className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 z-20
+            w-9 h-9 bg-white shadow-xl rounded-full border border-gray-100 text-gray-700
+            opacity-0 group-hover/carousel:opacity-100 hover:bg-[#fe7302] hover:text-white hover:scale-110
+            transition-all duration-200"
         >
-          {categories.map(category => (
-            <CategoryStory key={category.id} name={category.name} imageUrl={category.imageUrl} />
+          <ChevronRight size={20} />
+        </button>
+
+        {/* Scrollable row */}
+        <div
+          ref={scrollRef}
+          className="flex gap-3 overflow-x-auto scroll-smooth no-scrollbar px-1 py-2 pb-2"
+        >
+          {categories.map(cat => (
+            <CategoryCard
+              key={cat.id}
+              name={cat.name}
+              imageUrl={cat.imageUrl}
+              isActive={activeCategory === cat.name}
+              onClick={() =>
+                cat.name === t('allCategories')
+                  ? router.push('/')
+                  : router.push(`/?category=${encodeURIComponent(cat.name)}`)
+              }
+            />
           ))}
         </div>
       </div>
+
+      <style jsx global>{`
+        .no-scrollbar::-webkit-scrollbar { display: none !important; }
+        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+      `}</style>
     </section>
+  );
+}
+
+export default function CategoryCarousel() {
+  return (
+    <Suspense fallback={<div className="h-[110px]" />}>
+      <CategoryCarouselContent />
+    </Suspense>
   );
 }

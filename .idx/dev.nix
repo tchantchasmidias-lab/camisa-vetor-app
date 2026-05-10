@@ -10,14 +10,16 @@
     ];
     workspace = {
       onCreate = {
-        npm-install = "npm install --prefix camisa-vetor";
+        # Removido o --prefix
+        npm-install = "npm install";
       };
     };
     previews = {
       enable = true;
       previews = {
         web = {
-          command = ["npm" "run" "dev" "--prefix" "camisa-vetor" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
+          # Removido o --prefix camisa-vetor
+          command = ["npm" "run" "dev" "--" "--port" "$PORT" "--hostname" "0.0.0.0"];
           manager = "web";
         };
       };
