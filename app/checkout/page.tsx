@@ -14,7 +14,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useGeo } from '@/lib/i18n/GeoContext';
 
-export function CheckoutContent() {
+function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'paypal'>('pix');
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<{nome: string, cpf: string, phone: string, email: string} | null>(null);

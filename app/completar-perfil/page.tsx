@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { Loader2, FileText, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useGeo } from '@/lib/i18n/GeoContext';
 
-export function CompletarPerfilContent() {
+function CompletarPerfilContent() {
   const [cpf, setCpf] = useState('');
   const [phone, setPhone] = useState('');
   const [user, setUser] = useState<any>(null);

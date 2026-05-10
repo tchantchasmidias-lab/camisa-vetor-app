@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { Mail, Lock, Loader2, ArrowRight, AlertCircle, UserPlus, User, FileText, Phone, Eye, EyeOff } from 'lucide-react';
 import { useGeo } from '@/lib/i18n/GeoContext';
 
-export function LoginPageContent() {
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nome, setNome] = useState('');
