@@ -1,11 +1,23 @@
-# Configuração para o Firebase entender o Next.js
-runtime: nodejs20 # Recomendo a 20 para o Next 14
-
+kind: "AppStack"
+apiVersion: "v1"
 runConfig:
   concurrency: 80
   cpu: 1
   memoryMiB: 512
-
-# Força o Firebase a olhar para a pasta atual e não para a subpasta fantasma
-app:
-  rootDirectory: .
+env:
+  - variable: FIREBASE_SERVICE_ACCOUNT_KEY
+    availability: ["BUILD", "RUNTIME"]
+  - variable: GOOGLE_TRANSLATE_API_KEY
+    availability: ["BUILD", "RUNTIME"]
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    availability: ["BUILD", "RUNTIME"]
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    availability: ["BUILD", "RUNTIME"]
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    availability: ["BUILD", "RUNTIME"]
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    availability: ["BUILD", "RUNTIME"]
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    availability: ["BUILD", "RUNTIME"]
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    availability: ["BUILD", "RUNTIME"]
