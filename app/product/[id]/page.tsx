@@ -63,52 +63,61 @@ export async function generateMetadata(
 export default async function Page({ params }: Props) {
   const id = params.id;
   
-  let product: any = null;
-  const docRef = adminDb.collection('products').doc(id);
-  const docSnap = await docRef.get();
+  try {
+    let product: any = null;
+    const docRef = adminDb.collection('products').doc(id);
+    const docSnap = await docRef.get();
 
-  if (docSnap.exists) {
-    product = { id: docSnap.id, ...docSnap.data() };
-  } else {
-    // Tenta buscar por slug (RG)
-    const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
-    if (!slugQuery.empty) {
-      const doc = slugQuery.docs[0];
-      product = { id: doc.id, ...doc.data() };
+    if (docSnap.exists) {
+      product = { id: docSnap.id, ...docSnap.data() };
+    } else {
+      // Tenta buscar por slug (RG)
+      const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
+      if (!slugQuery.empty) {
+        const doc = slugQuery.docs[0];
+        product = { id: doc.id, ...doc.data() };
+      }
     }
-  }
 
-  if (!product) {
+    if (!product) {
+      return notFound();
+    }
+
+    // 🧹 LIMPEZA DE DADOS (IMPORTANTE PARA SERVER COMPONENTS)
+    // Converte Timestamps e outros objetos do Firebase em tipos simples (string/number)
+    const serializedProduct = JSON.parse(JSON.stringify(product));
+
+    // Dados Estruturados (JSON-LD) para o Google
+    const jsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      'name': serializedProduct.name,
+      'image': serializedProduct.urls?.capa || serializedProduct.urls?.destaque,
+      'description': serializedProduct.description || `Vetor editável de ${serializedProduct.name}`,
+      'brand': {
+        '@type': 'Brand',
+        'name': 'Camisa Vetor'
+      },
+      'offers': {
+        '@type': 'Offer',
+        'price': serializedProduct.price,
+        'priceCurrency': 'BRL',
+        'availability': 'https://schema.org/InStock',
+        'url': `https://camisa-vetor-app.web.app/product/${serializedProduct.slug || serializedProduct.id}`
+      }
+    };
+
+    return (
+      <>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+        <ProductDetailsWrapper product={serializedProduct} />
+      </>
+    );
+  } catch (error) {
+    console.error("Erro ao renderizar produto:", error);
     return notFound();
   }
-
-  // Dados Estruturados (JSON-LD) para o Google
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    'name': product.name,
-    'image': product.urls?.capa || product.urls?.destaque,
-    'description': product.description || `Vetor editável de ${product.name}`,
-    'brand': {
-      '@type': 'Brand',
-      'name': 'Camisa Vetor'
-    },
-    'offers': {
-      '@type': 'Offer',
-      'price': product.price,
-      'priceCurrency': 'BRL',
-      'availability': 'https://schema.org/InStock',
-      'url': `https://camisa-vetor-app.web.app/product/${product.slug || product.id}`
-    }
-  };
-
-  return (
-    <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
-      />
-      <ProductDetailsWrapper product={product} />
-    </>
-  );
 }
