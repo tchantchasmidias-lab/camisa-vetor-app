@@ -67,7 +67,7 @@ export default function DownloadsPage() {
 
       const allProducts: DownloadableItem[] = [];
 
-      for (const pid of boughtItemIds) {
+      for (const pid of Array.from(boughtItemIds)) {
         try {
           const pRef = doc(db, 'products', pid);
           const pSnap = await getDoc(pRef);
