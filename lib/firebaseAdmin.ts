@@ -8,7 +8,10 @@ if (!admin.apps.length) {
     const serviceAccountPath = path.join(process.cwd(), 'serviceAccount.json');
     let credential;
 
-    if (fs.existsSync(serviceAccountPath)) {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+      credential = admin.credential.cert(serviceAccount);
+    } else if (fs.existsSync(serviceAccountPath)) {
       const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, 'utf8'));
       credential = admin.credential.cert(serviceAccount);
     } else {
