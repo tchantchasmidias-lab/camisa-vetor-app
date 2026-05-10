@@ -3,6 +3,7 @@ import { Suspense } from 'react'; // Importação essencial para evitar erro 500
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import MainContainer from '@/components/MainContainer';
 import { GeoProvider } from '@/lib/i18n/GeoContext';
 
 // Configuração da fonte Inter (Padrão Google Premium)
@@ -40,10 +41,9 @@ export default function RootLayout({
           </Suspense>
 
           {/* Container principal para o conteúdo das páginas */}
-          {/* md:pl-20 = breathing room para o pill flutuante (left-4 + 52px + margem) */}
-          <main className="min-h-screen md:pl-20">
+          <MainContainer>
             {children}
-          </main>
+          </MainContainer>
 
           <Footer />
         </GeoProvider>

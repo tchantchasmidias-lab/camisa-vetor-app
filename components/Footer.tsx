@@ -1,11 +1,13 @@
 'use client';
 
-import Link from 'next/link';
-import { useGeo } from '@/lib/i18n/GeoContext';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { t } = useGeo();
+  const pathname = usePathname();
+
+  if (pathname === '/admin') return null;
 
   return (
     <footer className="bg-white border-t border-gray-100 py-10 mt-20">

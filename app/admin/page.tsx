@@ -232,43 +232,76 @@ export default function AdminPage() {
         <Loader2 className="animate-spin text-[#fe7302] mb-4" size={32} />
         <p className="text-[10px] font-medium uppercase tracking-[0.3em] text-[#5f6368]">Verificando acesso...</p>
       </div>
-    );
-  }
-
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-4 font-sans relative overflow-hidden">
-        <div className="max-w-md w-full relative z-10">
-          <div className="text-center mb-10">
-            <h2 className="text-[14px] font-bold text-white tracking-[0.5em] uppercase mb-2">Painel Administrativo</h2>
-            <p className="text-[10px] font-medium text-gray-400 uppercase tracking-widest">Acesso Restrito</p>
+      <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 font-sans relative overflow-hidden">
+        {/* Efeitos de Fundo (Glows Profissionais) */}
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#fe7302]/10 blur-[150px] rounded-full"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#fe7302]/5 blur-[150px] rounded-full"></div>
+
+        <div className="max-w-md w-full relative z-10 animate-in fade-in zoom-in-95 duration-1000">
+          {/* LOGO DO SITE */}
+          <div className="flex flex-col items-center mb-12">
+            <div className="mb-8 hover:scale-105 transition-transform duration-500">
+              <Image priority src="/logo.svg" alt="Camisa Vetor" width={220} height={45} className="h-10 w-auto" />
+            </div>
+            <div className="text-center">
+              <h2 className="text-[14px] font-black text-white tracking-[0.6em] uppercase mb-3">Painel Administrativo</h2>
+              <div className="flex items-center justify-center gap-3">
+                <div className="h-[1px] w-6 bg-gradient-to-r from-transparent to-[#fe7302]/30"></div>
+                <p className="text-[9px] font-bold text-[#fe7302] uppercase tracking-[0.4em]">Acesso Restrito</p>
+                <div className="h-[1px] w-6 bg-gradient-to-l from-transparent to-[#fe7302]/30"></div>
+              </div>
+            </div>
           </div>
           
-          <div className="bg-white p-8 md:p-10 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-            <form onSubmit={handleAdminLogin} className="space-y-6">
-              <div>
-                <label className="text-[10px] font-bold uppercase text-[#5f6368] ml-2 tracking-widest">E-mail Administrativo</label>
-                <input 
-                  type="email" required placeholder="admin@..."
-                  value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)}
-                  className="w-full mt-2 bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 text-[12px] font-medium outline-none focus:border-[#fe7302] transition-all"
-                />
-              </div>
-              <div>
-                <label className="text-[10px] font-bold uppercase text-[#5f6368] ml-2 tracking-widest">Senha de Acesso</label>
-                <input 
-                  type="password" required placeholder="••••••••"
-                  value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)}
-                  className="w-full mt-2 bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 text-[12px] font-medium outline-none focus:border-[#fe7302] transition-all"
-                />
+          <div className="bg-[#111111]/80 backdrop-blur-3xl p-8 md:p-12 rounded-[3.5rem] border border-white/5 shadow-[0_50px_100px_rgba(0,0,0,0.9)] relative overflow-hidden">
+            {/* Detalhe de borda neon suave */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[2px] bg-gradient-to-r from-transparent via-[#fe7302]/50 to-transparent"></div>
+
+            <form onSubmit={handleAdminLogin} className="space-y-8">
+              <div className="space-y-3">
+                <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">E-mail de Acesso</label>
+                <div className="relative group">
+                  <input 
+                    type="email" required placeholder="admin@camisavetor.com"
+                    value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  />
+                  <div className="absolute inset-0 rounded-2xl bg-[#fe7302]/10 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                </div>
               </div>
 
-              {loginError && <p className="text-red-500 text-[10px] font-bold text-center uppercase">{loginError}</p>}
+              <div className="space-y-3">
+                <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">Senha Segura</label>
+                <div className="relative group">
+                  <input 
+                    type="password" required placeholder="••••••••"
+                    value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  />
+                  <div className="absolute inset-0 rounded-2xl bg-[#fe7302]/10 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+                </div>
+              </div>
 
-              <button disabled={isLoggingIn} className="w-full bg-[#fe7302] text-white font-bold py-5 rounded-2xl hover:bg-black transition-all shadow-xl shadow-orange-500/20 uppercase tracking-[0.2em] text-[11px] flex justify-center items-center">
-                {isLoggingIn ? <Loader2 size={18} className="animate-spin" /> : 'Acessar Painel'}
+              {loginError && (
+                <div className="bg-red-500/10 border border-red-500/20 py-4 rounded-2xl animate-shake">
+                  <p className="text-red-400 text-[9px] font-black text-center uppercase tracking-widest px-4">{loginError}</p>
+                </div>
+              )}
+
+              <button 
+                disabled={isLoggingIn} 
+                className="group relative w-full overflow-hidden bg-[#fe7302] text-white font-black py-6 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_25px_50px_rgba(254,115,2,0.25)] uppercase tracking-[0.3em] text-[11px] flex justify-center items-center"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                {isLoggingIn ? <Loader2 size={22} className="animate-spin" /> : 'Desbloquear Painel'}
               </button>
             </form>
+          </div>
+
+          <div className="mt-16 text-center">
+            <p className="text-[8px] font-bold text-gray-700 uppercase tracking-[0.5em] opacity-50">© {new Date().getFullYear()} Camisa Vetor • Acesso Administrativo de Segurança</p>
           </div>
         </div>
       </div>
@@ -276,186 +309,302 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] pt-16 md:pt-4 pb-20 font-sans text-[#5f6368]">
+    <div className="min-h-screen bg-[#050505] pt-16 md:pt-10 pb-20 font-sans text-gray-400 selection:bg-[#fe7302]/30">
       <main className="max-w-7xl mx-auto px-4">
         
-        {/* MÉTRICAS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-12 animate-in fade-in duration-500">
-            <div className="bg-white p-6 rounded-[2rem] border border-[#dadce0] flex items-center gap-4 shadow-sm">
-                <div className="p-3 bg-blue-50 text-blue-600 rounded-xl"><Users size={24}/></div>
-                <div><p className="text-[10px] font-bold uppercase text-[#5f6368] tracking-widest mb-1 leading-none">Clientes</p><h3 className="text-xl font-bold text-[#202124]">{metricas.clientes}</h3></div>
+        {/* CABEÇALHO DO PAINEL */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+          <div>
+            <h1 className="text-[20px] font-black text-white uppercase tracking-[0.3em] mb-2">Dashboard</h1>
+            <p className="text-[9px] font-bold text-[#fe7302] uppercase tracking-[0.4em]">Gestão de Ativos Digitais</p>
+          </div>
+          <div className="flex items-center gap-4 bg-[#111111] p-2 rounded-2xl border border-white/5">
+             <button onClick={() => setActiveTab('produtos')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
+             <button onClick={() => setActiveTab('design')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
+             <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
+             <button onClick={handleAdminLogout} className="p-3 text-red-500/50 hover:text-red-500 transition-colors"><X size={20}/></button>
+          </div>
+        </div>
+        
+        {/* MÉTRICAS PREMIUM */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+            <div className="bg-[#111111] p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-2xl group hover:border-[#fe7302]/30 transition-all">
+                <div className="p-4 bg-blue-500/10 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform"><Users size={28}/></div>
+                <div><p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Clientes</p><h3 className="text-2xl font-black text-white tracking-tighter">{metricas.clientes}</h3></div>
             </div>
-            <div className="bg-white p-6 rounded-[2rem] border border-[#dadce0] flex items-center gap-4 shadow-sm">
-                <div className="p-3 bg-orange-50 text-[#fe7302] rounded-xl"><Award size={24}/></div>
-                <div className="flex-1 overflow-hidden"><p className="text-[9px] font-bold uppercase text-[#5f6368] tracking-widest mb-1 leading-none">Top Vendido</p><h3 className="text-[11px] font-bold text-[#202124] uppercase truncate">{metricas.topVendido}</h3></div>
+            <div className="bg-[#111111] p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-2xl group hover:border-[#fe7302]/30 transition-all">
+                <div className="p-4 bg-[#fe7302]/10 text-[#fe7302] rounded-2xl group-hover:scale-110 transition-transform"><Award size={28}/></div>
+                <div className="flex-1 overflow-hidden"><p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Mais Vendido</p><h3 className="text-[12px] font-black text-white uppercase truncate tracking-tight">{metricas.topVendido}</h3></div>
             </div>
-            <div className="bg-white p-6 rounded-[1.5rem] border border-[#dadce0] flex items-center gap-4 shadow-sm">
-                <div className="p-3 bg-green-50 text-green-600 rounded-xl"><TrendingUp size={24}/></div>
-                <div><p className="text-[10px] font-bold uppercase text-[#5f6368] tracking-widest mb-1 leading-none">Venda Mensal</p><h3 className="text-xl font-bold text-[#202124]">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(metricas.vendaMensal)}</h3></div>
+            <div className="bg-[#111111] p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-2xl group hover:border-[#fe7302]/30 transition-all">
+                <div className="p-4 bg-green-500/10 text-green-500 rounded-2xl group-hover:scale-110 transition-transform"><TrendingUp size={28}/></div>
+                <div><p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Venda Mensal</p><h3 className="text-xl font-black text-white tracking-tighter">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(metricas.vendaMensal)}</h3></div>
             </div>
-            <div className="bg-white p-6 rounded-[1.5rem] border border-[#dadce0] flex items-center gap-4 shadow-sm">
-                <div className="p-3 bg-yellow-50 text-yellow-500 rounded-xl"><Star size={24}/></div>
-                <div className="flex-1 overflow-hidden"><p className="text-[10px] font-bold uppercase text-[#5f6368] tracking-widest mb-1 leading-none">Top Avaliado</p><h3 className="text-[11px] font-bold text-[#202124] uppercase truncate">{metricas.topAvaliado}</h3></div>
-            </div>
-            <div className="bg-white p-6 rounded-[1.5rem] border border-[#dadce0] flex items-center gap-4 shadow-sm">
-                <div className="p-3 bg-gray-50 text-green-500 rounded-xl"><BarChart3 size={24}/></div>
-                <div><p className="text-[10px] font-bold uppercase text-[#5f6368] tracking-widest mb-1 leading-none">Status</p><h3 className="text-xs font-bold text-green-500 uppercase">Online</h3></div>
+            <div className="bg-[#111111] p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-2xl group hover:border-[#fe7302]/30 transition-all">
+                <div className="p-4 bg-yellow-500/10 text-yellow-500 rounded-2xl group-hover:scale-110 transition-transform"><Star size={28}/></div>
+                <div className="flex-1 overflow-hidden"><p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Top Avaliado</p><h3 className="text-[12px] font-black text-white uppercase truncate tracking-tight">{metricas.topAvaliado}</h3></div>
             </div>
         </div>
 
-        {/* ABAS E SAÍDA */}
-        <div className="flex justify-between items-center mb-10 border-b border-[#dadce0] pb-4">
-            <div className="flex gap-4">
-                <button onClick={() => setActiveTab('produtos')} className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#202124] text-white shadow-lg' : 'text-[#5f6368] hover:bg-white'}`}>Produtos</button>
-                <button onClick={() => setActiveTab('design')} className={`px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#202124] text-white shadow-lg' : 'text-[#5f6368] hover:bg-white'}`}>Design</button>
-            </div>
-            <button onClick={handleAdminLogout} className="text-[10px] font-bold uppercase tracking-widest text-red-500 hover:text-red-600 bg-red-50 hover:bg-red-100 px-4 py-2 rounded-full transition-all">Sair do Painel</button>
-        </div>
+        {/* CONTEÚDO DAS ABAS */}
+        <div className="space-y-12">
+          {activeTab === 'produtos' && (
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-px flex-1 bg-white/5"></div>
+                <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Gestão de Inventário</h2>
+                <div className="h-px flex-1 bg-white/5"></div>
+              </div>
 
-        {/* ABA PRODUTOS (IGUAL ANTERIOR) */}
-        {activeTab === 'produtos' && (
-           <div className="animate-in fade-in duration-500">
-             <form ref={formRef} onSubmit={handleSubmitProduct} className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-20">
-               {/* ... seu formulário de produtos completo aqui ... */}
-               <div className="lg:col-span-5 space-y-6">
-                <div className="bg-white p-6 rounded-[1.5rem] border border-[#dadce0] shadow-sm">
-                  <h2 className="text-[11px] font-semibold uppercase text-[#202124] mb-6 flex items-center gap-2"><ImageIcon size={14} className="text-[#fe7302]"/> Arquivos Visuais</h2>
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="relative aspect-[4/5] bg-[#f1f3f4] rounded-2xl border-2 border-dashed border-[#dadce0] overflow-hidden flex items-center justify-center hover:border-[#fe7302] transition-all group">
-                      {previews.capa ? (
-                        <>
-                          <img src={previews.capa} alt="" className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => removeImage('capa')} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg z-10"><X size={12}/></button>
-                        </>
-                      ) : <div className="text-center"><Upload className="mx-auto text-gray-400 mb-1" size={20}/><span className="text-[8px] font-black uppercase text-gray-400">Capa</span></div>}
-                      <input type="file" onChange={(e) => handleImageChange(e, 'capa')} className="absolute inset-0 opacity-0 cursor-pointer"/>
+              <form ref={formRef} onSubmit={handleSubmitProduct} className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-24">
+                {/* LADO ESQUERDO: ASSETS */}
+                <div className="lg:col-span-5 space-y-8">
+                  <div className="bg-[#111111] p-8 rounded-[3rem] border border-white/5 shadow-2xl">
+                    <h2 className="text-[10px] font-black uppercase text-white mb-8 flex items-center gap-3"><ImageIcon size={16} className="text-[#fe7302]"/> Mídia do Produto</h2>
+                    
+                    <div className="grid grid-cols-2 gap-6 mb-8">
+                      <div className="relative aspect-[4/5] bg-white/[0.03] rounded-3xl border-2 border-dashed border-white/10 overflow-hidden flex items-center justify-center hover:border-[#fe7302]/50 transition-all group">
+                        {previews.capa ? (
+                          <>
+                            <img src={previews.capa} alt="" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button type="button" onClick={() => removeImage('capa')} className="p-3 bg-red-500 text-white rounded-2xl shadow-xl hover:scale-110 transition-transform"><Trash2 size={18}/></button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-center">
+                            <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[#fe7302]/10 transition-colors">
+                              <Upload className="text-gray-500 group-hover:text-[#fe7302]" size={20}/>
+                            </div>
+                            <span className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Capa Principal</span>
+                          </div>
+                        )}
+                        <input type="file" onChange={(e) => handleImageChange(e, 'capa')} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                      </div>
+
+                      <div className="relative aspect-[4/5] bg-white/[0.03] rounded-3xl border-2 border-dashed border-white/10 overflow-hidden flex items-center justify-center hover:border-[#fe7302]/50 transition-all group">
+                        {previews.destaque ? (
+                          <>
+                            <img src={previews.destaque} alt="" className="w-full h-full object-cover" />
+                            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                              <button type="button" onClick={() => removeImage('destaque')} className="p-3 bg-red-500 text-white rounded-2xl shadow-xl hover:scale-110 transition-transform"><Trash2 size={18}/></button>
+                            </div>
+                          </>
+                        ) : (
+                          <div className="text-center">
+                            <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-3 group-hover:bg-[#fe7302]/10 transition-colors">
+                              <Upload className="text-gray-500 group-hover:text-[#fe7302]" size={20}/>
+                            </div>
+                            <span className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Banner Detalhe</span>
+                          </div>
+                        )}
+                        <input type="file" onChange={(e) => handleImageChange(e, 'destaque')} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                      </div>
                     </div>
-                    <div className="relative aspect-[4/5] bg-[#f1f3f4] rounded-2xl border-2 border-dashed border-[#dadce0] overflow-hidden flex items-center justify-center hover:border-[#fe7302] transition-all group">
-                      {previews.destaque ? (
-                        <>
-                          <img src={previews.destaque} alt="" className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => removeImage('destaque')} className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg z-10"><X size={12}/></button>
-                        </>
-                      ) : <div className="text-center"><Upload className="mx-auto text-gray-400 mb-1" size={20}/><span className="text-[8px] font-black uppercase text-gray-400">Destaque</span></div>}
-                      <input type="file" onChange={(e) => handleImageChange(e, 'destaque')} className="absolute inset-0 opacity-0 cursor-pointer"/>
+
+                    <div className="space-y-4 mb-8">
+                      <div className="flex justify-between items-center px-2">
+                        <label className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Galeria de Fotos</label>
+                        <span className="text-[8px] font-bold text-gray-700 bg-white/5 px-2 py-1 rounded-md">{previews.galeria.length} FOTOS</span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-3">
+                        {previews.galeria.map((url, i) => (
+                          <div key={i} className="relative aspect-square rounded-2xl overflow-hidden border border-white/5 group">
+                            <img src={url} alt="" className="w-full h-full object-cover" />
+                            <button type="button" onClick={() => removeImage('galeria', i)} className="absolute inset-0 bg-red-500/80 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center"><X size={14}/></button>
+                          </div>
+                        ))}
+                        <div className="relative aspect-square bg-white/[0.03] rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center hover:border-[#fe7302]/50 transition-all">
+                          <Plus size={20} className="text-gray-600"/><input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, 'galeria')} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/5 p-6 rounded-[2rem] border border-white/10 relative group hover:bg-white/[0.08] transition-all">
+                      <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 bg-[#fe7302]/10 rounded-2xl flex items-center justify-center text-[#fe7302]">
+                          <FileCode size={28} />
+                        </div>
+                        <div className="flex-1 overflow-hidden">
+                          <p className="text-[11px] font-bold text-white truncate mb-1">{fileVetor ? fileVetor.name : 'Vetor Digital'}</p>
+                          <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{fileVetor ? 'Arquivo Pronto' : 'Selecione .CDR, .ZIP ou .PDF'}</p>
+                        </div>
+                      </div>
+                      <input type="file" onChange={(e) => setFileVetor(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
                     </div>
                   </div>
-                  <div className="space-y-2 mb-6">
-                    <label className="text-[10px] font-medium uppercase text-[#5f6368] ml-1">Galeria</label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {previews.galeria.map((url, i) => (
-                        <div key={i} className="relative aspect-square rounded-xl overflow-hidden border border-[#dadce0]"><img src={url} alt="" className="w-full h-full object-cover" /></div>
-                      ))}
-                      <div className="relative aspect-square bg-[#f1f3f4] rounded-xl border-2 border-dashed border-[#dadce0] flex items-center justify-center hover:border-[#fe7302] transition-all">
-                        <Plus size={16} className="text-[#5f6368]"/><input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, 'galeria')} className="absolute inset-0 opacity-0 cursor-pointer"/>
+
+                  <div className="bg-[#111111] p-8 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
+                    <h2 className="text-[10px] font-black uppercase text-[#fe7302] flex items-center gap-3 tracking-[0.2em]"><Globe size={16}/> Inteligência de SEO</h2>
+                    <div className="space-y-4">
+                      <textarea name="seoDescription" rows={3} placeholder="Descrição para o Google..." className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all resize-none placeholder:text-gray-700" />
+                      <input name="keywords" placeholder="Palavras-chave (separadas por vírgula)" className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* LADO DIREITO: INFOS */}
+                <div className="lg:col-span-7 bg-[#111111] p-10 rounded-[4rem] border border-white/5 shadow-2xl space-y-10">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div className="md:col-span-2 space-y-4">
+                      <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Identificação do Vetor</label>
+                      <input name="productName" required placeholder="EX: CAMISA NONO ANO FOGUETE" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 text-[14px] font-black text-white uppercase outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all"/>
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Preço de Venda</label>
+                      <div className="relative">
+                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[#fe7302] font-black text-[12px]">R$</span>
+                        <input name="price" required type="number" step="0.01" placeholder="0,00" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 pl-14 text-[16px] font-black text-white outline-none focus:border-[#fe7302]/50 transition-all"/>
                       </div>
                     </div>
                   </div>
-                  <div className="bg-[#202124] p-5 rounded-2xl text-white flex items-center gap-4 relative">
-                    <FileCode size={22} className="text-[#fe7302]" />
-                    <div className="flex-1 overflow-hidden"><p className="text-[11px] font-medium truncate">{fileVetor ? fileVetor.name : 'Vetor .CDR / .ZIP'}</p></div>
-                    <input type="file" onChange={(e) => setFileVetor(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
-                    <button type="button" className="text-[9px] font-bold uppercase bg-white/10 px-3 py-2 rounded-lg">Trocar</button>
-                  </div>
-                </div>
-                <div className="bg-white p-6 rounded-[1.5rem] border border-[#dadce0] shadow-sm space-y-4">
-                  <h2 className="text-[11px] font-semibold uppercase text-[#fe7302] flex items-center gap-2"><Globe size={14}/> SEO & Metadados</h2>
-                  <textarea name="seoDescription" rows={3} placeholder="Meta-descrição..." className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-xl p-3 text-[11px] outline-none focus:border-[#fe7302] resize-none" />
-                  <input name="keywords" placeholder="Keywords (vírgulas)" className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-xl p-3 text-[11px] outline-none focus:border-[#fe7302]" />
-                </div>
-              </div>
-              <div className="lg:col-span-7 bg-white p-8 rounded-[1.5rem] border border-[#dadce0] shadow-sm space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="md:col-span-2 space-y-2">
-                    <label className="text-[10px] font-medium uppercase text-[#5f6368]">Nome do Vetor</label>
-                    <input name="productName" required className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 text-[12px] font-semibold uppercase outline-none focus:border-[#fe7302]"/>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-medium uppercase text-[#5f6368]">Preço R$</label>
-                    <input name="price" required type="number" step="0.01" className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 text-[12px] font-semibold outline-none focus:border-[#fe7302]"/>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <div className="flex justify-between items-center px-1"><label className="text-[10px] font-medium uppercase text-[#5f6368]">Categoria</label><button type="button" onClick={() => setShowNewCategory(!showNewCategory)} className="text-[9px] font-bold text-[#fe7302] uppercase flex items-center gap-1"><FolderPlus size={12}/>{showNewCategory ? 'Lista' : 'Nova'}</button></div>
-                  {showNewCategory ? <input name="newCategory" placeholder="NOME DA CATEGORIA" className="w-full bg-[#f8f9fa] border border-[#fe7302] rounded-2xl p-4 text-[12px] font-semibold uppercase outline-none"/> :
-                  <select name="category" className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 text-[12px] font-semibold outline-none cursor-pointer">
-                    {categorias.map(cat => <option key={cat.id} value={cat.name}>{cat.name}</option>)}
-                  </select>}
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-medium uppercase text-[#5f6368]">Formatos Disponíveis</label>
-                  <div className="flex flex-wrap gap-2">
-                    {formatosDisponiveis.map(fmt => (
-                      <button key={fmt} type="button" onClick={() => setSelectedFormats(prev => prev.includes(fmt) ? prev.filter(f => f !== fmt) : [...prev, fmt])} className={`px-5 py-2.5 rounded-xl text-[10px] font-bold border transition-all ${selectedFormats.includes(fmt) ? 'bg-[#fe7302] text-white border-[#fe7302]' : 'bg-white text-[#5f6368] border-[#dadce0]'}`}>{fmt}</button>
-                    ))}
-                  </div>
-                </div>
-                <textarea name="description" rows={5} className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 text-[12px] outline-none focus:border-[#fe7302] resize-none"/>
-                <button disabled={loading} className="w-full bg-[#fe7302] text-white font-bold py-6 rounded-2xl hover:bg-black transition-all shadow-xl uppercase tracking-widest text-[12px] flex items-center justify-center gap-3">
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18}/>}
-                  {editingId ? 'ATUALIZAR VETOR' : 'PUBLICAR VETOR AGORA'}
-                </button>
-              </div>
-             </form>
-             {/* LISTA GESTÃO PRODUTOS */}
-             <div className="grid grid-cols-1 gap-4">
-              {products.map(p => (
-                <div key={p.id} className="bg-white p-4 rounded-2xl border border-[#dadce0] flex items-center justify-between group hover:shadow-md transition-all">
-                  <div className="flex items-center gap-5">
-                    <div className="w-16 h-20 relative rounded-xl overflow-hidden bg-[#f1f3f4] border border-[#dadce0]"><img src={p.urls?.capa || ""} alt="" className="w-full h-full object-cover" /></div>
-                    <div><h3 className="text-[12px] font-semibold text-[#202124] uppercase tracking-wide">{p.name}</h3><p className="text-[11px] text-[#fe7302] font-bold mt-1">R$ {p.price?.toFixed(2)} • <span className="text-[#5f6368]">{p.category}</span></p></div>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => startEdit(p)} className="p-3 bg-[#f8f9fa] text-[#5f6368] rounded-xl hover:bg-[#202124] hover:text-white transition-all"><Edit3 size={18}/></button>
-                    <button onClick={async () => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "products", p.id)); loadData(); } }} className="p-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={18}/></button>
-                  </div>
-                </div>
-              ))}
-            </div>
-           </div>
-        )}
 
-        {/* ABA DESIGN (CATEGORIAS VISUAIS) */}
-        {activeTab === 'design' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-in fade-in duration-500">
-             <div className="bg-white p-8 rounded-[2rem] border border-[#dadce0] shadow-sm">
-                <h2 className="text-sm font-bold uppercase text-[#202124] mb-6 flex items-center gap-2"><FolderPlus size={18} className="text-[#fe7302]"/> Categorias do Site</h2>
-                <form onSubmit={handleAddCategory} className="flex gap-2 mb-6">
-                    <input name="catName" placeholder="NOVA CATEGORIA" className="flex-1 bg-[#f1f3f4] border-none rounded-xl px-4 text-xs font-bold uppercase outline-none focus:ring-2 focus:ring-[#fe7302]"/>
-                    <button className="bg-[#fe7302] text-white p-3 rounded-xl hover:bg-black transition-all"><Plus/></button>
-                </form>
-                <div className="space-y-3 max-h-[500px] overflow-y-auto no-scrollbar">
-                    {categorias.map(cat => (
-                        <div key={cat.id} className="flex justify-between items-center p-3 bg-[#f8f9fa] rounded-2xl border border-[#dadce0] group">
-                            <div className="flex items-center gap-4">
-                                {/* RETÂNGULO DE UPLOAD DA CATEGORIA */}
-                                <div className="relative w-20 h-12 bg-white rounded-xl border-2 border-dashed border-[#dadce0] flex items-center justify-center overflow-hidden hover:border-[#fe7302] transition-all shadow-sm">
-                                    {cat.imageUrl ? <img src={cat.imageUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={18} className="text-gray-300" />}
-                                    <input 
-                                        type="file" 
-                                        onChange={(e) => e.target.files?.[0] && handleCategoryImageUpload(e.target.files[0], cat.id)}
-                                        className="absolute inset-0 opacity-0 cursor-pointer z-10"
-                                    />
-                                </div>
-                                <span className="text-[11px] font-bold uppercase text-[#4a4a4a]">{cat.name}</span>
-                            </div>
-                            <button onClick={async () => { if(confirm("Excluir?")) { await deleteDoc(doc(db, "categories", cat.id)); loadData(); } }} className="text-gray-300 hover:text-red-500 mr-2 transition-colors"><Trash2 size={16}/></button>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center px-4">
+                       <label className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Categorização</label>
+                       <button type="button" onClick={() => setShowNewCategory(!showNewCategory)} className="text-[8px] font-black text-[#fe7302] uppercase flex items-center gap-2 hover:scale-105 transition-transform"><FolderPlus size={14}/>{showNewCategory ? 'Voltar para Lista' : 'Nova Categoria'}</button>
+                    </div>
+                    {showNewCategory ? (
+                      <input name="newCategory" placeholder="DIGITE O NOME DA NOVA CATEGORIA" className="w-full bg-white/5 border border-[#fe7302]/30 rounded-[2rem] p-6 text-[12px] font-black text-white uppercase outline-none shadow-[0_0_20px_rgba(254,115,2,0.05)]"/>
+                    ) : (
+                      <select name="category" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 text-[12px] font-black text-white uppercase outline-none cursor-pointer hover:bg-white/[0.08] transition-all appearance-none">
+                        {categorias.map(cat => <option key={cat.id} value={cat.name} className="bg-[#111111]">{cat.name}</option>)}
+                      </select>
+                    )}
+                  </div>
+
+                  <div className="space-y-5">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Formatos Inclusos no Download</label>
+                    <div className="flex flex-wrap gap-3">
+                      {formatosDisponiveis.map(fmt => (
+                        <button 
+                          key={fmt} type="button" 
+                          onClick={() => setSelectedFormats(prev => prev.includes(fmt) ? prev.filter(f => f !== fmt) : [...prev, fmt])} 
+                          className={`px-8 py-4 rounded-2xl text-[10px] font-black border transition-all ${selectedFormats.includes(fmt) ? 'bg-[#fe7302] text-white border-[#fe7302] shadow-lg shadow-orange-600/20' : 'bg-white/5 text-gray-500 border-white/5 hover:border-white/10'}`}
+                        >
+                          {fmt}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Descrição Técnica & Argumentos</label>
+                    <textarea name="description" rows={6} placeholder="Descreva os detalhes desta arte..." className="w-full bg-white/5 border border-white/10 rounded-[2.5rem] p-8 text-[12px] text-gray-300 outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all resize-none placeholder:text-gray-700"/>
+                  </div>
+
+                  <button disabled={loading} className="group relative w-full bg-[#fe7302] text-white font-black py-8 rounded-[2.5rem] hover:bg-white hover:text-[#fe7302] transition-all shadow-[0_20px_50px_rgba(254,115,2,0.15)] uppercase tracking-[0.4em] text-[13px] flex items-center justify-center gap-4 overflow-hidden">
+                    <div className="absolute inset-0 bg-white translate-y-[100%] group-hover:translate-y-0 transition-transform duration-500"></div>
+                    <div className="relative z-10 flex items-center gap-4">
+                      {loading ? <Loader2 size={24} className="animate-spin" /> : <CheckCircle2 size={24}/>}
+                      {editingId ? 'SALVAR ALTERAÇÕES' : 'PUBLICAR VETOR AGORA'}
+                    </div>
+                  </button>
+                </div>
+              </form>
+
+              {/* LISTAGEM DE GESTÃO */}
+              <div className="space-y-6">
+                <div className="flex items-center gap-4">
+                  <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Produtos Cadastrados</h2>
+                  <div className="h-px flex-1 bg-white/5"></div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  {products.map(p => (
+                    <div key={p.id} className="bg-[#111111] p-5 rounded-[2.5rem] border border-white/5 flex items-center justify-between group hover:border-[#fe7302]/40 transition-all shadow-xl">
+                      <div className="flex items-center gap-8">
+                        <div className="w-20 h-24 relative rounded-2xl overflow-hidden bg-black/40 border border-white/5 shadow-inner">
+                          <img src={p.urls?.capa || ""} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                         </div>
-                    ))}
+                        <div>
+                          <h3 className="text-[14px] font-black text-white uppercase tracking-tight mb-2">{p.name}</h3>
+                          <div className="flex items-center gap-3">
+                            <span className="text-[12px] text-[#fe7302] font-black">R$ {p.price?.toFixed(2)}</span>
+                            <span className="text-gray-800">•</span>
+                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">{p.category}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex gap-3 pr-4">
+                        <button onClick={() => startEdit(p)} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-[#fe7302] hover:text-white transition-all"><Edit3 size={20}/></button>
+                        <button onClick={async () => { if(confirm("Excluir definitivamente?")) { await deleteDoc(doc(db, "products", p.id)); loadData(); } }} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-            </div>
-
-            <div className="bg-white p-8 rounded-[2rem] border border-[#dadce0] shadow-sm">
-              <h2 className="text-sm font-bold uppercase text-[#202124] mb-6 flex items-center justify-center gap-2"><Megaphone size={18} className="text-[#fe7302]"/> Banner Sidebar</h2>
-              <div className="relative aspect-[4/5] max-w-[240px] mx-auto bg-[#f1f3f4] rounded-2xl border-2 border-dashed border-[#dadce0] overflow-hidden flex items-center justify-center mb-6">
-                {banner.imageUrl ? <img src={banner.imageUrl} alt="Banner" className="w-full h-full object-cover" /> : <ImageIcon className="text-gray-300" size={32}/>}
-                <input type="file" onChange={(e) => e.target.files?.[0] && handleBannerUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer"/>
               </div>
-              <input value={banner.link} onChange={(e) => setBanner(p => ({...p, link: e.target.value}))} onBlur={async () => await setDoc(doc(db, "configuracoes", "sidebar_banner"), { imageUrl: banner.imageUrl, link: banner.link }, { merge: true })} placeholder="Link do Banner (URL)" className="w-full bg-[#f1f3f4] rounded-xl p-4 text-[11px] font-medium outline-none focus:ring-2 focus:ring-[#fe7302]" />
             </div>
-          </div>
-        )}
+          )}
+
+          {/* ABA DESIGN (CATEGORIAS) */}
+          {activeTab === 'design' && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+               <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl">
+                  <div className="flex items-center justify-between mb-10">
+                    <h2 className="text-[12px] font-black uppercase text-white flex items-center gap-4 tracking-widest"><FolderPlus size={20} className="text-[#fe7302]"/> Categorias</h2>
+                    <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">{categorias.length} ATIVAS</span>
+                  </div>
+
+                  <form onSubmit={handleAddCategory} className="flex gap-3 mb-10">
+                      <input name="catName" placeholder="NOME DA CATEGORIA" className="flex-1 bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-[11px] font-black uppercase text-white outline-none focus:border-[#fe7302]/50 transition-all"/>
+                      <button className="bg-[#fe7302] text-white p-4 rounded-2xl hover:scale-105 transition-all shadow-lg shadow-orange-600/20"><Plus/></button>
+                  </form>
+
+                  <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+                      {categorias.map(cat => (
+                          <div key={cat.id} className="flex justify-between items-center p-4 bg-white/[0.02] rounded-[2rem] border border-white/5 group hover:bg-white/[0.05] transition-all">
+                              <div className="flex items-center gap-6">
+                                  <div className="relative w-24 h-14 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden group-hover:border-[#fe7302]/50 transition-all shadow-inner">
+                                      {cat.imageUrl ? <img src={cat.imageUrl} alt="" className="w-full h-full object-cover" /> : <Camera size={20} className="text-gray-700" />}
+                                      <input 
+                                          type="file" 
+                                          onChange={(e) => e.target.files?.[0] && handleCategoryImageUpload(e.target.files[0], cat.id)}
+                                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                      />
+                                  </div>
+                                  <span className="text-[11px] font-black uppercase text-gray-400 tracking-tight">{cat.name}</span>
+                              </div>
+                              <button onClick={async () => { if(confirm("Remover esta categoria?")) { await deleteDoc(doc(db, "categories", cat.id)); loadData(); } }} className="p-3 text-gray-700 hover:text-red-500 transition-colors"><Trash2 size={18}/></button>
+                          </div>
+                      ))}
+                  </div>
+              </div>
+
+              <div className="space-y-10">
+                <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl">
+                  <h2 className="text-[12px] font-black uppercase text-white mb-10 flex items-center gap-4 tracking-widest"><Megaphone size={20} className="text-[#fe7302]"/> Banner Publicitário</h2>
+                  <div className="relative aspect-[4/5] max-w-[280px] mx-auto bg-black/40 rounded-[2.5rem] border-2 border-dashed border-white/5 overflow-hidden flex items-center justify-center mb-10 group hover:border-[#fe7302]/30 transition-all">
+                    {banner.imageUrl ? <img src={banner.imageUrl} alt="Banner" className="w-full h-full object-cover" /> : <ImageIcon className="text-gray-700" size={40}/>}
+                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                       <span className="text-[9px] font-black text-white uppercase tracking-[0.3em] bg-black/40 px-4 py-2 rounded-full backdrop-blur-md">Trocar Imagem</span>
+                    </div>
+                    <input type="file" onChange={(e) => e.target.files?.[0] && handleBannerUpload(e.target.files[0])} className="absolute inset-0 opacity-0 cursor-pointer"/>
+                  </div>
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Link de Destino (URL)</label>
+                    <input 
+                      value={banner.link} 
+                      onChange={(e) => setBanner(p => ({...p, link: e.target.value}))} 
+                      onBlur={async () => await setDoc(doc(db, "configuracoes", "sidebar_banner"), { imageUrl: banner.imageUrl, link: banner.link }, { merge: true })} 
+                      placeholder="https://..." 
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700" 
+                    />
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-[#fe7302]/10 to-transparent p-10 rounded-[3rem] border border-[#fe7302]/10 shadow-2xl">
+                  <h3 className="text-white font-black uppercase text-[12px] mb-4 tracking-widest">Dica Premium</h3>
+                  <p className="text-[11px] text-gray-500 leading-relaxed">
+                    Sempre use imagens de capa com **fundo limpo** e em formato **4:5** para manter a elegância da vitrine. Vetores bem descritos e com palavras-chave corretas vendem até **3x mais** através do Google.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       </main>
     </div>
   );
+}
 }

@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { Home, Shirt, MessageCircle, User, ShoppingCart, Search, X, ChevronRight, Loader2, PenTool } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
@@ -22,12 +22,18 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
     const mobileSearchRef = useRef<HTMLInputElement>(null);
     const router = useRouter();
     const searchParams = useSearchParams();
+    const pathname = usePathname();
     const whatsappUrl = 'https://wa.me/558791425634';
     
     const { t, tp } = useGeo();
 
     useEffect(() => {
         setIsMounted(true);
+        // ... (rest of the effect)
+    }, []);
+
+    // 🛡️ PROTEÇÃO ADMIN: Não renderiza o menu na página de admin
+    if (pathname === '/admin') return null;
 
         const fetchCategories = async () => {
             try {
