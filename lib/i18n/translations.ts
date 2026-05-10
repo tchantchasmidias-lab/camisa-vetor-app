@@ -532,7 +532,6 @@ export const translations: Record<Language, Record<string, any>> = {
       'silhuetas': 'silhouettes',
       'cavaleiros': 'riders',
       'robusta': 'robust',
-      'robusta': 'robust',
       'legível': 'readable',
       'Nono Ano': 'Ninth Grade',
       'Foguete': 'Rocket',
