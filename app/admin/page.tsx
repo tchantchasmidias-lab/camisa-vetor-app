@@ -44,6 +44,13 @@ export default function AdminPage() {
 
   const formatosDisponiveis = ['CDR', 'PDF', 'SVG', 'PNG', 'AI'];
 
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
+
   // 1. CARREGAR DADOS & CHECAR AUTENTICAÇÃO
   const loadData = async () => {
     try {

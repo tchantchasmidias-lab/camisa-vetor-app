@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, Suspense } from 'react';
+import { useState, Suspense, useEffect } from 'react';
 import { auth, db } from '@/lib/firebase';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
@@ -28,6 +28,14 @@ function LoginPageContent() {
   const redirectUrl = searchParams.get('redirect') || '/perfil';
 
   const { t, isInternational } = useGeo();
+  
+  useEffect(() => {
+    // Congela a rolagem do body para evitar barras duplas
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, []);
 
   const maskCPF = (value: string) => {
     return value
