@@ -45,11 +45,16 @@ export default function AdminPage() {
   const formatosDisponiveis = ['CDR', 'PDF', 'SVG', 'PNG', 'AI'];
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
+    // Só congela a rolagem do body se NÃO for admin (tela de login)
+    if (!isAdmin) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, []);
+  }, [isAdmin]);
 
   // 1. CARREGAR DADOS & CHECAR AUTENTICAÇÃO
   const loadData = async () => {
