@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { auth, db } from '@/lib/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -21,6 +21,7 @@ function LoginPageContent() {
 
   const [isRegistering, setIsRegistering] = useState(false);
   const [error, setError] = useState('');
+  const [resetSent, setResetSent] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -118,6 +119,24 @@ function LoginPageContent() {
       } else {
         setError(t('googleLoginError'));
       }
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError(t('emailRequiredForReset'));
+      return;
+    }
+    setLoading(true);
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setResetSent(true);
+      setError('');
+    } catch (err: any) {
+      console.error(err);
+      setError(t('resetError'));
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -252,9 +271,27 @@ function LoginPageContent() {
             )}
 
             {error && (
-              <div className="flex items-center gap-3 text-red-400 bg-red-500/5 p-4 rounded-2xl border border-red-500/20 animate-shake">
-                <AlertCircle size={16} />
-                <p className="text-[9px] font-black uppercase tracking-widest leading-none">{error}</p>
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-3 text-red-400 bg-red-500/5 p-4 rounded-2xl border border-red-500/20 animate-shake">
+                  <AlertCircle size={16} />
+                  <p className="text-[9px] font-black uppercase tracking-widest leading-none">{error}</p>
+                </div>
+                {!isRegistering && (
+                  <button 
+                    type="button"
+                    onClick={handleForgotPassword}
+                    className="text-[10px] font-black text-[#fe7302] hover:text-white transition-colors uppercase tracking-widest text-left ml-4"
+                  >
+                    {t('forgotPassword')}?
+                  </button>
+                )}
+              </div>
+            )}
+
+            {resetSent && (
+              <div className="flex items-center gap-3 text-emerald-400 bg-emerald-500/5 p-4 rounded-2xl border border-emerald-500/20 animate-in fade-in zoom-in duration-300">
+                <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                <p className="text-[9px] font-black uppercase tracking-widest leading-none">{t('resetEmailSent')}</p>
               </div>
             )}
 
