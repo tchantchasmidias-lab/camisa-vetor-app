@@ -32,6 +32,7 @@ export default function AdminPage() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [selectedFormats, setSelectedFormats] = useState<string[]>([]);
   const [previews, setPreviews] = useState<{ capa?: string; destaque?: string; galeria: string[] }>({ galeria: [] });
   const [showNewCategory, setShowNewCategory] = useState(false);
@@ -157,6 +158,46 @@ export default function AdminPage() {
     await setDoc(doc(db, "configuracoes", "sidebar_banner"), { imageUrl: url, link: banner.link }, { merge: true });
     setBanner(prev => ({ ...prev, imageUrl: url }));
     setLoading(false);
+  };
+
+  const handleGenerateAI = async () => {
+    const nameInput = formRef.current?.elements.namedItem('productName') as HTMLInputElement;
+    const catSelect = formRef.current?.elements.namedItem('category') as HTMLSelectElement;
+    const newCatInput = formRef.current?.elements.namedItem('newCategory') as HTMLInputElement;
+    
+    const title = nameInput?.value;
+    const category = showNewCategory ? newCatInput?.value : catSelect?.value;
+
+    if (!title) {
+      alert('Por favor, preencha o título básico primeiro.');
+      return;
+    }
+
+    setIsGenerating(true);
+    try {
+      const res = await fetch('/api/ai/seo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, category: category || 'Geral' }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      // Atualiza os campos do formulário
+      if (nameInput) nameInput.value = data.improvedTitle;
+      const descInput = formRef.current?.elements.namedItem('description') as HTMLTextAreaElement;
+      if (descInput) descInput.value = data.description;
+      const seoDescInput = formRef.current?.elements.namedItem('seoDescription') as HTMLTextAreaElement;
+      if (seoDescInput) seoDescInput.value = data.seoDescription;
+      const keywordsInput = formRef.current?.elements.namedItem('keywords') as HTMLInputElement;
+      if (keywordsInput) keywordsInput.value = data.keywords;
+
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao gerar IA: ' + err.message);
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // --- MANTÉM AS FUNÇÕES DE PRODUTO (handleSubmitProduct, startEdit, handleImageChange, etc) ---
@@ -462,7 +503,18 @@ export default function AdminPage() {
                 <div className="lg:col-span-7 bg-[#111111] p-10 rounded-[4rem] border border-white/5 shadow-2xl space-y-10">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="md:col-span-2 space-y-4">
-                      <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Identificação do Vetor</label>
+                      <div className="flex justify-between items-center px-4">
+                        <label className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Identificação do Vetor</label>
+                        <button 
+                          type="button" 
+                          onClick={handleGenerateAI}
+                          disabled={isGenerating}
+                          className="bg-[#fe7302]/10 hover:bg-[#fe7302] text-[#fe7302] hover:text-white text-[8px] font-black px-4 py-2 rounded-full border border-[#fe7302]/20 transition-all flex items-center gap-2 shadow-lg shadow-orange-600/5 disabled:opacity-50"
+                        >
+                          {isGenerating ? <Loader2 size={12} className="animate-spin"/> : <Star size={12} className="animate-pulse"/>}
+                          {isGenerating ? 'GERANDO SEO...' : 'GERAR SEO IA'}
+                        </button>
+                      </div>
                       <input name="productName" required placeholder="EX: CAMISA NONO ANO FOGUETE" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 text-[14px] font-black text-white uppercase outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all"/>
                     </div>
                     <div className="space-y-4">
