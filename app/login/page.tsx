@@ -141,7 +141,7 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="fixed inset-0 z-[110] bg-[#050505] flex items-center justify-center p-4 font-sans overflow-y-auto selection:bg-[#fe7302]/30">
+    <div className="fixed inset-0 z-[110] bg-[#050505] flex items-center justify-center p-4 font-sans overflow-x-hidden overflow-y-auto selection:bg-[#fe7302]/30">
       {/* Efeitos de Fundo (Glows Profissionais) */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#fe7302]/10 blur-[150px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#fe7302]/5 blur-[150px] rounded-full pointer-events-none"></div>
