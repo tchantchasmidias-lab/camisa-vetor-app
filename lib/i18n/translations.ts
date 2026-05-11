@@ -196,6 +196,10 @@ export const translations: Record<Language, Record<string, any>> = {
     password: 'Senha',
     confirmPassword: 'Confirmar Senha',
     releasingFiles: 'Liberando seus arquivos...',
+    forgotPassword: 'Esqueceu a senha?',
+    resetEmailSent: 'E-mail de recuperação enviado!',
+    emailRequiredForReset: 'Digite seu e-mail para recuperar a senha.',
+    resetError: 'Erro ao enviar e-mail. Tente novamente.',
 
     // Completar perfil
     completeProfile: 'Completar Perfil',
@@ -427,8 +431,12 @@ export const translations: Record<Language, Record<string, any>> = {
     fullName: 'Full Name',
     email: 'Email',
     password: 'Password',
-    confirmPassword: 'Confirm Password',
+    confirmPassword: 'Confirmar Password',
     releasingFiles: 'Releasing your files...',
+    forgotPassword: 'Forgot password?',
+    resetEmailSent: 'Reset email sent!',
+    emailRequiredForReset: 'Enter your email to reset password.',
+    resetError: 'Error sending email. Try again.',
 
     // Complete profile
     completeProfile: 'Complete Profile',
@@ -749,6 +757,10 @@ export const translations: Record<Language, Record<string, any>> = {
     password: 'Contraseña',
     confirmPassword: 'Confirmar Contraseña',
     releasingFiles: 'Liberando tus archivos...',
+    forgotPassword: '¿Olvidó su contraseña?',
+    resetEmailSent: '¡Correo de restablecimiento enviado!',
+    emailRequiredForReset: 'Ingrese su correo para restablecer.',
+    resetError: 'Error al enviar correo. Intente de nuevo.',
 
     // Complete profile
     completeProfile: 'Completar Perfil',
