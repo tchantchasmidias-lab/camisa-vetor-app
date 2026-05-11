@@ -125,7 +125,7 @@ function LoginPageContent() {
       } else if (error.code === 'auth/popup-closed-by-user') {
         setError(t('popupClosed'));
       } else {
-        setError(t('googleLoginError'));
+        setError(`${t('googleLoginError')} (${error.code || error.message})`);
       }
     }
   };
