@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { ai } from '@/lib/ai/genkit';
-import { gemini15Flash } from '@genkit-ai/google-genai';
 import { z } from 'zod';
 
 export async function POST(req: Request) {
@@ -24,7 +23,7 @@ export async function POST(req: Request) {
       },
       async (input) => {
         const { text } = await ai.generate({
-          model: gemini15Flash,
+          model: 'googleai/gemini-1.5-flash',
           prompt: `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
           O usuário forneceu um título básico: "${input.title}" na categoria: "${input.category}".
           
