@@ -338,11 +338,11 @@ function LoginPageContent() {
         <div className="text-center mt-10">
             <button 
                 onClick={() => router.push('/')}
-                className="text-[9px] font-black text-gray-800 uppercase tracking-[0.5em] hover:text-[#fe7302] transition-all flex items-center justify-center gap-6 mx-auto group"
+                className="text-[9px] font-black text-white/90 uppercase tracking-[0.5em] hover:text-[#fe7302] transition-all flex items-center justify-center gap-6 mx-auto group"
             >
-                <div className="w-8 h-[1px] bg-gray-900 group-hover:bg-[#fe7302]/30 transition-colors" />
+                <div className="w-8 h-[1px] bg-white/10 group-hover:bg-[#fe7302]/30 transition-colors" />
                 {t('backToShop')}
-                <div className="w-8 h-[1px] bg-gray-900 group-hover:bg-[#fe7302]/30 transition-colors" />
+                <div className="w-8 h-[1px] bg-white/10 group-hover:bg-[#fe7302]/30 transition-colors" />
             </button>
         </div>
       </div>
