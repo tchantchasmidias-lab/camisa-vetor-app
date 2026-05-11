@@ -127,72 +127,72 @@ function LoginPageContent() {
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#fe7302]/10 blur-[150px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#fe7302]/5 blur-[150px] rounded-full pointer-events-none"></div>
 
-      <div className="max-w-md w-full pt-24 pb-12 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
-        <div className="text-center mb-10">
-          <div className="flex justify-center mb-10 hover:scale-105 transition-transform duration-500">
+      <div className="max-w-md w-full pt-16 pb-8 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-6 hover:scale-105 transition-transform duration-500">
              <Image 
                 src="/logo.svg" 
                 alt="Camisa Vetor" 
-                width={180} 
-                height={45} 
+                width={160} 
+                height={40} 
                 priority 
-                className="h-10 w-auto" 
+                className="h-9 w-auto" 
              />
           </div>
           <div className="text-center">
-            <h2 className="text-[13px] font-black text-white tracking-[0.5em] uppercase mb-2 opacity-80">
+            <h2 className="text-[12px] font-black text-white tracking-[0.5em] uppercase mb-1 opacity-80">
               {isRegistering ? t('createAccount') : t('clientAccess')}
             </h2>
             <div className="flex items-center justify-center gap-3">
-              <div className="h-[1px] w-6 bg-gradient-to-r from-transparent to-[#fe7302]/30"></div>
+              <div className="h-[1px] w-5 bg-gradient-to-r from-transparent to-[#fe7302]/30"></div>
               <p className="text-[8px] font-bold text-[#fe7302] uppercase tracking-[0.4em]">{isRegistering ? 'Novo Membro' : 'Bem-vindo'}</p>
-              <div className="h-[1px] w-6 bg-gradient-to-l from-transparent to-[#fe7302]/30"></div>
+              <div className="h-[1px] w-5 bg-gradient-to-l from-transparent to-[#fe7302]/30"></div>
             </div>
           </div>
         </div>
 
-        <div className="bg-[#111111]/80 backdrop-blur-3xl p-8 md:p-12 rounded-[3.5rem] border border-white/5 shadow-[0_50px_100px_rgba(0,0,0,0.8)] relative overflow-hidden">
+        <div className="bg-[#111111]/80 backdrop-blur-3xl p-7 md:p-10 rounded-[3rem] border border-white/5 shadow-[0_40px_80px_rgba(0,0,0,0.8)] relative overflow-hidden">
           {/* Detalhe de borda neon suave */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[1px] bg-gradient-to-r from-transparent via-[#fe7302]/40 to-transparent"></div>
 
-          <form onSubmit={handleAuth} className="space-y-7">
+          <form onSubmit={handleAuth} className="space-y-5">
             
             {isRegistering && (
               <>
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('fullName')}</label>
                   <div className="relative group">
                     <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={18} />
                     <input 
                       type="text" required placeholder={t('fullName')}
                       value={nome} onChange={(e) => setNome(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                     />
                   </div>
                 </div>
 
                 {!isInternational && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
                       <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('cpf')}</label>
                       <div className="relative group">
                         <FileText className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
                         <input 
                           type="text" required placeholder="000.000.000-00"
                           value={cpf} onChange={(e) => setCpf(maskCPF(e.target.value))}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-12 text-[11px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    <div className="space-y-1.5">
                       <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('whatsapp')}</label>
                       <div className="relative group">
                         <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
                         <input 
                           type="text" required placeholder="(00) 00000-0000"
                           value={phone} onChange={(e) => setPhone(maskPhone(e.target.value))}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-12 text-[11px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                         />
                       </div>
                     </div>
@@ -201,26 +201,26 @@ function LoginPageContent() {
               </>
             )}
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('email')}</label>
               <div className="relative group">
                 <Mail className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={18} />
                 <input 
                   type="email" required placeholder={t('email')}
                   value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                 />
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('password')}</label>
               <div className="relative group">
                 <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={18} />
                 <input 
                   type={showPassword ? "text" : "password"} required placeholder={t('password')}
                   value={password} onChange={(e) => setPassword(e.target.value)} minLength={6}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                 />
                 <button
                   type="button" onClick={() => setShowPassword(!showPassword)}
@@ -232,14 +232,14 @@ function LoginPageContent() {
             </div>
 
             {isRegistering && (
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('confirmPassword')}</label>
                 <div className="relative group">
                   <Lock className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={18} />
                   <input 
                     type={showConfirmPassword ? "text" : "password"} required placeholder={t('confirmPassword')}
                     value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={6}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                   />
                   <button
                     type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
@@ -252,7 +252,7 @@ function LoginPageContent() {
             )}
 
             {error && (
-              <div className="flex items-center gap-3 text-red-400 bg-red-500/5 p-5 rounded-2xl border border-red-500/20 animate-shake">
+              <div className="flex items-center gap-3 text-red-400 bg-red-500/5 p-4 rounded-2xl border border-red-500/20 animate-shake">
                 <AlertCircle size={16} />
                 <p className="text-[9px] font-black uppercase tracking-widest leading-none">{error}</p>
               </div>
@@ -260,7 +260,7 @@ function LoginPageContent() {
 
             <button
               disabled={loading}
-              className="group relative w-full overflow-hidden bg-[#fe7302] text-white font-black py-6 rounded-2xl hover:scale-[1.02] active:scale-[0.98] transition-all shadow-[0_25px_50px_rgba(254,115,2,0.25)] uppercase tracking-[0.3em] text-[11px] flex justify-center items-center gap-3 disabled:opacity-50"
+              className="group relative w-full overflow-hidden bg-[#fe7302] text-white font-black py-5 rounded-2xl hover:scale-[1.01] active:scale-[0.98] transition-all shadow-[0_20px_40px_rgba(254,115,2,0.2)] uppercase tracking-[0.3em] text-[11px] flex justify-center items-center gap-3 disabled:opacity-50"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               {loading ? (
@@ -273,24 +273,24 @@ function LoginPageContent() {
               )}
             </button>
 
-            <div className="relative flex items-center py-4">
+            <div className="relative flex items-center py-2">
               <div className="flex-grow border-t border-white/5"></div>
-              <span className="flex-shrink-0 mx-6 text-gray-600 text-[10px] font-black uppercase tracking-[0.3em]">{t('or')}</span>
+              <span className="flex-shrink-0 mx-5 text-gray-700 text-[10px] font-black uppercase tracking-[0.3em]">{t('or')}</span>
               <div className="flex-grow border-t border-white/5"></div>
             </div>
 
             <button
               type="button" onClick={handleGoogleLogin}
-              className="w-full bg-white/5 border border-white/10 text-white font-black py-5 rounded-2xl hover:bg-white/10 transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4"
+              className="w-full bg-white/5 border border-white/10 text-white font-black py-4 rounded-2xl hover:bg-white/10 transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4"
             >
               <Image src="https://www.google.com/favicon.ico" alt="Google" width={18} height={18} className="brightness-125" />
               {t('loginWithGoogle')}
             </button>
             
-            <div className="text-center pt-4">
+            <div className="text-center pt-2">
               <button
                 type="button" onClick={() => { setIsRegistering(!isRegistering); setError(''); }}
-                className="text-[11px] font-black text-gray-500 hover:text-[#fe7302] transition-colors uppercase tracking-[0.2em]"
+                className="text-[11px] font-black text-[#fe7302] hover:text-white transition-colors uppercase tracking-[0.2em]"
               >
                 {isRegistering ? t('alreadyHaveAccount') : t('dontHaveAccount')}
               </button>
@@ -298,10 +298,10 @@ function LoginPageContent() {
           </form>
         </div>
 
-        <div className="text-center mt-16">
+        <div className="text-center mt-10">
             <button 
                 onClick={() => router.push('/')}
-                className="text-[9px] font-black text-gray-700 uppercase tracking-[0.5em] hover:text-[#fe7302] transition-all flex items-center justify-center gap-6 mx-auto group"
+                className="text-[9px] font-black text-gray-800 uppercase tracking-[0.5em] hover:text-[#fe7302] transition-all flex items-center justify-center gap-6 mx-auto group"
             >
                 <div className="w-8 h-[1px] bg-gray-900 group-hover:bg-[#fe7302]/30 transition-colors" />
                 {t('backToShop')}
