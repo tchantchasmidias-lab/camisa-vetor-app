@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ai } from '@/lib/ai/genkit';
-import { z } from 'zod';
+import { z } from 'genkit';
 
 export async function POST(req: Request) {
   try {
