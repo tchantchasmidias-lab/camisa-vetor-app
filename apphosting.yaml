@@ -6,4 +6,4 @@ runConfig:
   memoryMiB: 512
 env:
   - variable: GOOGLE_GENAI_API_KEY
-    value: AIzaSyBNSn4g5kSIfjl5WtOEesNStMNGq5IVklM
+    value: AIzaSyBNSn4g5kSIfjl5WtOEesNStMNGq5IVkIM
