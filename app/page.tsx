@@ -30,13 +30,16 @@ function HomeContent() {
 
   // 1. Captura filtros da URL em tempo real
   const searchQuery = searchParams.get('search') || '';
-  const categoryQuery = searchParams.get('category') || t('allCategories');
+  const categoryParam = searchParams.get('category');
+  
+  // Se não houver categoria na URL, ou se for a tradução de "Todos", usamos o valor padrão
+  const allLabel = t('allCategories');
+  const isAllSelected = !categoryParam || categoryParam.toLowerCase() === allLabel.toLowerCase();
+  const categoryQuery = isAllSelected ? allLabel : categoryParam;
 
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        // Busca TODOS os produtos sem orderBy no Firestore
-        // (orderBy exclui docs sem o campo — fazemos a ordenação no cliente)
         const querySnapshot = await getDocs(collection(db, "products"));
 
         const productsData = querySnapshot.docs.map(doc => {
@@ -52,10 +55,10 @@ function HomeContent() {
               destaque: data.urls?.destaque || '',
             },
           };
-        }) as Product[];
+        }) as any[];
 
-        // Ordena no cliente: mais recentes primeiro (docs sem createdAt vão para o final)
-        productsData.sort((a: any, b: any) => (b.createdAt || 0) - (a.createdAt || 0));
+        // Ordena: mais recentes primeiro
+        productsData.sort((a, b) => b.createdAt - a.createdAt);
 
         setProducts(productsData);
       } catch (err) {
@@ -71,10 +74,10 @@ function HomeContent() {
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesCategory = categoryQuery === t('allCategories') || product.category === categoryQuery;
+      const matchesCategory = isAllSelected || product.category.toLowerCase() === categoryQuery.toLowerCase();
       return matchesSearch && matchesCategory;
     });
-  }, [products, searchQuery, categoryQuery]);
+  }, [products, searchQuery, categoryQuery, isAllSelected]);
 
   return (
     <div className="bg-white min-h-screen font-sans">
