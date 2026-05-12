@@ -14,8 +14,7 @@ export async function POST(req: Request) {
     
     // Testando com o nome absoluto do modelo
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash',
-      apiVersion: 'v1'
+      model: 'gemini-1.5-flash'
     });
 
     const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
