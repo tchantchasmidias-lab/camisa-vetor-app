@@ -4,6 +4,5 @@ runConfig:
   concurrency: 80
   cpu: 1
   memoryMiB: 512
-env:
-  - variable: GOOGLE_GENAI_API_KEY
-    value: AIzaSyBNSn4g5kSIfjl5WtOEesNStMNGq5IVkIM
+# A chave foi removida daqui por segurança (GitGuardian alert).
+# A variável GOOGLE_GENAI_API_KEY deve ser configurada diretamente no console do Firebase App Hosting.
