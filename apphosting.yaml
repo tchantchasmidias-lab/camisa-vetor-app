@@ -4,3 +4,6 @@ runConfig:
   concurrency: 80
   cpu: 1
   memoryMiB: 512
+env:
+  - variable: GOOGLE_GENAI_API_KEY
+    value: AIzaSyBNSn4g5kSIfjl5WtOEesNStMNGq5IVklM
