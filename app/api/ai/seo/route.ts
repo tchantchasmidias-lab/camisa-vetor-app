@@ -26,9 +26,22 @@ export async function POST(req: Request) {
         console.log(`Tentando IA com modelo: ${modelName}...`);
         const model = genAI.getGenerativeModel({ model: modelName });
 
-        const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais.
+        const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
           Título: "${title}", Categoria: "${category}".
-          Responda apenas com um JSON válido (sem markdown) contendo: improvedTitle, description, seoDescription, keywords.`;
+          
+          Sua tarefa é:
+          1. Melhorar o Título para torná-lo atraente para buscas no Google (ex: adicionar palavras como "Vetor", "Premium", "Editável").
+          2. Criar uma Descrição curta e objetiva (máximo 3 frases) focada em benefícios e design.
+          3. Criar uma Meta Descrição curta para SEO.
+          4. Gerar uma lista de 5 a 10 Palavras-Chave separadas por vírgula.
+
+          REGRAS IMPORTANTES:
+          - NÃO mencione formatos de arquivo (como SVG, AI, EPS, PDF, CDR, etc.) na descrição.
+          - NÃO use a palavra "download" ou "arquivo" repetidamente.
+          - Foque no estilo da estampa e no público-alvo.
+
+          Responda estritamente em formato JSON válido com as chaves: improvedTitle, description, seoDescription, keywords.
+          Não inclua blocos de código markdown (\`\`\`json) ou explicações extras.`;
 
         const result = await model.generateContent(prompt);
         const response = await result.response;

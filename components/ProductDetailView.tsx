@@ -199,60 +199,6 @@ export default function ProductDetailView({ product }: { product: any }) {
                 </button>
               ))}
             </div>
-            
-            {/* SEÇÃO DE AVALIAR */}
-            <div className="mt-8 py-2 w-full bg-white transition-shadow">
-              <h3 className="text-[11px] font-bold text-[#202124] uppercase tracking-widest mb-3 text-center md:text-left">
-                {t('leaveReview')}
-              </h3>
-              
-              {!user ? (
-                <div className="flex flex-col items-center md:items-start gap-2">
-                  <p className="text-[11px] text-[#5f6368]">{t('loginToReview')}</p>
-                  <Link href="/login" className="text-[10px] font-bold text-[#fe7302] uppercase tracking-wider hover:underline">
-                    {t('goToLogin')}
-                  </Link>
-                </div>
-              ) : userRating ? (
-                <div className="flex flex-col items-center md:items-start gap-2">
-                   <div className="flex items-center text-[#fe7302] gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star 
-                        key={star} 
-                        size={20} 
-                        className={star <= userRating ? "fill-current" : "text-gray-200"} 
-                      />
-                    ))}
-                  </div>
-                  <p className="text-[10px] font-bold text-green-600 uppercase tracking-wider mt-1">{t('ratingSuccess')}</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center md:items-start gap-2">
-                  <div className="flex items-center gap-1">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        disabled={isSubmittingRating}
-                        onMouseEnter={() => setHoverRating(star)}
-                        onMouseLeave={() => setHoverRating(0)}
-                        onClick={() => handleRate(star)}
-                        className="transition-all transform hover:scale-110 active:scale-95 disabled:opacity-50"
-                      >
-                        <Star 
-                          size={24} 
-                          className={`${
-                            star <= (hoverRating || 0) 
-                              ? "text-[#fe7302] fill-[#fe7302]" 
-                              : "text-gray-300"
-                          } transition-colors`} 
-                        />
-                      </button>
-                    ))}
-                  </div>
-                  {isSubmittingRating && <span className="text-[10px] text-gray-400">{t('sending')}...</span>}
-                </div>
-              )}
-            </div>
           </div>
 
           {/* COLUNA 2: DETALHES E COMPRA - ALINHAMENTO DINÂMICO */}
@@ -262,23 +208,47 @@ export default function ProductDetailView({ product }: { product: any }) {
                 {tp(product.name)}
               </h1>
               
-              {/* MÉDIA DE AVALIAÇÕES */}
+              {/* MÉDIA DE AVALIAÇÕES E SISTEMA DE VOTO */}
               <div className="flex items-center justify-center md:justify-start gap-2 mt-3">
-                <div className="flex items-center text-[#fe7302]">
+                <div className="flex items-center gap-1">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <Star 
-                      key={star} 
-                      size={16} 
-                      className={star <= Math.round(averageRating) ? "fill-current" : "text-gray-300"} 
-                    />
+                    <button
+                      key={star}
+                      disabled={isSubmittingRating || (user && userRating !== null)}
+                      onMouseEnter={() => !userRating && setHoverRating(star)}
+                      onMouseLeave={() => !userRating && setHoverRating(0)}
+                      onClick={() => {
+                        if (!user) {
+                          router.push('/login');
+                        } else if (!userRating) {
+                          handleRate(star);
+                        }
+                      }}
+                      className={`transition-all transform ${!userRating ? 'hover:scale-125 active:scale-95' : 'cursor-default'} disabled:opacity-80`}
+                      title={!user ? t('loginToReview') : userRating ? t('ratingSuccess') : `${t('rate')} ${star} ${t('stars')}`}
+                    >
+                      <Star 
+                        size={20} 
+                        className={`transition-colors ${
+                          star <= (hoverRating || (userRating || Math.round(averageRating))) 
+                            ? "text-[#fe7302] fill-[#fe7302]" 
+                            : "text-gray-300"
+                        }`} 
+                      />
+                    </button>
                   ))}
                 </div>
-                <span className="text-[12px] font-bold text-[#5f6368]">
-                  {averageRating > 0 ? averageRating.toFixed(1) : t('new')}
-                </span>
-                <span className="text-[11px] text-gray-400">
-                  ({totalRatings} {totalRatings === 1 ? t('review') : t('reviews')})
-                </span>
+                
+                <div className="flex items-center gap-2 ml-2">
+                  <span className="text-[12px] font-bold text-[#5f6368]">
+                    {averageRating > 0 ? averageRating.toFixed(1) : t('new')}
+                  </span>
+                  <span className="text-[11px] text-gray-400">
+                    ({totalRatings} {totalRatings === 1 ? t('review') : t('reviews')})
+                  </span>
+                  {isSubmittingRating && <Loader2 size={12} className="animate-spin text-[#fe7302]" />}
+                  {userRating && <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider ml-2">{t('ratingSuccess')}</span>}
+                </div>
               </div>
 
               <p className="text-[#5f6368] mt-6 text-[15px] leading-relaxed max-w-xl font-medium mx-auto md:mx-0">
