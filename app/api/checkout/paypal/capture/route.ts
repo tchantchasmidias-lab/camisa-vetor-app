@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 
-const base = "https://api-m.sandbox.paypal.com";
+const base = "https://api-m.paypal.com";
 
 async function generateAccessToken() {
   const { NEXT_PUBLIC_PAYPAL_CLIENT_ID, PAYPAL_SECRET } = process.env;

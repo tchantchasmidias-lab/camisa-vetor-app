@@ -30,10 +30,34 @@ export async function POST(req: Request) {
         isVerified = true;
       }
     } else if (paymentMethod === 'paypal') {
-      // Para PayPal, como o checkout já faz o 'capture' no servidor, 
-      // confiamos no fluxo, mas o ideal seria re-verificar o status aqui via API do PayPal.
-      // Por ora, assumimos verificado se o capture foi bem sucedido no passo anterior.
-      isVerified = true; 
+      // 🛡️ PROTEÇÃO 2 (PayPal): Re-verificar status diretamente no PayPal Live
+      try {
+        const { NEXT_PUBLIC_PAYPAL_CLIENT_ID, PAYPAL_SECRET } = process.env;
+        const auth = Buffer.from(`${NEXT_PUBLIC_PAYPAL_CLIENT_ID}:${PAYPAL_SECRET}`).toString("base64");
+        
+        // 1. Pegar Access Token
+        const tokenRes = await fetch("https://api-m.paypal.com/v1/oauth2/token", {
+          method: "POST",
+          body: "grant_type=client_credentials",
+          headers: {
+            Authorization: `Basic ${auth}`,
+            "Content-Type": "application/x-www-form-urlencoded",
+          },
+        });
+        const { access_token } = await tokenRes.json();
+
+        // 2. Verificar Pedido
+        const orderRes = await fetch(`https://api-m.paypal.com/v2/checkout/orders/${transactionId}`, {
+          headers: { Authorization: `Bearer ${access_token}` }
+        });
+        const orderData = await orderRes.json();
+        
+        if (orderData.status === 'COMPLETED' || orderData.status === 'APPROVED') {
+          isVerified = true;
+        }
+      } catch (err) {
+        console.error("Erro ao verificar PayPal no servidor:", err);
+      }
     }
 
     if (!isVerified) {
