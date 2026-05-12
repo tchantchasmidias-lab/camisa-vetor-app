@@ -9,13 +9,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Título e categoria são obrigatórios' }, { status: 400 });
     }
 
-    // Inicializa a API do Google forçando a versão v1 e o nome completo do modelo
+    // Inicializa a API do Google forçando a versão estável v1
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
     
-    // Testando com o nome absoluto do modelo
+    // Usando a configuração mais estável possível
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-1.5-flash'
-    });
+      model: 'gemini-1.5-flash',
+    }, { apiVersion: 'v1' });
 
     const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
       O usuário forneceu um título básico: "${title}" na categoria: "${category}".
@@ -39,10 +39,9 @@ export async function POST(req: Request) {
     return NextResponse.json(seoData);
   } catch (error: any) {
     console.error('Erro detalhado da IA:', error);
-    // Retorna o erro detalhado para podermos diagnosticar
     return NextResponse.json({ 
-      error: 'Erro na IA: ' + error.message,
-      details: error.stack 
+      error: 'Falha na conexão com a IA: ' + error.message,
+      details: 'Certifique-se de que a conta do Google Cloud está totalmente ativa.'
     }, { status: 500 });
   }
 }
