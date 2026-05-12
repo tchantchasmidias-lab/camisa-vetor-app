@@ -9,13 +9,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Título e categoria são obrigatórios' }, { status: 400 });
     }
 
-    // Inicializa a API do Google (Conta agora 100% ativa!)
+    // Inicializa a API do Google (Usando a chave que você configurou no painel do Firebase)
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
     
-    // Voltando para o modelo mais avançado: 1.5 Flash
+    // Configuração definitiva: Nome completo do modelo e versão estável v1
     const model = genAI.getGenerativeModel({ 
       model: 'gemini-1.5-flash',
-    });
+    }, { apiVersion: 'v1' });
 
     const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
       O usuário forneceu um título básico: "${title}" na categoria: "${category}".
@@ -33,6 +33,7 @@ export async function POST(req: Request) {
     const response = await result.response;
     const text = response.text();
 
+    // Limpa o texto de qualquer sujeira que a IA possa mandar
     const cleanedText = text.replace(/```json|```/g, '').trim();
     const seoData = JSON.parse(cleanedText);
 
@@ -40,8 +41,8 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error('Erro na IA:', error);
     return NextResponse.json({ 
-      error: 'Erro na IA: ' + error.message,
-      details: 'Tente novamente em alguns segundos.'
+      error: 'Falha na conexão com a IA: ' + error.message,
+      details: 'Aguarde o novo Rollout terminar no painel do Firebase.'
     }, { status: 500 });
   }
 }
