@@ -214,7 +214,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
-                      disabled={isSubmittingRating || (user && userRating !== null)}
+                      disabled={!!(isSubmittingRating || (user && userRating !== null))}
                       onMouseEnter={() => !userRating && setHoverRating(star)}
                       onMouseLeave={() => !userRating && setHoverRating(0)}
                       onClick={() => {
