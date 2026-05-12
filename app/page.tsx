@@ -82,7 +82,7 @@ function HomeContent() {
   return (
     <div className="bg-white min-h-screen font-sans">
       {/* pt-16 no mobile para o mini pill + bottom tab bar, sem padding top no desktop */}
-      <main className="pt-[36px] md:pt-4 pb-24 md:pb-10">
+      <main className="pt-[16px] md:pt-4 pb-24 md:pb-10">
         <div className="w-full px-3 md:px-5">
           
           {/* Carrossel de Categorias */}

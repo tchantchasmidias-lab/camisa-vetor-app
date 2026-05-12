@@ -154,10 +154,10 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
                     <Image priority src="/logo.svg" alt="Camisa Vetor" width={100} height={18} className="h-[15px] w-auto" />
                 </Link>
 
-                {/* Direita: só pesquisa (absoluto) */}
-                <button onClick={openMobileSearch} className={`absolute right-4 text-white/60 ${laranjaHover}`}>
-                    <Search size={20} />
-                </button>
+                {/* Direita: WHATSAPP (absoluto) */}
+                <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={`absolute right-4 text-white/60 hover:text-[#25D366] transition-colors`}>
+                    <MessageCircle size={20} />
+                </a>
             </div>
 
             {/* Mobile Search bar — expande sobre o pill */}
@@ -185,9 +185,9 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
                 <div className="flex items-center justify-around rounded-full bg-[#1a1a1a]/95 backdrop-blur-xl h-14 shadow-lg border border-white/5 px-2">
                     <Link href="/" className="p-2 text-white/70"><Home size={23} className={laranjaHover} /></Link>
                     <button onClick={() => setDrawerOpen(true)} className="p-2 text-white/70"><Shirt size={23} className={laranjaHover} /></button>
-                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className="p-2 text-white/70">
-                        <MessageCircle size={23} className="hover:text-[#25D366] transition-colors" />
-                    </a>
+                    <button onClick={openMobileSearch} className="p-2 text-white/70">
+                        <Search size={23} className={laranjaHover} />
+                    </button>
                     <Link href="/carrinho" className="relative p-2 text-white/70">
                         <ShoppingCart size={23} className={laranjaHover} />
                         <CartBadge size={15} />
