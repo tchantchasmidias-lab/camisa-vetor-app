@@ -9,9 +9,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Título e categoria são obrigatórios' }, { status: 400 });
     }
 
-    // Inicializa a API do Google diretamente com a chave corrigida
+    // Inicializa a API do Google forçando a versão v1 e o nome completo do modelo
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    
+    // Testando com o nome absoluto do modelo
+    const model = genAI.getGenerativeModel({ 
+      model: 'gemini-1.5-flash',
+      apiVersion: 'v1'
+    });
 
     const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
       O usuário forneceu um título básico: "${title}" na categoria: "${category}".
@@ -29,13 +34,16 @@ export async function POST(req: Request) {
     const response = await result.response;
     const text = response.text();
 
-    // Limpa possíveis blocos de código markdown se a IA retornar
     const cleanedText = text.replace(/```json|```/g, '').trim();
     const seoData = JSON.parse(cleanedText);
 
     return NextResponse.json(seoData);
   } catch (error: any) {
-    console.error('Erro na geração de IA (Google SDK):', error);
-    return NextResponse.json({ error: 'Falha ao gerar SEO inteligente: ' + error.message }, { status: 500 });
+    console.error('Erro detalhado da IA:', error);
+    // Retorna o erro detalhado para podermos diagnosticar
+    return NextResponse.json({ 
+      error: 'Erro na IA: ' + error.message,
+      details: error.stack 
+    }, { status: 500 });
   }
 }
