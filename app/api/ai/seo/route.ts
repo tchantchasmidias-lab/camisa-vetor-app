@@ -9,39 +9,52 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Título e categoria são obrigatórios' }, { status: 400 });
     }
 
-    // Inicializa a API do Google
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
     
-    // Usando o modelo 2.0 Flash (mais moderno e autorizado para sua conta)
-    const model = genAI.getGenerativeModel({ 
-      model: 'gemini-2.0-flash',
-    });
+    // Lista de modelos para tentar (do mais novo para o mais estável)
+    const modelsToTry = [
+      'gemini-2.5-flash',
+      'gemini-1.5-flash',
+      'gemini-2.0-flash'
+    ];
 
-    const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
-      O usuário forneceu um título básico: "${title}" na categoria: "${category}".
-      
-      Sua tarefa é:
-      1. Melhorar o Título para torná-lo atraente para buscas no Google (ex: adicionar palavras como "Vetor", "Premium", "Editável").
-      2. Criar uma Descrição curta e objetiva (máximo 3 frases) focada em benefícios (alta qualidade, download imediato, formatos profissionais).
-      3. Criar uma Meta Descrição curta para SEO.
-      4. Gerar uma lista de 5 a 10 Palavras-Chave separadas por vírgula.
+    let lastError = null;
+    let seoData = null;
 
-      Responda estritamente em formato JSON válido com as chaves: improvedTitle, description, seoDescription, keywords.
-      Não inclua blocos de código markdown (\`\`\`json) ou explicações extras.`;
+    for (const modelName of modelsToTry) {
+      try {
+        console.log(`Tentando IA com modelo: ${modelName}...`);
+        const model = genAI.getGenerativeModel({ model: modelName });
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+        const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais.
+          Título: "${title}", Categoria: "${category}".
+          Responda apenas com um JSON válido (sem markdown) contendo: improvedTitle, description, seoDescription, keywords.`;
 
-    const cleanedText = text.replace(/```json|```/g, '').trim();
-    const seoData = JSON.parse(cleanedText);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        const cleanedText = text.replace(/```json|```/g, '').trim();
+        seoData = JSON.parse(cleanedText);
+        
+        console.log(`✅ Sucesso com o modelo: ${modelName}`);
+        break; // Sai do loop se conseguir
+      } catch (e: any) {
+        console.error(`❌ Falha com o modelo ${modelName}:`, e.message);
+        lastError = e;
+        continue; // Tenta o próximo da lista
+      }
+    }
+
+    if (!seoData) {
+      throw new Error(`Todos os modelos falharam. Último erro: ${lastError?.message}`);
+    }
 
     return NextResponse.json(seoData);
   } catch (error: any) {
-    console.error('Erro na IA:', error);
+    console.error('Erro final na IA:', error);
     return NextResponse.json({ 
-      error: 'Erro na IA: ' + error.message,
-      details: 'O modelo Gemini 2.0 Flash foi selecionado para maior compatibilidade.'
+      error: 'Erro na IA: ' + error.message 
     }, { status: 500 });
   }
 }
