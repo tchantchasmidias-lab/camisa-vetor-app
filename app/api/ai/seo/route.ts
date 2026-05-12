@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { ai } from '@/lib/ai/genkit';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 export async function POST(req: Request) {
   try {
@@ -9,9 +9,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Título e categoria são obrigatórios' }, { status: 400 });
     }
 
-    const { text } = await ai.generate({
-      model: 'googleai/gemini-1.5-flash-latest',
-      prompt: `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
+    // Inicializa a API do Google diretamente com a chave corrigida
+    const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
       O usuário forneceu um título básico: "${title}" na categoria: "${category}".
       
       Sua tarefa é:
@@ -21,19 +23,19 @@ export async function POST(req: Request) {
       4. Gerar uma lista de 5 a 10 Palavras-Chave separadas por vírgula.
 
       Responda estritamente em formato JSON válido com as chaves: improvedTitle, description, seoDescription, keywords.
-      Não inclua blocos de código markdown (\`\`\`json) ou explicações extras.`,
-      config: {
-        temperature: 0.7,
-      }
-    });
+      Não inclua blocos de código markdown (\`\`\`json) ou explicações extras.`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
 
     // Limpa possíveis blocos de código markdown se a IA retornar
     const cleanedText = text.replace(/```json|```/g, '').trim();
-    const result = JSON.parse(cleanedText);
+    const seoData = JSON.parse(cleanedText);
 
-    return NextResponse.json(result);
+    return NextResponse.json(seoData);
   } catch (error: any) {
-    console.error('Erro na geração de IA:', error);
+    console.error('Erro na geração de IA (Google SDK):', error);
     return NextResponse.json({ error: 'Falha ao gerar SEO inteligente: ' + error.message }, { status: 500 });
   }
 }
