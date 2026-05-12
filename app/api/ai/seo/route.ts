@@ -9,12 +9,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Título e categoria são obrigatórios' }, { status: 400 });
     }
 
-    // Inicializa a API do Google
+    // Inicializa a API do Google (Conta agora 100% ativa!)
     const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || '');
     
-    // Testando com o Gemini Pro (mais compatível com contas em trial)
+    // Voltando para o modelo mais avançado: 1.5 Flash
     const model = genAI.getGenerativeModel({ 
-      model: 'gemini-pro',
+      model: 'gemini-1.5-flash',
     });
 
     const prompt = `Você é um especialista em SEO para e-commerce de produtos digitais (vetores para estamparia).
@@ -38,10 +38,10 @@ export async function POST(req: Request) {
 
     return NextResponse.json(seoData);
   } catch (error: any) {
-    console.error('Erro detalhado da IA:', error);
+    console.error('Erro na IA:', error);
     return NextResponse.json({ 
-      error: 'Falha na conexão com a IA: ' + error.message,
-      details: 'Isso pode ser resolvido clicando no botão "ATIVAR" na barra azul do seu Console Google Cloud.'
+      error: 'Erro na IA: ' + error.message,
+      details: 'Tente novamente em alguns segundos.'
     }, { status: 500 });
   }
 }
