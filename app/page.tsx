@@ -88,7 +88,7 @@ function HomeContent() {
           <CategoryCarousel />
 
           {/* Seção de Produtos */}
-          <section className="-mt-1 md:mt-4"> 
+          <section className="mt-4 md:mt-4"> 
             
             {/* Mensagem de "Nada encontrado" com Tipografia Google */}
             {!isLoading && filteredProducts.length === 0 && (
