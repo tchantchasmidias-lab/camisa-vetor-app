@@ -81,14 +81,14 @@ function HomeContent() {
 
   return (
     <div className="bg-white min-h-screen font-sans">
-      <div className="pt-2 md:pt-4 pb-24 md:pb-10">
-        <div className="w-full px-3 md:px-5 -mt-6 md:mt-0">
+      <div className="pt-[76px] md:pt-4 pb-24 md:pb-10">
+        <div className="w-full px-3 md:px-5">
           
           {/* Carrossel de Categorias */}
           <CategoryCarousel />
 
           {/* Seção de Produtos */}
-          <section className="mt-6 md:mt-4"> 
+          <section className="mt-4 md:mt-4"> 
             
             {/* Mensagem de "Nada encontrado" com Tipografia Google */}
             {!isLoading && filteredProducts.length === 0 && (
@@ -100,7 +100,7 @@ function HomeContent() {
             )}
 
             {/* Grid: 1 coluna no mobile, 3 no tablet e 5 no desktop */}
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-y-10 gap-x-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
               {isLoading ? (
                 // Skeletons enquanto carrega
                 [...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)

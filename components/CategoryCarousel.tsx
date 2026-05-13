@@ -151,7 +151,7 @@ function CategoryCarouselContent() {
         {/* Scrollable row */}
         <div
           ref={scrollRef}
-          className="flex gap-3 overflow-x-auto scroll-smooth no-scrollbar px-1 py-2 pb-2"
+          className="flex gap-3 overflow-x-auto scroll-smooth no-scrollbar px-1 py-2"
         >
           {categories.map(cat => (
             <CategoryCard
