@@ -12,7 +12,7 @@ export default function Footer() {
   if (pathname === '/admin') return null;
 
   return (
-    <footer className="bg-white border-t border-gray-100 pt-4 pb-10 md:py-10 mt-4 md:mt-20">
+    <footer className="bg-white border-t border-gray-100 pt-4 pb-10 md:py-10 mt-2 md:mt-20">
       <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row justify-between items-center gap-6">
         
         {/* COPYRIGHT */}
