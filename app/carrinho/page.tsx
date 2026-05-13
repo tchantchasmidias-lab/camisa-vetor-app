@@ -51,7 +51,7 @@ function CarrinhoContent() {
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen animate-in fade-in duration-700 font-sans text-[#4a4a4a]">
-      <main className="pt-[24px] md:pt-4 pb-20 px-4">
+      <main className="pt-[28px] md:pt-4 pb-20 px-4">
         <div className="max-w-6xl mx-auto">
 
           {/* NAVEGAÇÃO E TÍTULO */}
