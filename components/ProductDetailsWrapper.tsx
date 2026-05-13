@@ -21,7 +21,7 @@ export default function ProductDetailsWrapper({ product }: { product: any }) {
         <ProductDetailView product={product} />
        
         {/* Seção de Relacionados */}
-        <div className="max-w-7xl mx-auto px-4 mt-12 pb-20">
+        <div className="max-w-7xl mx-auto px-4 mt-12 pb-[20px] md:pb-20">
           <Suspense fallback={
             <div className="flex flex-col items-center justify-center py-20">
               <Loader2 className="animate-spin text-orange-200 mb-4" size={32} />
