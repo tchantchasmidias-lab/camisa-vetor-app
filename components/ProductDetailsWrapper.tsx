@@ -15,7 +15,7 @@ export default function ProductDetailsWrapper({ product }: { product: any }) {
         pt-20 (Mobile) - Reduzido para aproximar do Header
         md:pt-24 (Desktop) - Espaçamento ideal para não ficar "longe" nem "colado"
       */}
-      <main className="flex-grow pt-[24px] md:pt-4">
+      <main className="flex-grow pt-16 md:pt-4">
         
         {/* Visualização Principal do Produto */}
         <ProductDetailView product={product} />
