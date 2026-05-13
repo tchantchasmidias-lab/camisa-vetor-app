@@ -154,7 +154,7 @@ function LoginPageContent() {
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#fe7302]/10 blur-[150px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#fe7302]/5 blur-[150px] rounded-full pointer-events-none"></div>
 
-      <div className="max-w-md w-full pt-16 pb-8 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
+      <div className="max-w-md w-full pt-[24px] pb-8 relative z-10 animate-in fade-in zoom-in-95 duration-1000">
         <div className="text-center mb-6">
           <div className="flex justify-center mb-6 hover:scale-105 transition-transform duration-500">
              <Image 

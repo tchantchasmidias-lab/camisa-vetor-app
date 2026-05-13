@@ -90,7 +90,7 @@ export default function PerfilPage() {
 
   return (
     <div className="bg-white min-h-screen font-sans text-[#4a4a4a] animate-in fade-in duration-700">
-      <main className="pt-16 md:pt-4 pb-20 px-4">
+      <main className="pt-[24px] md:pt-4 pb-20 px-4">
         <div className="max-w-5xl mx-auto">
           
           {/* HEADER DO PERFIL */}
