@@ -81,7 +81,7 @@ function HomeContent() {
 
   return (
     <div className="bg-white min-h-screen font-sans">
-      <div className="pt-[76px] md:pt-4 pb-24 md:pb-10">
+      <div className="pt-[64px] md:pt-4 pb-24 md:pb-10">
         <div className="w-full px-3 md:px-5">
           
           {/* Carrossel de Categorias */}
