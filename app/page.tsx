@@ -113,7 +113,7 @@ function HomeContent() {
             </div>
           </section>
         </div>
-      </main>
+      </div>
     </div>
   );
 }
