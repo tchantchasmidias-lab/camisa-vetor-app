@@ -163,7 +163,7 @@ function LoginPageContent() {
                 width={160} 
                 height={40} 
                 priority 
-                className="h-9 w-auto" 
+                className="h-[18px] md:h-9 w-auto" 
              />
           </div>
           <div className="text-center">
@@ -193,7 +193,7 @@ function LoginPageContent() {
                     <input 
                       type="text" required placeholder={t('fullName')}
                       value={nome} onChange={(e) => setNome(e.target.value)}
-                      className="w-full bg-white border border-white/10 rounded-2xl p-[10px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                      className="w-full bg-white border border-white/10 rounded-2xl p-[10px] md:p-[14px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -207,7 +207,7 @@ function LoginPageContent() {
                         <input 
                           type="text" required placeholder="000.000.000-00"
                           value={cpf} onChange={(e) => setCpf(maskCPF(e.target.value))}
-                          className="w-full bg-white border border-white/10 rounded-2xl p-2.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                          className="w-full bg-white border border-white/10 rounded-2xl p-2.5 md:p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -219,7 +219,7 @@ function LoginPageContent() {
                         <input 
                           type="text" required placeholder="(00) 00000-0000"
                           value={phone} onChange={(e) => setPhone(maskPhone(e.target.value))}
-                          className="w-full bg-white border border-white/10 rounded-2xl p-2.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                          className="w-full bg-white border border-white/10 rounded-2xl p-2.5 md:p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -235,7 +235,7 @@ function LoginPageContent() {
                 <input 
                   type="email" required placeholder={t('email')}
                   value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-white/10 rounded-2xl p-[10px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                  className="w-full bg-white border border-white/10 rounded-2xl p-[10px] md:p-[14px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ function LoginPageContent() {
                 <input 
                   type={showPassword ? "text" : "password"} required placeholder={t('password')}
                   value={password} onChange={(e) => setPassword(e.target.value)} minLength={6}
-                  className="w-full bg-white border border-white/10 rounded-2xl p-[10px] pl-14 pr-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                  className="w-full bg-white border border-white/10 rounded-2xl p-[10px] md:p-[14px] pl-14 pr-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                 />
                 <button
                   type="button" onClick={() => setShowPassword(!showPassword)}
@@ -266,7 +266,7 @@ function LoginPageContent() {
                   <input 
                     type={showConfirmPassword ? "text" : "password"} required placeholder={t('confirmPassword')}
                     value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} minLength={6}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                    className="w-full bg-white border border-white/10 rounded-2xl p-[10px] md:p-[14px] pl-14 pr-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                   />
                   <button
                     type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)}
