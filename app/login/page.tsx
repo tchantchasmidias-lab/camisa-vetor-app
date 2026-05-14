@@ -303,7 +303,7 @@ function LoginPageContent() {
               </div>
             )}
 
-            <div className="pt-10">
+            <div className="pt-4">
               <button
                 disabled={loading}
                 className="group relative w-full overflow-hidden bg-[#fe7302] text-white font-black py-5 rounded-2xl hover:scale-[1.01] active:scale-[0.98] transition-all shadow-[0_20px_40px_rgba(254,115,2,0.2)] uppercase tracking-[0.3em] text-[11px] flex justify-center items-center gap-3 disabled:opacity-50"
@@ -320,7 +320,7 @@ function LoginPageContent() {
               </button>
             </div>
 
-            <div className="relative flex items-center pt-8 pb-4">
+            <div className="relative flex items-center pt-2 pb-2">
               <div className="flex-grow border-t border-white/5"></div>
               <span className="flex-shrink-0 mx-5 text-gray-700 text-[10px] font-black uppercase tracking-[0.3em]">{t('or')}</span>
               <div className="flex-grow border-t border-white/5"></div>
