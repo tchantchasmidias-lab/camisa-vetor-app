@@ -149,7 +149,7 @@ function LoginPageContent() {
   };
 
   return (
-    <div className="fixed inset-0 z-[110] bg-[#050505] flex items-center justify-center p-4 font-sans overflow-x-hidden overflow-y-auto selection:bg-[#fe7302]/30">
+    <div className="fixed inset-0 z-[110] bg-[#050505] flex items-start justify-center p-4 font-sans overflow-x-hidden overflow-y-auto selection:bg-[#fe7302]/30">
       {/* Efeitos de Fundo (Glows Profissionais) */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#fe7302]/10 blur-[150px] rounded-full pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#fe7302]/5 blur-[150px] rounded-full pointer-events-none"></div>
@@ -193,7 +193,7 @@ function LoginPageContent() {
                     <input 
                       type="text" required placeholder={t('fullName')}
                       value={nome} onChange={(e) => setNome(e.target.value)}
-                      className="w-full bg-white border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                      className="w-full bg-white border border-white/10 rounded-2xl p-[10px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -207,7 +207,7 @@ function LoginPageContent() {
                         <input 
                           type="text" required placeholder="000.000.000-00"
                           value={cpf} onChange={(e) => setCpf(maskCPF(e.target.value))}
-                          className="w-full bg-white border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                          className="w-full bg-white border border-white/10 rounded-2xl p-2.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -219,7 +219,7 @@ function LoginPageContent() {
                         <input 
                           type="text" required placeholder="(00) 00000-0000"
                           value={phone} onChange={(e) => setPhone(maskPhone(e.target.value))}
-                          className="w-full bg-white border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                          className="w-full bg-white border border-white/10 rounded-2xl p-2.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -235,7 +235,7 @@ function LoginPageContent() {
                 <input 
                   type="email" required placeholder={t('email')}
                   value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                  className="w-full bg-white border border-white/10 rounded-2xl p-[10px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ function LoginPageContent() {
                 <input 
                   type={showPassword ? "text" : "password"} required placeholder={t('password')}
                   value={password} onChange={(e) => setPassword(e.target.value)} minLength={6}
-                  className="w-full bg-white border border-white/10 rounded-2xl p-[14px] pl-14 pr-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
+                  className="w-full bg-white border border-white/10 rounded-2xl p-[10px] pl-14 pr-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                 />
                 <button
                   type="button" onClick={() => setShowPassword(!showPassword)}
