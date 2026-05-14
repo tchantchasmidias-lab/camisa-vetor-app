@@ -16,6 +16,10 @@ const inter = Inter({
 export const metadata = {
   title: 'Camisa Vetor | Vetores Profissionais',
   description: 'Os melhores vetores para estamparia e sublimação.',
+  robots: {
+    index: false,
+    follow: false,
+  },
 };
 
 export default function RootLayout({

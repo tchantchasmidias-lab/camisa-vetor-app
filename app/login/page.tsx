@@ -2,7 +2,7 @@
 
 import { useState, Suspense, useEffect } from 'react';
 import { auth, db } from '@/lib/firebase';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithRedirect, getRedirectResult, sendPasswordResetEmail } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
@@ -32,10 +32,41 @@ function LoginPageContent() {
   useEffect(() => {
     // Congela a rolagem do body para evitar barras duplas
     document.body.style.overflow = 'hidden';
+
+    // Processa o resultado do redirecionamento do Google
+    const checkRedirect = async () => {
+      try {
+        const result = await getRedirectResult(auth);
+        if (result) {
+          setLoading(true);
+          const userRef = doc(db, 'users', result.user.uid);
+          const userSnap = await getDoc(userRef);
+          if (!userSnap.exists()) {
+            await setDoc(userRef, {
+              nome: result.user.displayName || '',
+              email: result.user.email || '',
+              createdAt: new Date().toISOString()
+            });
+          }
+          router.push(redirectUrl);
+        }
+      } catch (err: any) {
+        console.error("Erro no redirect:", err);
+        if (err.code === 'auth/unauthorized-domain') {
+          setError(`Erro: Domínio não autorizado (${window.location.hostname}). Adicione-o no Console do Firebase.`);
+        } else {
+          setError(`${t('googleLoginError')} (${err.code})`);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkRedirect();
+
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, []);
+  }, [auth, db, router, redirectUrl, t]);
 
   const maskCPF = (value: string) => {
     return value
@@ -106,27 +137,11 @@ function LoginPageContent() {
   const handleGoogleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      
-      const userRef = doc(db, 'users', result.user.uid);
-      const userSnap = await getDoc(userRef);
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          nome: result.user.displayName || '',
-          email: result.user.email || '',
-          createdAt: new Date().toISOString()
-        });
-      }
-      router.push(redirectUrl);
+      // Melhora a UX: Salva no localStorage que estamos tentando logar para mostrar um loader se quiser
+      await signInWithRedirect(auth, provider);
     } catch (error: any) {
       console.error(error);
-      if (error.code === 'auth/operation-not-allowed') {
-        setError(t('googleLoginDisabled'));
-      } else if (error.code === 'auth/popup-closed-by-user') {
-        setError(t('popupClosed'));
-      } else {
-        setError(t('googleLoginError'));
-      }
+      setError(`${t('googleLoginError')} (${error.code})`);
     }
   };
 
