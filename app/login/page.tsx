@@ -305,7 +305,7 @@ function LoginPageContent() {
 
             <button
               disabled={loading}
-              className="group relative w-full overflow-hidden bg-[#fe7302] text-white font-black py-5 rounded-2xl hover:scale-[1.01] active:scale-[0.98] transition-all shadow-[0_20px_40px_rgba(254,115,2,0.2)] uppercase tracking-[0.3em] text-[11px] flex justify-center items-center gap-3 disabled:opacity-50 mt-4"
+              className="group relative w-full overflow-hidden bg-[#fe7302] text-white font-black py-5 rounded-2xl hover:scale-[1.01] active:scale-[0.98] transition-all shadow-[0_20px_40px_rgba(254,115,2,0.2)] uppercase tracking-[0.3em] text-[11px] flex justify-center items-center gap-3 disabled:opacity-50 mt-8"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
               {loading ? (
@@ -318,7 +318,7 @@ function LoginPageContent() {
               )}
             </button>
 
-            <div className="relative flex items-center py-2">
+            <div className="relative flex items-center pt-8 pb-4">
               <div className="flex-grow border-t border-white/5"></div>
               <span className="flex-shrink-0 mx-5 text-gray-700 text-[10px] font-black uppercase tracking-[0.3em]">{t('or')}</span>
               <div className="flex-grow border-t border-white/5"></div>
