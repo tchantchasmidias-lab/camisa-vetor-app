@@ -182,44 +182,44 @@ function LoginPageContent() {
           {/* Detalhe de borda neon suave */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[1px] bg-gradient-to-r from-transparent via-[#fe7302]/40 to-transparent"></div>
 
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-3">
             
             {isRegistering && (
               <>
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                   <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('fullName')}</label>
                   <div className="relative group">
                     <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={18} />
                     <input 
                       type="text" required placeholder={t('fullName')}
                       value={nome} onChange={(e) => setNome(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                      className="w-full bg-white border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                     />
                   </div>
                 </div>
 
                 {!isInternational && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div className="space-y-1.5">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
                       <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('cpf')}</label>
                       <div className="relative group">
                         <FileText className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
                         <input 
                           type="text" required placeholder="000.000.000-00"
                           value={cpf} onChange={(e) => setCpf(maskCPF(e.target.value))}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                          className="w-full bg-white border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('whatsapp')}</label>
                       <div className="relative group">
                         <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
                         <input 
                           type="text" required placeholder="(00) 00000-0000"
                           value={phone} onChange={(e) => setPhone(maskPhone(e.target.value))}
-                          className="w-full bg-white/5 border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                          className="w-full bg-white border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>
                     </div>
@@ -235,7 +235,7 @@ function LoginPageContent() {
                 <input 
                   type="email" required placeholder={t('email')}
                   value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  className="w-full bg-white border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ function LoginPageContent() {
                 <input 
                   type={showPassword ? "text" : "password"} required placeholder={t('password')}
                   value={password} onChange={(e) => setPassword(e.target.value)} minLength={6}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-[14px] pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  className="w-full bg-white border border-white/10 rounded-2xl p-[14px] pl-14 pr-14 text-[12px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                 />
                 <button
                   type="button" onClick={() => setShowPassword(!showPassword)}
