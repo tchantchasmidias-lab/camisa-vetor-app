@@ -178,11 +178,11 @@ function LoginPageContent() {
           </div>
         </div>
 
-        <div className="bg-[#111111]/80 backdrop-blur-3xl p-7 md:p-10 rounded-[3rem] border border-white/5 shadow-[0_40px_80px_rgba(0,0,0,0.8)] relative overflow-hidden">
+        <div className="bg-[#111111]/80 backdrop-blur-3xl p-6 md:p-10 rounded-[2rem] border border-white/5 shadow-[0_40px_80px_rgba(0,0,0,0.8)] relative overflow-hidden">
           {/* Detalhe de borda neon suave */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[1px] bg-gradient-to-r from-transparent via-[#fe7302]/40 to-transparent"></div>
 
-          <form onSubmit={handleAuth} className="space-y-5">
+          <form onSubmit={handleAuth} className="space-y-4">
             
             {isRegistering && (
               <>
@@ -193,7 +193,7 @@ function LoginPageContent() {
                     <input 
                       type="text" required placeholder={t('fullName')}
                       value={nome} onChange={(e) => setNome(e.target.value)}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                     />
                   </div>
                 </div>
@@ -235,7 +235,7 @@ function LoginPageContent() {
                 <input 
                   type="email" required placeholder={t('email')}
                   value={email} onChange={(e) => setEmail(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-[14px] pl-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ function LoginPageContent() {
                 <input 
                   type={showPassword ? "text" : "password"} required placeholder={t('password')}
                   value={password} onChange={(e) => setPassword(e.target.value)} minLength={6}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-4 pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-[14px] pl-14 pr-14 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
                 />
                 <button
                   type="button" onClick={() => setShowPassword(!showPassword)}
