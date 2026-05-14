@@ -182,11 +182,11 @@ function LoginPageContent() {
           {/* Detalhe de borda neon suave */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-[1px] bg-gradient-to-r from-transparent via-[#fe7302]/40 to-transparent"></div>
 
-          <form onSubmit={handleAuth} className="space-y-3">
+          <form onSubmit={handleAuth} className="space-y-2">
             
             {isRegistering && (
               <>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('fullName')}</label>
                   <div className="relative group">
                     <User className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={18} />
@@ -199,8 +199,8 @@ function LoginPageContent() {
                 </div>
 
                 {!isInternational && (
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
+                  <div className="space-y-2">
+                    <div className="space-y-0.5">
                       <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('cpf')}</label>
                       <div className="relative group">
                         <FileText className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
@@ -212,7 +212,7 @@ function LoginPageContent() {
                       </div>
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-0.5">
                       <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-[0.2em]">{t('whatsapp')}</label>
                       <div className="relative group">
                         <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
