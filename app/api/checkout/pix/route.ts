@@ -60,8 +60,8 @@ export async function POST(req: Request) {
           if (data?.pixBody) body = data.pixBody;
         }
 
-        const finalSubject = subject.replace(/{{nome}}/g, firstName).replace(/{{codigo_pix}}/g, qr_code);
-        const finalBody = body.replace(/{{nome}}/g, firstName).replace(/{{codigo_pix}}/g, qr_code);
+        const finalSubject = subject.replace(/{{nome}}/g, String(firstName || '')).replace(/{{codigo_pix}}/g, String(qr_code || ''));
+        const finalBody = body.replace(/{{nome}}/g, String(firstName || '')).replace(/{{codigo_pix}}/g, String(qr_code || ''));
         const htmlBody = finalBody.replace(/\n/g, '<br>');
 
         const emailHtml = `
