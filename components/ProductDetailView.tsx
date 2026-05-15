@@ -204,7 +204,7 @@ export default function ProductDetailView({ product }: { product: any }) {
           {/* COLUNA 2: DETALHES E COMPRA - ALINHAMENTO DINÂMICO */}
           <div className="flex-1 w-full space-y-6 md:space-y-8">
             <div>
-              <h1 className="text-2xl md:text-3xl font-black text-[#202124] uppercase tracking-tight leading-[1.1] mb-3">
+              <h1 className="text-2xl md:text-3xl font-black text-[#202124] uppercase tracking-tight leading-[1.1] mb-3 text-center md:text-left">
                 {tp(product.name)}
               </h1>
               
@@ -251,7 +251,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 </div>
               </div>
 
-              <p className="text-[#5f6368] mt-6 text-[15px] leading-relaxed max-w-xl font-medium mx-auto md:mx-0">
+              <p className="text-[#5f6368] mt-6 text-[15px] leading-relaxed max-w-xl font-medium mx-auto md:mx-0 text-center md:text-left">
                 {tp(product.description)}
               </p>
               
