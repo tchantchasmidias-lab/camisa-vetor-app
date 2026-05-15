@@ -78,10 +78,13 @@ export async function POST(req: Request) {
       </div>
     `;
 
+    // Adiciona um timestamp para o Gmail não agrupar os testes e esconder o conteúdo
+    const timeString = new Date().toLocaleTimeString('pt-BR');
+
     await resend.emails.send({
       from: 'Camisa Vetor <contato@camisavetor.com>',
       to: [email],
-      subject: `[TESTE] ${finalSubject}`,
+      subject: `[TESTE] ${finalSubject} (${timeString})`,
       html: emailHtml,
     });
 
