@@ -35,6 +35,7 @@ export default function AdminPage() {
     marketingBody: 'Olá {{nome}}, temos pacotes novos disponíveis com desconto especial para você.',
   });
   const [isSavingEmails, setIsSavingEmails] = useState(false);
+  const [isSendingMarketing, setIsSendingMarketing] = useState(false);
   
   // ESTADOS DE AUTENTICAÇÃO DO ADMIN
   const [isAdmin, setIsAdmin] = useState(false);
@@ -113,11 +114,31 @@ export default function AdminPage() {
     try {
       await setDoc(doc(db, "configuracoes", "email_templates"), emailTemplates, { merge: true });
       alert('Modelos de e-mail salvos com sucesso!');
-    } catch (e) {
-      console.error(e);
+    } catch (error) {
+      console.error('Erro ao salvar e-mails:', error);
       alert('Erro ao salvar modelos.');
     } finally {
       setIsSavingEmails(false);
+    }
+  };
+
+  const handleSendMarketing = async () => {
+    if (!confirm('Tem certeza que deseja disparar este e-mail para TODOS os clientes cadastrados?')) return;
+    
+    setIsSendingMarketing(true);
+    try {
+      const res = await fetch('/api/emails/marketing/send-all', { method: 'POST' });
+      const data = await res.json();
+      if (data.success) {
+        alert(`Campanha disparada com sucesso para ${data.sentCount} clientes!`);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error: any) {
+      console.error('Erro ao disparar marketing:', error);
+      alert('Erro ao disparar campanha: ' + error.message);
+    } finally {
+      setIsSendingMarketing(false);
     }
   };
 
@@ -912,7 +933,17 @@ export default function AdminPage() {
                       className="w-full h-40 bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all resize-none" 
                     ></textarea>
                   </div>
+
+                  <button 
+                    onClick={handleSendMarketing}
+                    disabled={isSendingMarketing}
+                    className="w-full bg-purple-600/20 text-purple-400 border border-purple-500/30 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-purple-600 hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    {isSendingMarketing ? <Loader2 size={16} className="animate-spin" /> : <Megaphone size={16} />}
+                    Disparar Campanha para Todos os Clientes
+                  </button>
                 </div>
+
 
                 {/* BOTÃO SALVAR GERAL */}
                 <div className="lg:col-span-2 flex justify-end">
