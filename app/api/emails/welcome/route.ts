@@ -39,8 +39,8 @@ export async function POST(req: Request) {
       <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111; color: #fff; padding: 40px; border-radius: 16px; border: 1px solid #222;">
         <div style="text-align: center; margin-bottom: 30px;">
           <a href="https://camisavetor.com" style="text-decoration: none;">
-            <img src="https://camisavetor.com/logo.svg" alt="Camisa Vetor" width="180" style="display: block; margin: 0 auto; border: none;" />
-            <!-- Fallback text em caso do e-mail não carregar SVG -->
+            <img src="https://camisavetor.com/logo-email.png" alt="Camisa Vetor" width="180" style="display: block; margin: 0 auto; border: none;" />
+            <!-- Fallback text em caso do e-mail não carregar a imagem -->
             <div style="color: #fe7302; font-size: 20px; font-weight: 900; margin-top: 10px; font-family: sans-serif;">
               <span style="color: #ffffff;">CAMISA</span> VETOR
             </div>
