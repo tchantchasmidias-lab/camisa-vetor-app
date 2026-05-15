@@ -42,6 +42,7 @@ export default function AdminPage() {
   const [fileDestaque, setFileDestaque] = useState<File | null>(null);
   const [filesGaleria, setFilesGaleria] = useState<File[]>([]);
   const [fileVetor, setFileVetor] = useState<File | null>(null);
+  const [removeExistingVetor, setRemoveExistingVetor] = useState(false);
 
   const formatosDisponiveis = ['CDR', 'PDF', 'SVG', 'PNG', 'AI'];
 
@@ -204,6 +205,8 @@ export default function AdminPage() {
   // (Omitidas aqui para brevidade, mas devem permanecer no seu arquivo)
   const startEdit = (p: any) => {
     setEditingId(p.id);
+    setRemoveExistingVetor(false);
+    setFileVetor(null);
     setSelectedFormats(p.formats || []);
     setPreviews({ capa: p.urls?.capa || '', destaque: p.urls?.destaque || '', galeria: p.urls?.galeria || [] });
     if (formRef.current) {
@@ -254,7 +257,7 @@ export default function AdminPage() {
     const formData = new FormData(e.currentTarget);
     const category = showNewCategory ? formData.get('newCategory')?.toString() : formData.get('category')?.toString();
     try {
-      let urlCapa = previews.capa, urlDestaque = previews.destaque, urlVetor = products.find(p => p.id === editingId)?.urls?.download, galeriaUrls = previews.galeria.filter(url => !url.startsWith('blob:'));
+      let urlCapa = previews.capa, urlDestaque = previews.destaque, urlVetor = removeExistingVetor ? "" : products.find(p => p.id === editingId)?.urls?.download, galeriaUrls = previews.galeria.filter(url => !url.startsWith('blob:'));
       if (fileCapa) urlCapa = await uploadFile(fileCapa, 'capas');
       if (fileDestaque) urlDestaque = await uploadFile(fileDestaque, 'destaques');
       if (fileVetor) urlVetor = await uploadFile(fileVetor, 'downloads');
@@ -476,18 +479,43 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    <div className="bg-white/5 p-6 rounded-[2rem] border border-white/10 relative group hover:bg-white/[0.08] transition-all">
-                      <div className="flex items-center gap-5">
-                        <div className="w-14 h-14 bg-[#fe7302]/10 rounded-2xl flex items-center justify-center text-[#fe7302]">
-                          <FileCode size={28} />
+                    {(() => {
+                      const existingVetorUrl = editingId ? products.find(p => p.id === editingId)?.urls?.download : null;
+                      const hasVetor = fileVetor || (existingVetorUrl && !removeExistingVetor);
+                      const displayTitle = fileVetor ? fileVetor.name : (hasVetor ? 'Arquivo Atual Mantido' : 'Vetor Digital');
+                      const displaySub = hasVetor ? 'Pronto para uso' : 'Selecione .CDR, .ZIP ou .PDF';
+
+                      return (
+                        <div className={`p-6 rounded-[2rem] border relative group transition-all ${hasVetor ? 'bg-green-500/5 border-green-500/20' : 'bg-white/5 border-white/10 hover:bg-white/[0.08]'}`}>
+                          <div className="flex items-center gap-5">
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${hasVetor ? 'bg-green-500/10 text-green-500' : 'bg-[#fe7302]/10 text-[#fe7302]'}`}>
+                              {hasVetor ? <CheckCircle2 size={28} /> : <FileCode size={28} />}
+                            </div>
+                            <div className="flex-1 overflow-hidden">
+                              <p className="text-[11px] font-bold text-white truncate mb-1">{displayTitle}</p>
+                              <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{displaySub}</p>
+                            </div>
+                            {hasVetor && (
+                              <button 
+                                type="button" 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  setFileVetor(null);
+                                  if (existingVetorUrl) setRemoveExistingVetor(true);
+                                }}
+                                className="w-10 h-10 rounded-full bg-red-500/10 text-red-500 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all z-20 relative"
+                              >
+                                <Trash2 size={16} />
+                              </button>
+                            )}
+                          </div>
+                          {!hasVetor && (
+                            <input type="file" onChange={(e) => { setFileVetor(e.target.files?.[0] || null); setRemoveExistingVetor(false); }} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
+                          )}
                         </div>
-                        <div className="flex-1 overflow-hidden">
-                          <p className="text-[11px] font-bold text-white truncate mb-1">{fileVetor ? fileVetor.name : 'Vetor Digital'}</p>
-                          <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest">{fileVetor ? 'Arquivo Pronto' : 'Selecione .CDR, .ZIP ou .PDF'}</p>
-                        </div>
-                      </div>
-                      <input type="file" onChange={(e) => setFileVetor(e.target.files?.[0] || null)} className="absolute inset-0 opacity-0 cursor-pointer z-10"/>
-                    </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="bg-[#111111] p-8 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
