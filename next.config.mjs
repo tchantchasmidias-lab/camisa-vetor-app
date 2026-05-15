@@ -7,5 +7,13 @@ const nextConfig = {
       { protocol: 'https', hostname: 'firebasestorage.app' }, // Domínio do seu novo bucket
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/__/auth/:path*',
+        destination: `https://camisa-vetor-app.firebaseapp.com/__/auth/:path*`,
+      },
+    ];
+  },
 };
 export default nextConfig;
