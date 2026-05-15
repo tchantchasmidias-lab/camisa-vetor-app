@@ -40,10 +40,6 @@ export async function POST(req: Request) {
         <div style="text-align: center; margin-bottom: 30px;">
           <a href="https://camisavetor.com" style="text-decoration: none;">
             <img src="https://camisavetor.com/logo-email.png" alt="Camisa Vetor" width="180" style="display: block; margin: 0 auto; border: none;" />
-            <!-- Fallback text em caso do e-mail não carregar a imagem -->
-            <div style="color: #fe7302; font-size: 20px; font-weight: 900; margin-top: 10px; font-family: sans-serif;">
-              <span style="color: #ffffff;">CAMISA</span> VETOR
-            </div>
           </a>
         </div>
 
