@@ -7,7 +7,7 @@ import {
   deleteDoc, doc, updateDoc, setDoc, where, collectionGroup 
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
   Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
@@ -90,17 +90,46 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === 'camisavetor@gmail.com') {
-        setIsAdmin(true);
-        loadData();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        if (user.email === 'camisavetor@gmail.com') {
+          setIsAdmin(true);
+          loadData();
+        } else {
+          setIsAdmin(false);
+          setLoginError('Acesso Negado: Esta conta não tem privilégios de administrador.');
+          await signOut(auth);
+        }
       } else {
         setIsAdmin(false);
       }
       setAuthLoading(false);
     });
+
+    const checkRedirect = async () => {
+      try {
+        await getRedirectResult(auth);
+      } catch (error: any) {
+        console.error("Erro no redirecionamento do Google:", error);
+        setLoginError('Falha ao autenticar com o Google. Tente novamente.');
+      }
+    };
+    checkRedirect();
+
     return () => unsubscribe();
   }, []);
+
+  const handleGoogleLogin = () => {
+    setIsLoggingIn(true);
+    setLoginError('');
+    try {
+      const provider = new GoogleAuthProvider();
+      signInWithRedirect(auth, provider);
+    } catch (err) {
+      setLoginError('Erro ao iniciar login com Google.');
+      setIsLoggingIn(false);
+    }
+  };
 
   // LOGIN DO ADMIN
   const handleAdminLogin = async (e: React.FormEvent) => {
@@ -355,6 +384,20 @@ export default function AdminPage() {
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
                 {isLoggingIn ? <Loader2 size={22} className="animate-spin" /> : 'Desbloquear Painel'}
+              </button>
+
+              <div className="relative flex items-center pt-2 pb-2">
+                <div className="flex-grow border-t border-white/5"></div>
+                <span className="flex-shrink-0 mx-5 text-gray-700 text-[10px] font-black uppercase tracking-[0.3em]">OU</span>
+                <div className="flex-grow border-t border-white/5"></div>
+              </div>
+
+              <button
+                type="button" onClick={handleGoogleLogin}
+                className="w-full bg-white/5 border border-white/10 text-white font-black py-4 rounded-2xl hover:bg-white/10 transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4"
+              >
+                <Image src="https://www.google.com/favicon.ico" alt="Google" width={18} height={18} className="brightness-125" />
+                Entrar com Google
               </button>
             </form>
           </div>
