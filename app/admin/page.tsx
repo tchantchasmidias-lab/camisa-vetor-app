@@ -69,7 +69,10 @@ export default function AdminPage() {
       setCategorias(cSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
       try {
-        const statsRes = await fetch('/api/admin/stats');
+        const token = await auth.currentUser?.getIdToken();
+        const statsRes = await fetch('/api/admin/stats', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (statsRes.ok) {
           const stats = await statsRes.json();
           setMetricas({ 
@@ -205,9 +208,13 @@ export default function AdminPage() {
 
     setIsGenerating(true);
     try {
+      const token = await auth.currentUser?.getIdToken();
       const res = await fetch('/api/ai/seo', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ title, category: category || 'Geral' }),
       });
       const data = await res.json();

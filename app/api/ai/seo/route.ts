@@ -1,8 +1,20 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { adminAuth } from '@/lib/firebaseAdmin';
 
 export async function POST(req: Request) {
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    
+    if (decodedToken.email !== 'camisavetor@gmail.com') {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+    }
+
     const { title, category } = await req.json();
 
     if (!title || !category) {

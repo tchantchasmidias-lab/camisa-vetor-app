@@ -1,8 +1,19 @@
 import { NextResponse } from 'next/server';
-import { adminDb } from '@/lib/firebaseAdmin';
+import { adminDb, adminAuth } from '@/lib/firebaseAdmin';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+    const token = authHeader.split('Bearer ')[1];
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    
+    if (decodedToken.email !== 'camisavetor@gmail.com') {
+      return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+    }
+
     // 1. Clientes
     const usersSnap = await adminDb.collection('users').get();
     const clientes = usersSnap.size;
