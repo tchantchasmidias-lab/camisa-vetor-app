@@ -5,7 +5,10 @@ export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY || 're_stub');
   
   try {
-    const { email, subject, body, type } = await req.json();
+    const { 
+      email, subject, body, type, 
+      marketingImageUrl, marketingButtonText, marketingButtonLink 
+    } = await req.json();
 
     if (!email) {
       return NextResponse.json({ error: 'E-mail de destino é obrigatório' }, { status: 400 });
@@ -58,8 +61,16 @@ export async function POST(req: Request) {
           ${htmlContent}
         </div>
         
+        ${type === 'marketing' && marketingImageUrl ? `
+        <div style="margin-top: 30px; text-align: center; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
+          <img src="${marketingImageUrl}" alt="Promoção Camisa Vetor" style="width: 100%; max-width: 600px; height: auto; display: block;" />
+        </div>
+        ` : ''}
+        
         <div style="margin-top: 40px; text-align: center;">
-          <a href="https://camisavetor.com" style="background-color: #fe7302; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Acessar o Site</a>
+          <a href="${type === 'marketing' && marketingButtonLink ? marketingButtonLink : 'https://camisavetor.com'}" style="background-color: #fe7302; color: #fff; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: 900; font-size: 16px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">
+            ${type === 'marketing' && marketingButtonText ? marketingButtonText : 'Acessar o Site'}
+          </a>
         </div>
         
         <hr style="border: 0; border-top: 1px solid #222; margin: 30px 0;" />

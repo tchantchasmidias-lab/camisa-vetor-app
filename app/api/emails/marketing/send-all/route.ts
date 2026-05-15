@@ -22,6 +22,9 @@ export async function POST(req: Request) {
     const data = configDoc.data();
     const subject = data?.marketingSubject || '🔥 Novidade na Camisa Vetor!';
     const body = data?.marketingBody || '';
+    const imageUrl = data?.marketingImageUrl || '';
+    const buttonText = data?.marketingButtonText || 'Aproveitar Agora';
+    const buttonLink = data?.marketingButtonLink || 'https://camisavetor.com';
 
     if (!body) {
       return NextResponse.json({ error: 'O corpo do e-mail de marketing está vazio' }, { status: 400 });
@@ -61,8 +64,15 @@ export async function POST(req: Request) {
             <div style="font-size: 16px; line-height: 1.6; color: #ccc;">
               ${htmlBody}
             </div>
+            
+            ${imageUrl ? `
+            <div style="margin-top: 30px; text-align: center; border-radius: 12px; overflow: hidden; border: 1px solid #333;">
+              <img src="${imageUrl}" alt="Promoção Camisa Vetor" style="width: 100%; max-width: 600px; height: auto; display: block;" />
+            </div>
+            ` : ''}
+
             <div style="margin-top: 40px; text-align: center;">
-              <a href="https://camisavetor.com" style="background-color: #fe7302; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Aproveitar Agora</a>
+              <a href="${buttonLink}" style="background-color: #fe7302; color: #fff; padding: 16px 32px; text-decoration: none; border-radius: 12px; font-weight: 900; font-size: 16px; display: inline-block; text-transform: uppercase; letter-spacing: 1px;">${buttonText}</a>
             </div>
             <hr style="border: 0; border-top: 1px solid #222; margin: 30px 0;" />
             <p style="font-size: 12px; color: #555; text-align: center;">

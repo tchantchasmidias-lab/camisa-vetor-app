@@ -33,6 +33,9 @@ export default function AdminPage() {
     deliveryBody: 'Olá {{nome}}, muito obrigado pela compra. Seguem abaixo os links para baixar seus arquivos.\n\n{{links}}',
     marketingSubject: '🔥 Novidade na Camisa Vetor!',
     marketingBody: 'Olá {{nome}}, temos pacotes novos disponíveis com desconto especial para você.',
+    marketingImageUrl: '',
+    marketingButtonText: 'Aproveitar Agora',
+    marketingButtonLink: 'https://camisavetor.com',
   });
   const [isSavingEmails, setIsSavingEmails] = useState(false);
   const [isSendingMarketing, setIsSendingMarketing] = useState(false);
@@ -149,10 +152,22 @@ export default function AdminPage() {
 
     setIsTestingEmail(p => ({ ...p, [type]: true }));
     try {
+      const payload = { 
+        email: adminEmail, 
+        subject, 
+        body, 
+        type,
+        ...(type === 'marketing' && {
+          marketingImageUrl: emailTemplates.marketingImageUrl,
+          marketingButtonText: emailTemplates.marketingButtonText,
+          marketingButtonLink: emailTemplates.marketingButtonLink
+        })
+      };
+
       const res = await fetch('/api/emails/test-send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: adminEmail, subject, body, type })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
@@ -250,6 +265,21 @@ export default function AdminPage() {
       alert("Imagem da categoria atualizada!");
     } catch (e) { alert("Erro ao subir imagem"); }
     setLoading(false);
+  };
+
+  // UPLOAD DA IMAGEM DE MARKETING
+  const handleMarketingImageUpload = async (file: File) => {
+    setIsSavingEmails(true);
+    try {
+      const url = await uploadFile(file, 'marketing');
+      setEmailTemplates(p => ({ ...p, marketingImageUrl: url }));
+      alert("Imagem enviada! Não esqueça de clicar em 'Salvar Modelos de E-mail' no final da página.");
+    } catch (e) {
+      alert("Erro ao enviar imagem.");
+      console.error(e);
+    } finally {
+      setIsSavingEmails(false);
+    }
   };
 
   const handleAddCategory = async (e: any) => {
@@ -990,7 +1020,59 @@ export default function AdminPage() {
                     ></textarea>
                   </div>
 
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Banner Promocional (Opcional)</label>
+                    <div className="flex items-center gap-6 p-4 bg-white/[0.02] rounded-[2rem] border border-white/5">
+                      <div className="relative w-32 h-20 bg-black/40 rounded-2xl border border-white/5 flex items-center justify-center overflow-hidden group-hover:border-[#fe7302]/50 transition-all shadow-inner">
+                        {emailTemplates.marketingImageUrl ? (
+                          <img src={emailTemplates.marketingImageUrl} alt="Banner" className="w-full h-full object-cover" />
+                        ) : (
+                          <ImageIcon size={24} className="text-gray-700" />
+                        )}
+                        <input 
+                          type="file" 
+                          accept="image/*"
+                          onChange={(e) => e.target.files?.[0] && handleMarketingImageUpload(e.target.files[0])}
+                          className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[11px] font-bold text-gray-400">Clique na caixa ao lado para fazer upload.</p>
+                        <p className="text-[9px] text-gray-600 mt-1">Recomendado: Formato paisagem (ex: 600x300px).</p>
+                        {emailTemplates.marketingImageUrl && (
+                          <button 
+                            onClick={() => setEmailTemplates(p => ({...p, marketingImageUrl: ''}))}
+                            className="mt-2 text-[10px] text-red-500 hover:text-red-400 font-bold"
+                          >
+                            Remover Imagem
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-4">
+                      <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Texto do Botão</label>
+                      <input 
+                        value={emailTemplates.marketingButtonText}
+                        onChange={e => setEmailTemplates(p => ({...p, marketingButtonText: e.target.value}))}
+                        placeholder="Ex: Aproveitar Agora"
+                        className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all" 
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Link do Botão</label>
+                      <input 
+                        value={emailTemplates.marketingButtonLink}
+                        onChange={e => setEmailTemplates(p => ({...p, marketingButtonLink: e.target.value}))}
+                        placeholder="Ex: https://camisavetor.com/produtos"
+                        className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all" 
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-white/5">
                     <button 
                       onClick={() => handleTestEmail('marketing', emailTemplates.marketingSubject, emailTemplates.marketingBody)}
                       disabled={isTestingEmail['marketing']}
