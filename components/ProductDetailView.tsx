@@ -5,7 +5,7 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, orderBy, query, doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { Star, Download, Shirt, Info, CheckCircle2, Loader2, ExternalLink, Megaphone, Search } from 'lucide-react';
+import { Star, Download, Shirt, Info, CheckCircle2, Loader2, ExternalLink, Megaphone, Search, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -289,6 +289,19 @@ export default function ProductDetailView({ product }: { product: any }) {
               }`}
             >
               {isAdding ? <><Loader2 size={18} className="animate-spin mr-3"/> {t('processing')}...</> : t('addToCart')}
+            </button>
+
+            <button
+              onClick={() => {
+                const url = window.location.href;
+                const text = `Olha essa estampa incrível na Camisa Vetor: ${product.name}`;
+                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(text + '\n' + url)}`;
+                window.open(whatsappUrl, '_blank');
+              }}
+              className="w-full max-w-md mx-auto md:mx-0 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all border border-[#25D366]/30 text-[#25D366] bg-transparent hover:bg-[#25D366]/10 uppercase tracking-widest text-[10px]"
+            >
+              <MessageCircle size={16} />
+              Compartilhar no WhatsApp
             </button>
           </div>
 
