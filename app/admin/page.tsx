@@ -10,6 +10,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
+  Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
   FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail
 } from 'lucide-react';
 import Image from 'next/image';
