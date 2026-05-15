@@ -11,7 +11,7 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithRedi
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
   Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
-  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail
+  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag
 } from 'lucide-react';
 import Image from 'next/image';
 
@@ -29,6 +29,10 @@ export default function AdminPage() {
     welcomeBody: 'Olá {{nome}}! Seja muito bem-vindo à nossa plataforma. Aqui você encontra os melhores vetores para estamparia.',
     pixSubject: '⏳ Seu pedido está quase lá!',
     pixBody: 'Identificamos o seu pedido. Faça o pagamento para liberar seus arquivos imediatamente.',
+    deliverySubject: '🚀 Seus vetores chegaram!',
+    deliveryBody: 'Olá {{nome}}, muito obrigado pela compra. Seguem abaixo os links para baixar seus arquivos.\n\n{{links}}',
+    marketingSubject: '🔥 Novidade na Camisa Vetor!',
+    marketingBody: 'Olá {{nome}}, temos pacotes novos disponíveis com desconto especial para você.',
   });
   const [isSavingEmails, setIsSavingEmails] = useState(false);
   
@@ -841,6 +845,70 @@ export default function AdminPage() {
                     <textarea 
                       value={emailTemplates.pixBody}
                       onChange={e => setEmailTemplates(p => ({...p, pixBody: e.target.value}))}
+                      className="w-full h-40 bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all resize-none" 
+                    ></textarea>
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-4">Use {'{{nome}}'} e {'{{codigo_pix}}'}.</p>
+                  </div>
+                </div>
+
+                {/* E-MAIL ENTREGA */}
+                <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-green-500/10 text-green-500 flex items-center justify-center">
+                      <Package size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-black text-white uppercase tracking-widest">Entrega dos Vetores</h3>
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Links de Download (Pós-Pagamento)</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Assunto do E-mail</label>
+                    <input 
+                      value={emailTemplates.deliverySubject}
+                      onChange={e => setEmailTemplates(p => ({...p, deliverySubject: e.target.value}))}
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all" 
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Corpo da Mensagem (Suporta variáveis)</label>
+                    <textarea 
+                      value={emailTemplates.deliveryBody}
+                      onChange={e => setEmailTemplates(p => ({...p, deliveryBody: e.target.value}))}
+                      className="w-full h-40 bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all resize-none" 
+                    ></textarea>
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-4">Use {'{{nome}}'} e {'{{links}}'}.</p>
+                  </div>
+                </div>
+
+                {/* E-MAIL MARKETING */}
+                <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
+                      <Tag size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-black text-white uppercase tracking-widest">Marketing</h3>
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Promoções e Avisos</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Assunto do E-mail</label>
+                    <input 
+                      value={emailTemplates.marketingSubject}
+                      onChange={e => setEmailTemplates(p => ({...p, marketingSubject: e.target.value}))}
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all" 
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Corpo da Mensagem</label>
+                    <textarea 
+                      value={emailTemplates.marketingBody}
+                      onChange={e => setEmailTemplates(p => ({...p, marketingBody: e.target.value}))}
                       className="w-full h-40 bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all resize-none" 
                     ></textarea>
                   </div>

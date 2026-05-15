@@ -97,23 +97,43 @@ export async function POST(req: Request) {
     if (process.env.RESEND_API_KEY) {
       const resend = new Resend(process.env.RESEND_API_KEY);
       const linksHtml = productsLinks.map((item: any) => `
-        <div style="margin-bottom: 15px; padding: 10px; border: 1px solid #eee; border-radius: 8px;">
-          <strong>${item.name}</strong><br/>
-          <a href="${item.directLink}" style="color: #fe7302; font-weight: bold;">Clique aqui para baixar</a>
+        <div style="margin-bottom: 15px; padding: 20px; background-color: #222; border: 1px solid #333; border-radius: 12px;">
+          <strong style="color: #fff; display: block; margin-bottom: 10px; font-size: 16px;">${item.name}</strong>
+          <a href="${item.directLink}" style="background-color: #fe7302; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">Fazer Download Seguro</a>
         </div>
       `).join('');
 
+      // Buscar template dinâmico
+      const configDoc = await adminDb.collection('configuracoes').doc('email_templates').get();
+      let subject = '🚀 Seus vetores chegaram!';
+      let body = 'Olá {{nome}}, muito obrigado pela compra. Seguem abaixo os links para baixar seus arquivos.\n\n{{links}}';
+      
+      if (configDoc.exists) {
+        const data = configDoc.data();
+        if (data?.deliverySubject) subject = data.deliverySubject;
+        if (data?.deliveryBody) body = data.deliveryBody;
+      }
+
+      // Substituir variáveis
+      const customerName = metadata?.firstName || 'Cliente';
+      const finalSubject = subject.replace(/{{nome}}/g, customerName);
+      
+      // Converte quebras de linha mas preserva a tag {{links}} para substituir pelo HTML
+      let htmlBody = body.replace(/{{nome}}/g, customerName).replace(/\n/g, '<br>');
+      htmlBody = htmlBody.replace(/{{links}}/g, linksHtml);
+
       await resend.emails.send({
-        from: 'Camisa Vetor <contato@camisa-vetor.com>',
+        from: 'Camisa Vetor <contato@camisavetor.com>',
         to: email,
-        subject: '🚀 Seus Vetores Chegaram!',
+        subject: finalSubject,
         html: `
-          <div style="font-family: sans-serif; max-width: 600px; color: #333;">
-            <h1 style="color: #fe7302;">Pagamento Confirmado!</h1>
-            <p>Olá! Seus arquivos já estão disponíveis para download:</p>
-            ${linksHtml}
-            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
-            <p style="font-size: 12px; color: #999;">Obrigado por comprar na Camisa Vetor!</p>
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111; color: #fff; padding: 40px; border-radius: 16px;">
+            <h1 style="color: #fe7302; margin-top: 0;">Pagamento Aprovado!</h1>
+            <div style="font-size: 16px; line-height: 1.6; color: #ccc;">
+              ${htmlBody}
+            </div>
+            <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #666; text-align: center;">Obrigado por comprar na Camisa Vetor! Este é um e-mail automático.</p>
           </div>
         `
       });

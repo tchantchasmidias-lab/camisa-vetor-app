@@ -112,6 +112,14 @@ function LoginPageContent() {
           email,
           createdAt: new Date().toISOString()
         });
+        
+        // Gatilho: Enviar e-mail de Boas-vindas (assíncrono)
+        fetch('/api/emails/welcome', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, nome })
+        }).catch(console.error);
+        
       } else {
         await signInWithEmailAndPassword(auth, email, password);
       }
