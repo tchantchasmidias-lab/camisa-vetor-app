@@ -4,9 +4,9 @@ import { v4 as uuidv4 } from 'uuid';
 import { Resend } from 'resend';
 import { adminDb } from '@/lib/firebaseAdmin';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(req: Request) {
+  const resend = new Resend(process.env.RESEND_API_KEY || 're_stub');
   try {
     const body = await req.json();
     const { items, email, firstName, cpf } = body;
