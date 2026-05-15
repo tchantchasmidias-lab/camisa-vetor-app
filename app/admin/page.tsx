@@ -36,6 +36,7 @@ export default function AdminPage() {
   });
   const [isSavingEmails, setIsSavingEmails] = useState(false);
   const [isSendingMarketing, setIsSendingMarketing] = useState(false);
+  const [isTestingEmail, setIsTestingEmail] = useState<Record<string, boolean>>({});
   
   // ESTADOS DE AUTENTICAÇÃO DO ADMIN
   const [isAdmin, setIsAdmin] = useState(false);
@@ -139,6 +140,31 @@ export default function AdminPage() {
       alert('Erro ao disparar campanha: ' + error.message);
     } finally {
       setIsSendingMarketing(false);
+    }
+  };
+
+  const handleTestEmail = async (type: string, subject: string, body: string) => {
+    const adminEmail = auth.currentUser?.email;
+    if (!adminEmail) return alert('Você precisa estar logado para enviar um teste.');
+
+    setIsTestingEmail(p => ({ ...p, [type]: true }));
+    try {
+      const res = await fetch('/api/emails/test-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: adminEmail, subject, body, type })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`E-mail de teste enviado para ${adminEmail}. Verifique sua caixa de entrada (e o spam)!`);
+      } else {
+        throw new Error(data.error);
+      }
+    } catch (error: any) {
+      console.error('Erro ao testar e-mail:', error);
+      alert('Erro ao enviar teste: ' + error.message);
+    } finally {
+      setIsTestingEmail(p => ({ ...p, [type]: false }));
     }
   };
 
@@ -838,7 +864,17 @@ export default function AdminPage() {
                     ></textarea>
                     <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-4">Use {'{{nome}}'} para incluir o nome do cliente.</p>
                   </div>
+
+                  <button 
+                    onClick={() => handleTestEmail('welcome', emailTemplates.welcomeSubject, emailTemplates.welcomeBody)}
+                    disabled={isTestingEmail['welcome']}
+                    className="w-full bg-white/5 text-white/50 border border-white/10 py-3 rounded-xl font-bold uppercase tracking-widest text-[9px] hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    {isTestingEmail['welcome'] ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                    Enviar E-mail de Teste para Mim
+                  </button>
                 </div>
+
 
                 {/* E-MAIL PIX */}
                 <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
@@ -870,7 +906,17 @@ export default function AdminPage() {
                     ></textarea>
                     <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-4">Use {'{{nome}}'} e {'{{codigo_pix}}'}.</p>
                   </div>
+
+                  <button 
+                    onClick={() => handleTestEmail('pix', emailTemplates.pixSubject, emailTemplates.pixBody)}
+                    disabled={isTestingEmail['pix']}
+                    className="w-full bg-white/5 text-white/50 border border-white/10 py-3 rounded-xl font-bold uppercase tracking-widest text-[9px] hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    {isTestingEmail['pix'] ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                    Enviar E-mail de Teste para Mim
+                  </button>
                 </div>
+
 
                 {/* E-MAIL ENTREGA */}
                 <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
@@ -902,7 +948,17 @@ export default function AdminPage() {
                     ></textarea>
                     <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-4">Use {'{{nome}}'} e {'{{links}}'}.</p>
                   </div>
+
+                  <button 
+                    onClick={() => handleTestEmail('delivery', emailTemplates.deliverySubject, emailTemplates.deliveryBody)}
+                    disabled={isTestingEmail['delivery']}
+                    className="w-full bg-white/5 text-white/50 border border-white/10 py-3 rounded-xl font-bold uppercase tracking-widest text-[9px] hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    {isTestingEmail['delivery'] ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                    Enviar E-mail de Teste para Mim
+                  </button>
                 </div>
+
 
                 {/* E-MAIL MARKETING */}
                 <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
@@ -934,15 +990,27 @@ export default function AdminPage() {
                     ></textarea>
                   </div>
 
-                  <button 
-                    onClick={handleSendMarketing}
-                    disabled={isSendingMarketing}
-                    className="w-full bg-purple-600/20 text-purple-400 border border-purple-500/30 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-purple-600 hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50"
-                  >
-                    {isSendingMarketing ? <Loader2 size={16} className="animate-spin" /> : <Megaphone size={16} />}
-                    Disparar Campanha para Todos os Clientes
-                  </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button 
+                      onClick={() => handleTestEmail('marketing', emailTemplates.marketingSubject, emailTemplates.marketingBody)}
+                      disabled={isTestingEmail['marketing']}
+                      className="bg-white/5 text-white/50 border border-white/10 py-4 rounded-2xl font-bold uppercase tracking-widest text-[9px] hover:bg-white/10 hover:text-white transition-all flex items-center justify-center gap-2"
+                    >
+                      {isTestingEmail['marketing'] ? <Loader2 size={14} className="animate-spin" /> : <Mail size={14} />}
+                      Enviar Teste para Mim
+                    </button>
+
+                    <button 
+                      onClick={handleSendMarketing}
+                      disabled={isSendingMarketing}
+                      className="bg-purple-600/20 text-purple-400 border border-purple-500/30 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-purple-600 hover:text-white transition-all flex items-center justify-center gap-3 disabled:opacity-50"
+                    >
+                      {isSendingMarketing ? <Loader2 size={16} className="animate-spin" /> : <Megaphone size={16} />}
+                      Disparar Campanha para Todos
+                    </button>
+                  </div>
                 </div>
+
 
 
                 {/* BOTÃO SALVAR GERAL */}

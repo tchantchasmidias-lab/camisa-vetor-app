@@ -138,13 +138,21 @@ export async function POST(req: Request) {
         to: email,
         subject: finalSubject,
         html: `
-          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111; color: #fff; padding: 40px; border-radius: 16px;">
-            <h1 style="color: #fe7302; margin-top: 0;">Pagamento Aprovado!</h1>
+          <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111; color: #fff; padding: 40px; border-radius: 16px; border: 1px solid #222;">
+            <div style="text-align: center; margin-bottom: 30px;">
+              <div style="display: inline-block; background-color: #fe7302; padding: 10px; border-radius: 12px; margin-bottom: 10px;">
+                <img src="https://camisavetor.com/logo-icon.png" alt="CV" width="30" height="30" style="display: block;" />
+              </div>
+              <div style="color: #fe7302; font-size: 18px; font-weight: 900; letter-spacing: 3px; text-transform: uppercase;">Camisa Vetor</div>
+            </div>
+
             <div style="font-size: 16px; line-height: 1.6; color: #ccc;">
               ${htmlBody}
             </div>
-            <hr style="border: 0; border-top: 1px solid #333; margin: 30px 0;" />
-            <p style="font-size: 12px; color: #666; text-align: center;">Obrigado por comprar na Camisa Vetor! Este é um e-mail automático.</p>
+            <hr style="border: 0; border-top: 1px solid #222; margin: 30px 0;" />
+            <p style="font-size: 12px; color: #555; text-align: center;">
+              &copy; ${new Date().getFullYear()} Camisa Vetor
+            </p>
           </div>
         `
       });
