@@ -10,18 +10,26 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
-  Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
-  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star
+  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail
 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'produtos' | 'design'>('produtos');
+  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails'>('produtos');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [metricas, setMetricas] = useState({ clientes: 0, topVendido: 'Nenhum', vendaMensal: 0, topAvaliado: 'Nenhum' });
   const [banner, setBanner] = useState({ imageUrl: '', link: '' });
+  
+  // ESTADOS DE EMAIL
+  const [emailTemplates, setEmailTemplates] = useState({
+    welcomeSubject: '🎉 Bem-vindo à Camisa Vetor!',
+    welcomeBody: 'Olá {{nome}}! Seja muito bem-vindo à nossa plataforma. Aqui você encontra os melhores vetores para estamparia.',
+    pixSubject: '⏳ Seu pedido está quase lá!',
+    pixBody: 'Identificamos o seu pedido. Faça o pagamento para liberar seus arquivos imediatamente.',
+  });
+  const [isSavingEmails, setIsSavingEmails] = useState(false);
   
   // ESTADOS DE AUTENTICAÇÃO DO ADMIN
   const [isAdmin, setIsAdmin] = useState(false);
@@ -89,7 +97,23 @@ export default function AdminPage() {
       const configSnap = await getDocs(collection(db, "configuracoes"));
       const bData = configSnap.docs.find(d => d.id === 'sidebar_banner')?.data();
       if (bData) setBanner({ imageUrl: bData.imageUrl, link: bData.link });
+
+      const emailData = configSnap.docs.find(d => d.id === 'email_templates')?.data();
+      if (emailData) setEmailTemplates(prev => ({ ...prev, ...emailData }));
     } catch (e) { console.error(e); }
+  };
+
+  const handleSaveEmails = async () => {
+    setIsSavingEmails(true);
+    try {
+      await setDoc(doc(db, "configuracoes", "email_templates"), emailTemplates, { merge: true });
+      alert('Modelos de e-mail salvos com sucesso!');
+    } catch (e) {
+      console.error(e);
+      alert('Erro ao salvar modelos.');
+    } finally {
+      setIsSavingEmails(false);
+    }
   };
 
   useEffect(() => {
@@ -430,6 +454,7 @@ export default function AdminPage() {
           <div className="flex items-center gap-4 bg-[#111111] p-2 rounded-2xl border border-white/5">
              <button onClick={() => setActiveTab('produtos')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
              <button onClick={() => setActiveTab('design')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
+             <button onClick={() => setActiveTab('emails')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
              <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
              <button onClick={handleAdminLogout} className="p-3 text-red-500/50 hover:text-red-500 transition-colors"><X size={20}/></button>
           </div>
@@ -743,6 +768,93 @@ export default function AdminPage() {
                   <p className="text-[11px] text-gray-500 leading-relaxed">
                     Sempre use imagens de capa com **fundo limpo** e em formato **4:5** para manter a elegância da vitrine. Vetores bem descritos e com palavras-chave corretas vendem até **3x mais** através do Google.
                   </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'emails' && (
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-px flex-1 bg-white/5"></div>
+                <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Gerenciador de E-mails</h2>
+                <div className="h-px flex-1 bg-white/5"></div>
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24">
+                {/* E-MAIL BOAS VINDAS */}
+                <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
+                      <Mail size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-black text-white uppercase tracking-widest">Boas-Vindas</h3>
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Novo Cliente Cadastrado</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Assunto do E-mail</label>
+                    <input 
+                      value={emailTemplates.welcomeSubject}
+                      onChange={e => setEmailTemplates(p => ({...p, welcomeSubject: e.target.value}))}
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all" 
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Corpo da Mensagem (Suporta variáveis)</label>
+                    <textarea 
+                      value={emailTemplates.welcomeBody}
+                      onChange={e => setEmailTemplates(p => ({...p, welcomeBody: e.target.value}))}
+                      className="w-full h-40 bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all resize-none" 
+                    ></textarea>
+                    <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest ml-4">Use {'{{nome}}'} para incluir o nome do cliente.</p>
+                  </div>
+                </div>
+
+                {/* E-MAIL PIX */}
+                <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl space-y-6">
+                  <div className="flex items-center gap-4 mb-8">
+                    <div className="w-12 h-12 rounded-2xl bg-orange-500/10 text-[#fe7302] flex items-center justify-center">
+                      <Mail size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-[14px] font-black text-white uppercase tracking-widest">Aguardando Pagamento</h3>
+                      <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Pedido Pix ou Boleto Gerado</p>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Assunto do E-mail</label>
+                    <input 
+                      value={emailTemplates.pixSubject}
+                      onChange={e => setEmailTemplates(p => ({...p, pixSubject: e.target.value}))}
+                      className="w-full bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all" 
+                    />
+                  </div>
+
+                  <div className="space-y-4">
+                    <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Corpo da Mensagem</label>
+                    <textarea 
+                      value={emailTemplates.pixBody}
+                      onChange={e => setEmailTemplates(p => ({...p, pixBody: e.target.value}))}
+                      className="w-full h-40 bg-white/5 border border-white/10 rounded-[1.5rem] p-5 text-[12px] text-white outline-none focus:border-[#fe7302]/50 transition-all resize-none" 
+                    ></textarea>
+                  </div>
+                </div>
+
+                {/* BOTÃO SALVAR GERAL */}
+                <div className="lg:col-span-2 flex justify-end">
+                  <button 
+                    onClick={handleSaveEmails}
+                    disabled={isSavingEmails}
+                    className="bg-[#fe7302] text-white px-10 py-5 rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] shadow-2xl shadow-orange-900/50 hover:bg-[#ff8a2b] transition-all flex items-center gap-3 disabled:opacity-50"
+                  >
+                    {isSavingEmails ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                    Salvar Modelos de E-mail
+                  </button>
                 </div>
               </div>
             </div>
