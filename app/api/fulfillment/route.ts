@@ -108,14 +108,25 @@ export async function POST(req: Request) {
       let subject = '🚀 Seus vetores chegaram!';
       let body = 'Olá {{nome}}, muito obrigado pela compra. Seguem abaixo os links para baixar seus arquivos.\n\n{{links}}';
       
+
       if (configDoc.exists) {
         const data = configDoc.data();
         if (data?.deliverySubject) subject = data.deliverySubject;
         if (data?.deliveryBody) body = data.deliveryBody;
       }
 
+      // Buscar nome do cliente no Firestore
+      let customerName = 'Cliente';
+      try {
+        const userDoc = await adminDb.collection('users').doc(userId).get();
+        if (userDoc.exists) {
+          customerName = userDoc.data()?.nome || 'Cliente';
+        }
+      } catch (e) {
+        console.error("Erro ao buscar nome do cliente:", e);
+      }
+
       // Substituir variáveis
-      const customerName = metadata?.firstName || 'Cliente';
       const finalSubject = subject.replace(/{{nome}}/g, customerName);
       
       // Converte quebras de linha mas preserva a tag {{links}} para substituir pelo HTML
