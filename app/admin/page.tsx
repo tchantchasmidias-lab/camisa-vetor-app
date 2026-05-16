@@ -759,6 +759,7 @@ export default function AdminPage() {
               <div className="space-y-6">
                 <div className="flex items-center gap-4">
                   <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Produtos Cadastrados</h2>
+                  <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">{products.length} PRODUTOS</span>
                   <div className="h-px flex-1 bg-white/5"></div>
                 </div>
                 
