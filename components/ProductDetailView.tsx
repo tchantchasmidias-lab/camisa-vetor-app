@@ -159,7 +159,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
   return (
     <div className="w-full bg-white font-sans text-[#4a4a4a] animate-in fade-in duration-700">
-      <div className="max-w-7xl mx-auto px-4 pt-0 pb-4">
+      <div className="max-w-[1400px] mx-auto px-4 pt-0 pb-4">
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start">
 
           {/* COLUNA 1: GALERIA INTERATIVA */}
