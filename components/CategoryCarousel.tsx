@@ -92,6 +92,7 @@ function CategoryCarouselContent() {
           name: d.data().name || '',
           imageUrl: d.data().imageUrl || '',
         }));
+        list.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
         setCategories(list);
       } catch (err) {
         console.error('Erro ao carregar categorias:', err);

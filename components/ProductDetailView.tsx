@@ -109,7 +109,9 @@ export default function ProductDetailView({ product }: { product: any }) {
     const fetchSidebarData = async () => {
       try {
         const cSnap = await getDocs(query(collection(db, "categories"), orderBy("name", "asc")));
-        setDbCategories(cSnap.docs.map(d => d.data().name));
+        const catNames = cSnap.docs.map(d => d.data().name as string);
+        catNames.sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+        setDbCategories(catNames);
         const bSnap = await getDoc(doc(db, "configuracoes", "sidebar_banner"));
         if (bSnap.exists()) setSidebarBanner(bSnap.data() as any);
       } catch (e) { console.error(e); } finally { setLoadingSidebar(false); }
