@@ -1,10 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    unoptimized: true,
+    // 🚀 OTIMIZAÇÃO ATIVADA: Next.js converte automaticamente para WebP/AVIF
+    // e serve o tamanho exato para cada dispositivo
+    formats: ['image/avif', 'image/webp'],
+    deviceSizes: [390, 430, 768, 1024, 1280, 1400, 1920],
+    imageSizes: [64, 128, 256, 384, 512],
+    minimumCacheTTL: 31536000, // 1 ano de cache para imagens otimizadas
     remotePatterns: [
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
-      { protocol: 'https', hostname: 'firebasestorage.app' }, // Domínio do seu novo bucket
+      { protocol: 'https', hostname: 'firebasestorage.app' },
     ],
   },
   async rewrites() {
