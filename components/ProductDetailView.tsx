@@ -177,7 +177,8 @@ export default function ProductDetailView({ product }: { product: any }) {
                       src={url} 
                       alt={`Imagem ${idx}`} 
                       fill 
-                      sizes="(max-width: 1024px) 100vw, 45vw"
+                      
+                       quality={85}
                       className={`object-cover transition-transform duration-500 ease-out pointer-events-none lg:pointer-events-auto ${isZoomed && selectedImage === url ? 'scale-[2.5]' : 'scale-100'}`}
                       style={{ transformOrigin: zoomPos }}
                       priority={idx === 0}
@@ -198,7 +199,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   onClick={() => handleThumbnailClick(url, index)}
                   className={`aspect-square relative rounded-2xl overflow-hidden border-2 transition-all duration-300 ${selectedImage === url ? 'border-[#fe7302] shadow-md shadow-orange-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
                 >
-                  <Image src={url} alt={`Preview ${index}`} fill sizes="128px" className="object-cover" />
+                  <Image src={url} alt={`Preview ${index}`} fill sizes="128px" quality={85} className="object-cover" />
                 </button>
               ))}
             </div>

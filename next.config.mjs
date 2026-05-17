@@ -2,9 +2,7 @@
 const nextConfig = {
   images: {
     // 🚀 OTIMIZAÇÃO: WebP apenas (sem AVIF para preservar qualidade das artes)
-    // Qualidade 85 garante que nunca perde abaixo do WebP 80% exportado pelo CorelDraw
     formats: ['image/webp'],
-    quality: 85,
     deviceSizes: [390, 430, 768, 1024, 1280, 1400, 1920],
     imageSizes: [64, 128, 256, 384, 512],
     minimumCacheTTL: 31536000, // 1 ano de cache para imagens otimizadas
