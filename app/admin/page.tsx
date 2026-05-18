@@ -509,7 +509,7 @@ export default function AdminPage() {
                 type="button" onClick={handleGoogleLogin}
                 className="w-full bg-white/5 border border-white/10 text-white font-black py-4 rounded-2xl hover:bg-white/10 transition-all uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4"
               >
-                <Image src="https://www.google.com/favicon.ico" alt="Google" width={18} height={18} className="brightness-125" />
+                <Image src="/google.svg" alt="Google" width={18} height={18} />
                 Entrar com Google
               </button>
             </form>
