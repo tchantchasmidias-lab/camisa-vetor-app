@@ -1,4 +1,8 @@
 {
+  "apphosting": {
+    "backendId": "camisa-vetor-app",
+    "rootDir": "."
+  },
   "hosting": {
     "source": ".",
     "ignore": [
