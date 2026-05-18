@@ -322,22 +322,6 @@ export default function ProductDetailView({ product }: { product: any }) {
               </nav>
             </div>
 
-            {!loadingSidebar && sidebarBanner?.imageUrl && (
-              <div className="pt-6 border-t border-[#f1f3f4] animate-in slide-in-from-bottom-4 duration-1000 text-center">
-                <h3 className="text-[10px] font-bold text-[#999] uppercase tracking-[0.3em] mb-4 flex items-center justify-center gap-2">
-                  <Megaphone size={12} className="text-[#fe7302]" /> {t('advertising')}
-                </h3>
-                <Link href={sidebarBanner.link || '#'} target="_blank">
-                  <div className="relative aspect-[4/5] w-full rounded-2xl overflow-hidden border border-[#dadce0] shadow-md hover:shadow-2xl transition-all group">
-                    <Image src={sidebarBanner.imageUrl} alt="Publicidade" fill className="object-cover group-hover:scale-105 transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-black/5 group-hover:bg-transparent" />
-                    <div className="absolute bottom-4 right-4 p-2.5 bg-white rounded-full shadow-xl opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all">
-                      <ExternalLink size={14} className="text-[#fe7302]" />
-                    </div>
-                  </div>
-                </Link>
-              </div>
-            )}
           </aside>
 
         </div>
