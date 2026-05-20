@@ -11,17 +11,22 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithRedi
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
   Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
-  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag
+  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag, Clock, Search, Calendar
 } from 'lucide-react';
 import Image from 'next/image';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails'>('produtos');
+  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos'>('produtos');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [categorias, setCategorias] = useState<any[]>([]);
   const [metricas, setMetricas] = useState({ clientes: 0, topVendido: 'Nenhum', vendaMensal: 0, topAvaliado: 'Nenhum' });
   const [banner, setBanner] = useState({ imageUrl: '', link: '' });
+  
+  // ESTADOS DE PEDIDOS
+  const [pedidos, setPedidos] = useState<any[]>([]);
+  const [filtroStatus, setFiltroStatus] = useState<'todos' | 'pago' | 'pendente' | 'cancelado'>('todos');
+  const [buscaPedido, setBuscaPedido] = useState('');
   
   // ESTADOS DE EMAIL
   const [emailTemplates, setEmailTemplates] = useState({
@@ -110,7 +115,32 @@ export default function AdminPage() {
 
       const emailData = configSnap.docs.find(d => d.id === 'email_templates')?.data();
       if (emailData) setEmailTemplates(prev => ({ ...prev, ...emailData }));
+
+      // Buscar Pedidos
+      try {
+        const pedSnap = await getDocs(collection(db, "pedidos"));
+        const pedList: any[] = pedSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+        pedList.sort((a, b) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
+          return dateB.getTime() - dateA.getTime();
+        });
+        setPedidos(pedList);
+      } catch (err) {
+        console.error("Erro ao buscar pedidos", err);
+      }
     } catch (e) { console.error(e); }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: string, newStatus: 'pago' | 'pendente' | 'cancelado') => {
+    try {
+      await updateDoc(doc(db, "pedidos", orderId), { status: newStatus });
+      setPedidos(prev => prev.map(p => p.id === orderId ? { ...p, status: newStatus } : p));
+      alert(`Status do pedido atualizado para '${newStatus}' com sucesso!`);
+    } catch (error: any) {
+      console.error("Erro ao atualizar status do pedido:", error);
+      alert("Erro ao atualizar status: " + error.message);
+    }
   };
 
   const handleSaveEmails = async () => {
@@ -533,10 +563,11 @@ export default function AdminPage() {
             <h1 className="text-[20px] font-black text-white uppercase tracking-[0.3em] mb-2">Dashboard</h1>
             <p className="text-[9px] font-bold text-[#fe7302] uppercase tracking-[0.4em]">Gestão de Ativos Digitais</p>
           </div>
-          <div className="flex items-center gap-4 bg-[#111111] p-2 rounded-2xl border border-white/5">
-             <button onClick={() => setActiveTab('produtos')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
-             <button onClick={() => setActiveTab('design')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
-             <button onClick={() => setActiveTab('emails')} className={`px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
+          <div className="flex flex-wrap items-center gap-4 bg-[#111111] p-2 rounded-2xl border border-white/5">
+             <button onClick={() => setActiveTab('produtos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
+             <button onClick={() => setActiveTab('pedidos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pedidos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Vendas</button>
+             <button onClick={() => setActiveTab('design')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
+             <button onClick={() => setActiveTab('emails')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
              <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
              <button onClick={handleAdminLogout} className="p-3 text-red-500/50 hover:text-red-500 transition-colors"><X size={20}/></button>
           </div>
@@ -1107,6 +1138,183 @@ export default function AdminPage() {
                     Salvar Modelos de E-mail
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'pedidos' && (
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700 space-y-8">
+              {/* CABEÇALHO DA ABA */}
+              <div className="flex items-center gap-4">
+                <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Gestão de Pedidos & Pagamentos</h2>
+                <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">{pedidos.length} PEDIDOS</span>
+                <div className="h-px flex-1 bg-white/5"></div>
+              </div>
+
+              {/* FILTROS E BUSCA */}
+              <div className="flex flex-col md:flex-row gap-6 items-center justify-between bg-[#111111] p-6 rounded-[2rem] border border-white/5 shadow-2xl">
+                {/* Filtro de Status */}
+                <div className="flex flex-wrap gap-2">
+                  {(['todos', 'pago', 'pendente', 'cancelado'] as const).map((status) => (
+                    <button
+                      key={status}
+                      type="button"
+                      onClick={() => setFiltroStatus(status)}
+                      className={`px-5 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest border transition-all ${
+                        filtroStatus === status
+                          ? 'bg-[#fe7302] text-white border-[#fe7302] shadow-lg shadow-orange-600/20'
+                          : 'bg-white/5 text-gray-500 border-white/5 hover:border-white/10 hover:text-white'
+                      }`}
+                    >
+                      {status === 'todos' ? 'Todos' : status === 'pago' ? 'Aprovados' : status === 'pendente' ? 'Pendentes' : 'Cancelados'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Campo de Busca */}
+                <div className="relative w-full md:w-80 flex items-center bg-white/5 border border-white/10 rounded-xl px-4 py-3 focus-within:border-[#fe7302]/50 transition-all">
+                  <Search size={14} className="text-gray-600 mr-3" />
+                  <input
+                    type="text"
+                    placeholder="BUSCAR POR E-MAIL OU ID..."
+                    value={buscaPedido}
+                    onChange={(e) => setBuscaPedido(e.target.value)}
+                    className="w-full bg-transparent text-[10px] font-black uppercase tracking-wider text-white placeholder:text-gray-600 outline-none"
+                  />
+                </div>
+              </div>
+
+              {/* LISTA DE PEDIDOS */}
+              <div className="space-y-6">
+                {(() => {
+                  const filtered = pedidos.filter(p => {
+                    const matchesStatus = filtroStatus === 'todos' || p.status === filtroStatus;
+                    const matchesSearch = !buscaPedido || 
+                      p.email?.toLowerCase().includes(buscaPedido.toLowerCase()) ||
+                      p.id?.toLowerCase().includes(buscaPedido.toLowerCase());
+                    return matchesStatus && matchesSearch;
+                  });
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="bg-[#111111] border border-white/5 rounded-[2.5rem] p-16 text-center">
+                        <Package className="mx-auto text-gray-800 stroke-[1px] mb-4" size={48} />
+                        <p className="text-[10px] font-black uppercase text-gray-500 tracking-widest">Nenhum pedido encontrado.</p>
+                      </div>
+                    );
+                  }
+
+                  return filtered.map(pedido => {
+                    const totalVal = pedido.total || pedido.items?.reduce((sum: number, item: any) => sum + (Number(item.price) * (item.quantity || 1)), 0) || 0;
+                    const formattedTotal = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(totalVal);
+                    
+                    let dateStr = 'Data indisponível';
+                    if (pedido.createdAt) {
+                      try {
+                        const dateObj = pedido.createdAt.toDate ? pedido.createdAt.toDate() : new Date(pedido.createdAt);
+                        dateStr = dateObj.toLocaleString('pt-BR');
+                      } catch (err) {
+                        console.error(err);
+                      }
+                    }
+
+                    return (
+                      <div key={pedido.id} className="bg-[#111111] rounded-[2.5rem] border border-white/5 overflow-hidden hover:border-[#fe7302]/30 transition-all duration-300">
+                        {/* Header do pedido */}
+                        <div className="bg-white/[0.01] border-b border-white/5 px-8 py-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+                          <div className="flex flex-wrap gap-8 items-center">
+                            <div>
+                              <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5">ID Transação</p>
+                              <p className="text-[11px] font-black text-white font-mono uppercase text-xs">#{pedido.id}</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Cliente</p>
+                              <p className="text-[11px] font-bold text-gray-300">{pedido.email}</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Data / Hora</p>
+                              <p className="text-[11px] font-bold text-gray-400 flex items-center gap-1.5"><Calendar size={12}/>{dateStr}</p>
+                            </div>
+                            <div>
+                              <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Total</p>
+                              <p className="text-[11px] font-black text-[#fe7302]">{formattedTotal}</p>
+                            </div>
+                            {pedido.paymentMethod && (
+                              <div>
+                                <p className="text-[8px] font-black text-gray-500 uppercase tracking-widest mb-1.5">Método</p>
+                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-wider">{pedido.paymentMethod}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Status do pedido & Ações */}
+                          <div className="flex flex-wrap items-center gap-4">
+                            <span className={`px-4 py-2 rounded-full text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 ${
+                              pedido.status === 'pago'
+                                ? 'bg-green-500/10 text-green-500'
+                                : pedido.status === 'pendente'
+                                ? 'bg-orange-500/10 text-orange-500 animate-pulse'
+                                : 'bg-red-500/10 text-red-500'
+                            }`}>
+                              {pedido.status === 'pago' ? <CheckCircle2 size={12}/> : pedido.status === 'pendente' ? <Clock size={12}/> : <X size={12}/>}
+                              {pedido.status === 'pago' ? 'Aprovado' : pedido.status === 'pendente' ? 'Pendente' : 'Cancelado'}
+                            </span>
+
+                            {/* Ações de Alteração de Status */}
+                            <div className="flex gap-2">
+                              {pedido.status !== 'pago' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateOrderStatus(pedido.id, 'pago')}
+                                  className="bg-green-600 hover:bg-green-500 text-white text-[9px] font-black uppercase px-4 py-2 rounded-xl transition-all shadow-lg shadow-green-900/10"
+                                >
+                                  Aprovar
+                                </button>
+                              )}
+                              {pedido.status !== 'pendente' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateOrderStatus(pedido.id, 'pendente')}
+                                  className="bg-orange-600/10 hover:bg-orange-600/20 text-orange-400 text-[9px] font-black uppercase px-4 py-2 rounded-xl border border-orange-500/10 transition-all"
+                                >
+                                  Pendente
+                                </button>
+                              )}
+                              {pedido.status !== 'cancelado' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateOrderStatus(pedido.id, 'cancelado')}
+                                  className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[9px] font-black uppercase px-4 py-2 rounded-xl border border-red-500/10 transition-all"
+                                >
+                                  Cancelar
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Itens do pedido */}
+                        <div className="p-8 space-y-4">
+                          {pedido.items?.map((item: any, idx: number) => (
+                            <div key={idx} className="flex items-center gap-6 bg-white/[0.01] border border-white/5 p-4 rounded-2xl">
+                              {item.image && (
+                                <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-black/40 border border-white/5 flex-shrink-0">
+                                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-[11px] font-black text-white uppercase tracking-wider truncate">{item.name}</p>
+                                <p className="text-[9px] font-bold text-gray-500 uppercase mt-1">
+                                  Qtd: {item.quantity || 1} • Unitário: {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.price)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             </div>
           )}
