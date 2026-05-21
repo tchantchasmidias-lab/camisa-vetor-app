@@ -1,5 +1,5 @@
 import { adminDb } from '@/lib/firebaseAdmin';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import ProductDetailsWrapper from '@/components/ProductDetailsWrapper';
 import { Metadata, ResolvingMetadata } from 'next';
 
@@ -21,6 +21,10 @@ export async function generateMetadata(
 
   if (docSnap.exists) {
     product = { id: docSnap.id, ...docSnap.data() };
+    // Se o acesso foi por ID mas o produto tem slug, redireciona permanentemente (SEO 301/308)
+    if (product.slug && product.slug !== id) {
+      permanentRedirect(`/product/${product.slug}`);
+    }
   } else {
     // Tenta buscar por slug (RG)
     const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
@@ -70,6 +74,10 @@ export default async function Page({ params }: Props) {
 
     if (docSnap.exists) {
       product = { id: docSnap.id, ...docSnap.data() };
+      // Se o acesso foi por ID mas o produto tem slug, redireciona permanentemente (SEO 301/308)
+      if (product.slug && product.slug !== id) {
+        permanentRedirect(`/product/${product.slug}`);
+      }
     } else {
       // Tenta buscar por slug (RG)
       const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
