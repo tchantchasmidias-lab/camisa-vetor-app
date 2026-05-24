@@ -1,7 +1,8 @@
 {
   "apphosting": {
-    "backendId": "camisa-vetor-app",
-    "rootDir": "."
+    "backendId": "camisa-vetor-main",
+    "rootDir": ".",
+    "alwaysDeployFromSource": true
   },
   "hosting": {
     "source": ".",
@@ -18,5 +19,11 @@
         "supportEmail": "tchantchasmidias@gmail.com"
       }
     }
-  }
+  },
+  "functions": [
+    {
+      "source": ".firebase\\camisa-vetor-app\\functions",
+      "codebase": "firebase-frameworks-camisa-vetor-app"
+    }
+  ]
 }

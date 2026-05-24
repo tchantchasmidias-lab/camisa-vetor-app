@@ -19,6 +19,9 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos'>('produtos');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
+  const [buscaProduto, setBuscaProduto] = useState('');
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const ITENS_POR_PAGINA = 10;
   const [categorias, setCategorias] = useState<any[]>([]);
   const [metricas, setMetricas] = useState({ clientes: 0, topVendido: 'Nenhum', vendaMensal: 0, topAvaliado: 'Nenhum' });
   const [banner, setBanner] = useState({ imageUrl: '', link: '' });
@@ -553,6 +556,17 @@ export default function AdminPage() {
     );
   }
 
+  // --- LÓGICA DERIVADA: BUSCA E PAGINAÇÃO DE PRODUTOS ---
+  const produtosFiltrados = products.filter(p =>
+    p.name?.toLowerCase().includes(buscaProduto.toLowerCase()) ||
+    p.category?.toLowerCase().includes(buscaProduto.toLowerCase())
+  );
+  const totalPaginas = Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA);
+  const produtosPaginados = produtosFiltrados.slice(
+    (paginaAtual - 1) * ITENS_POR_PAGINA,
+    paginaAtual * ITENS_POR_PAGINA
+  );
+
   return (
     <div className="min-h-screen bg-[#050505] pt-16 md:pt-10 pb-20 font-sans text-gray-400 selection:bg-[#fe7302]/30">
       <main className="max-w-7xl mx-auto px-4">
@@ -788,35 +802,125 @@ export default function AdminPage() {
 
               {/* LISTAGEM DE GESTÃO */}
               <div className="space-y-6">
+                {/* CABEÇALHO COM BADGE DINÂMICO */}
                 <div className="flex items-center gap-4">
                   <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Produtos Cadastrados</h2>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">{products.length} PRODUTOS</span>
+                  <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">
+                    {buscaProduto
+                      ? `${produtosFiltrados.length} de ${products.length} produtos`
+                      : `${products.length} produtos`
+                    }
+                  </span>
                   <div className="h-px flex-1 bg-white/5"></div>
                 </div>
-                
+
+                {/* CAMPO DE BUSCA */}
+                <div className="relative">
+                  <Search size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none" />
+                  <input
+                    id="admin-product-search"
+                    type="text"
+                    placeholder="Buscar por nome ou categoria..."
+                    value={buscaProduto}
+                    onChange={e => { setBuscaProduto(e.target.value); setPaginaAtual(1); }}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-12 pr-6 py-4 text-[12px] text-white font-medium outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-600"
+                  />
+                  {buscaProduto && (
+                    <span className="absolute right-5 top-1/2 -translate-y-1/2 text-[9px] font-black text-gray-500 uppercase tracking-widest">
+                      {produtosFiltrados.length} resultado{produtosFiltrados.length !== 1 ? 's' : ''}
+                    </span>
+                  )}
+                </div>
+
+                {/* GRID DE PRODUTOS PAGINADOS */}
                 <div className="grid grid-cols-1 gap-4">
-                  {products.map(p => (
-                    <div key={p.id} className="bg-[#111111] p-5 rounded-[2.5rem] border border-white/5 flex items-center justify-between group hover:border-[#fe7302]/40 transition-all shadow-xl">
-                      <div className="flex items-center gap-8">
-                        <div className="w-20 h-24 relative rounded-2xl overflow-hidden bg-black/40 border border-white/5 shadow-inner">
-                          <img src={p.urls?.capa || ""} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                        </div>
-                        <div>
-                          <h3 className="text-[14px] font-black text-white uppercase tracking-tight mb-2">{p.name}</h3>
-                          <div className="flex items-center gap-3">
-                            <span className="text-[12px] text-[#fe7302] font-black">R$ {p.price?.toFixed(2)}</span>
-                            <span className="text-gray-800">•</span>
-                            <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">{p.category}</span>
+                  {produtosPaginados.length === 0 ? (
+                    <div className="text-center py-16 text-gray-600">
+                      <Search size={40} className="mx-auto mb-4 opacity-30" />
+                      <p className="text-[11px] font-black uppercase tracking-widest">
+                        {buscaProduto
+                          ? `Nenhum produto encontrado para "${buscaProduto}"`
+                          : 'Nenhum produto cadastrado ainda'
+                        }
+                      </p>
+                    </div>
+                  ) : (
+                    produtosPaginados.map(p => (
+                      <div key={p.id} className="bg-[#111111] p-5 rounded-[2.5rem] border border-white/5 flex items-center justify-between group hover:border-[#fe7302]/40 transition-all shadow-xl">
+                        <div className="flex items-center gap-8">
+                          <div className="w-20 h-24 relative rounded-2xl overflow-hidden bg-black/40 border border-white/5 shadow-inner">
+                            <img src={p.urls?.capa || ""} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                          </div>
+                          <div>
+                            <h3 className="text-[14px] font-black text-white uppercase tracking-tight mb-2">{p.name}</h3>
+                            <div className="flex items-center gap-3">
+                              <span className="text-[12px] text-[#fe7302] font-black">R$ {p.price?.toFixed(2)}</span>
+                              <span className="text-gray-800">•</span>
+                              <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">{p.category}</span>
+                            </div>
                           </div>
                         </div>
+                        <div className="flex gap-3 pr-4">
+                          <button onClick={() => startEdit(p)} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-[#fe7302] hover:text-white transition-all"><Edit3 size={20}/></button>
+                          <button onClick={async () => { if(confirm("Excluir definitivamente?")) { await deleteDoc(doc(db, "products", p.id)); loadData(); } }} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
+                        </div>
                       </div>
-                      <div className="flex gap-3 pr-4">
-                        <button onClick={() => startEdit(p)} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-[#fe7302] hover:text-white transition-all"><Edit3 size={20}/></button>
-                        <button onClick={async () => { if(confirm("Excluir definitivamente?")) { await deleteDoc(doc(db, "products", p.id)); loadData(); } }} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </div>
+
+                {/* CONTROLES DE PAGINAÇÃO */}
+                {totalPaginas > 1 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/5">
+                    <p className="text-[9px] font-black text-gray-600 uppercase tracking-widest">
+                      {(paginaAtual - 1) * ITENS_POR_PAGINA + 1}–{Math.min(paginaAtual * ITENS_POR_PAGINA, produtosFiltrados.length)} de {produtosFiltrados.length}
+                    </p>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setPaginaAtual(p => Math.max(1, p - 1))}
+                        disabled={paginaAtual === 1}
+                        className="px-5 py-2 rounded-xl bg-white/5 text-gray-500 text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        ← Anterior
+                      </button>
+
+                      {Array.from({ length: totalPaginas }, (_, i) => i + 1)
+                        .filter(n => n === 1 || n === totalPaginas || Math.abs(n - paginaAtual) <= 1)
+                        .reduce<(number | '...')[]>((acc, n, idx, arr) => {
+                          if (idx > 0 && (n as number) - (arr[idx - 1] as number) > 1) acc.push('...');
+                          acc.push(n);
+                          return acc;
+                        }, [])
+                        .map((item, idx) =>
+                          item === '...' ? (
+                            <span key={`ellipsis-${idx}`} className="text-gray-700 text-[10px] font-black px-1">…</span>
+                          ) : (
+                            <button
+                              key={item}
+                              onClick={() => setPaginaAtual(item as number)}
+                              className={`w-9 h-9 rounded-xl text-[10px] font-black transition-all ${
+                                paginaAtual === item
+                                  ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20'
+                                  : 'bg-white/5 text-gray-500 border border-white/5 hover:bg-white/10 hover:text-white'
+                              }`}
+                            >
+                              {item}
+                            </button>
+                          )
+                        )
+                      }
+
+                      <button
+                        onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))}
+                        disabled={paginaAtual === totalPaginas}
+                        className="px-5 py-2 rounded-xl bg-white/5 text-gray-500 text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-white/10 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      >
+                        Próxima →
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
