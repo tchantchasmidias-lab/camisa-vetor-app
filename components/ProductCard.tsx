@@ -38,7 +38,7 @@ export default function ProductCard({ product }: any) {
       <Link href={`/product/${product.slug || product.id}`} className="block">
         <div className="aspect-[4/5] relative overflow-hidden rounded-[1.5rem] bg-[#f8f8f8] mb-4 group-hover:shadow-xl group-hover:shadow-gray-100 transition-all duration-500">
           {imgSrc ? (
-            <Image src={imgSrc} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw" quality={85} className="object-cover transition-transform duration-700 group-hover:scale-105" />
+            <Image src={imgSrc} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw" quality={100} className="object-cover transition-transform duration-700 group-hover:scale-105" />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-200">
                <span className="text-gray-400 text-xs">Sem Imagem</span>
