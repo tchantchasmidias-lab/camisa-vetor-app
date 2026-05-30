@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, Suspense, useMemo } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocsFromServer } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useSearchParams } from 'next/navigation';
 import { useGeo } from '@/lib/i18n/GeoContext';
@@ -42,7 +42,7 @@ function HomeContent() {
     setIsLoading(true);
     setHasError(false);
     try {
-      const querySnapshot = await getDocs(collection(db, "products"));
+      const querySnapshot = await getDocsFromServer(collection(db, "products"));
 
       const productsData = querySnapshot.docs.map(doc => {
         const data = doc.data();
@@ -98,9 +98,7 @@ function HomeContent() {
             {/* Tela de Erro de Conexão */}
             {hasError && !isLoading && (
               <div className="flex flex-col items-center justify-center py-32 gap-4 animate-in fade-in duration-700">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-10 h-10 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18M8.11 8.11A5.002 5.002 0 0112 7c1.306 0 2.487.5 3.374 1.313M15.536 15.536A5 5 0 0112 17a5 5 0 01-5-5c0-.97.28-1.874.764-2.636M1.42 1.42A19.93 19.93 0 002 2m0 0A19.933 19.933 0 0112 5c2.784 0 5.44.567 7.854 1.591" />
-                </svg>
+                <span className="text-5xl">😢</span>
                 <p className="text-[11px] font-medium uppercase tracking-[0.2em] text-[#aaa] text-center">
                   Falha na conexão.<br />Verifique sua internet.
                 </p>
