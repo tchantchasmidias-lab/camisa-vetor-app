@@ -4,14 +4,6 @@
     "rootDir": ".",
     "alwaysDeployFromSource": true
   },
-  "hosting": {
-    "source": ".",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ]
-  },
   "auth": {
     "providers": {
       "googleSignIn": {
@@ -19,11 +11,5 @@
         "supportEmail": "tchantchasmidias@gmail.com"
       }
     }
-  },
-  "functions": [
-    {
-      "source": ".firebase\\camisa-vetor-app\\functions",
-      "codebase": "firebase-frameworks-camisa-vetor-app"
-    }
-  ]
+  }
 }
