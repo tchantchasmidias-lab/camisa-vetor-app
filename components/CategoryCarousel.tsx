@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import Image from 'next/image';
 
 interface Category {
   id: string;
@@ -13,7 +14,7 @@ interface Category {
   imageUrl: string;
 }
 
-function CategoryCard({ name, imageUrl, isActive, onClick }: { name: string; imageUrl: string; isActive: boolean; onClick: () => void }) {
+function CategoryCard({ name, imageUrl, isActive, onClick, priority }: { name: string; imageUrl: string; isActive: boolean; onClick: () => void; priority: boolean }) {
   const { tp } = useGeo();
   const hasImage = imageUrl && imageUrl.trim() !== '';
 
@@ -32,10 +33,14 @@ function CategoryCard({ name, imageUrl, isActive, onClick }: { name: string; ima
       {/* Background */}
       <div className="absolute inset-0 bg-[#111]">
         {hasImage && (
-          <img
+          <Image
             src={imageUrl}
             alt={name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            fill
+            sizes="(max-width: 768px) 145px, 185px"
+            quality={100}
+            priority={priority}
+            className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         )}
       </div>
@@ -154,12 +159,13 @@ function CategoryCarouselContent() {
           ref={scrollRef}
           className="flex gap-3 overflow-x-auto scroll-smooth no-scrollbar px-1 py-2"
         >
-          {categories.map(cat => (
+          {categories.map((cat, index) => (
             <CategoryCard
               key={cat.id}
               name={cat.name}
               imageUrl={cat.imageUrl}
               isActive={activeCategory === cat.name}
+              priority={index < 5}
               onClick={() =>
                 cat.name === t('allCategories')
                   ? router.push('/')
