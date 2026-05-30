@@ -1,0 +1,27 @@
+{
+  "name": "camisa-vetor",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@apphosting/adapter-nextjs": "^14.0.21",
+    "@google/generative-ai": "^0.24.1",
+    "@paypal/react-paypal-js": "^9.2.0",
+    "firebase": "^11.0.1",
+    "firebase-admin": "^13.9.0",
+    "lucide-react": "^1.14.0",
+    "mercadopago": "^2.12.0",
+    "next": "^14.2.35",
+    "react": "^18",
+    "react-dom": "^18",
+    "resend": "^6.12.3",
+    "tailwind-scrollbar-hide": "^4.0.0",
+    "uuid": "^14.0.0",
+    "zod": "^4.4.3",
+    "firebase-frameworks": "^0.11.0",
+    "firebase-functions": "^6.0.1"
+  },
+  "main": "server.js",
+  "engines": {
+    "node": "24"
+  }
+}
