@@ -26,7 +26,7 @@ export const metadata = {
   themeColor: '#fe7302',
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default' as const,
+    statusBarStyle: 'black' as const,
     title: 'Camisa Vetor',
   },
   icons: {

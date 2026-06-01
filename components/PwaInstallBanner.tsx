@@ -23,6 +23,9 @@ export default function PwaInstallBanner() {
     // Não mostra se já está instalado (modo standalone)
     if (window.matchMedia('(display-mode: standalone)').matches) return;
 
+    // Não mostra em desktop — apenas mobile (≤ 768px)
+    if (window.innerWidth > 768) return;
+
     const handler = (e: Event) => {
       e.preventDefault();
       setPrompt(e as BeforeInstallPromptEvent);
