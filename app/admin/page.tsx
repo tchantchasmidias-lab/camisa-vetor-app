@@ -25,6 +25,8 @@ export default function AdminPage() {
   const [categorias, setCategorias] = useState<any[]>([]);
   const [metricas, setMetricas] = useState({ clientes: 0, topVendido: 'Nenhum', vendaMensal: 0, topAvaliado: 'Nenhum' });
   const [banner, setBanner] = useState({ imageUrl: '', link: '' });
+  const [lastPublishedProduct, setLastPublishedProduct] = useState<{ name: string; slug: string } | null>(null);
+  const [isSendingPush, setIsSendingPush] = useState(false);
   
   // ESTADOS DE PEDIDOS
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -137,9 +139,31 @@ export default function AdminPage() {
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: 'pago' | 'pendente' | 'cancelado') => {
     try {
+      // Busca o pedido para obter o userId antes de atualizar
+      const pedido = pedidos.find(p => p.id === orderId);
+      
       await updateDoc(doc(db, "pedidos", orderId), { status: newStatus });
       setPedidos(prev => prev.map(p => p.id === orderId ? { ...p, status: newStatus } : p));
       alert(`Status do pedido atualizado para '${newStatus}' com sucesso!`);
+
+      // Envia notificação push se o status mudou para 'pago'
+      if (newStatus === 'pago' && pedido?.userId) {
+        try {
+          const token = await auth.currentUser?.getIdToken();
+          await fetch('/api/notifications/order-approved', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ userId: pedido.userId, orderId }),
+          });
+          console.log('[Admin] Notificação de pedido aprovado enviada.');
+        } catch (notifErr) {
+          // Falha na notificação não bloqueia a atualização do status
+          console.error('[Admin] Erro ao enviar notificação:', notifErr);
+        }
+      }
     } catch (error: any) {
       console.error("Erro ao atualizar status do pedido:", error);
       alert("Erro ao atualizar status: " + error.message);
@@ -431,6 +455,7 @@ export default function AdminPage() {
     setLoading(true);
     const formData = new FormData(e.currentTarget);
     const category = showNewCategory ? formData.get('newCategory')?.toString() : formData.get('category')?.toString();
+    const isNewProduct = !editingId;
     try {
       let urlCapa = previews.capa, urlDestaque = previews.destaque, urlVetor = removeExistingVetor ? "" : products.find(p => p.id === editingId)?.urls?.download, galeriaUrls = previews.galeria.filter(url => !url.startsWith('blob:'));
       if (fileCapa) urlCapa = await uploadFile(fileCapa, 'capas');
@@ -440,9 +465,11 @@ export default function AdminPage() {
         const novos = await Promise.all(filesGaleria.map(img => uploadFile(img, 'galeria')));
         galeriaUrls = [...galeriaUrls, ...novos];
       }
+      const productName = formData.get('productName')?.toString().toUpperCase() || '';
+      const productSlug = createSlug(formData.get('productName')?.toString() || '');
       const data = {
-        name: formData.get('productName')?.toString().toUpperCase(),
-        slug: createSlug(formData.get('productName')?.toString() || ''),
+        name: productName,
+        slug: productSlug,
         price: Number(formData.get('price')),
         category: category || 'Geral',
         formats: selectedFormats,
@@ -453,8 +480,41 @@ export default function AdminPage() {
         updatedAt: serverTimestamp(),
       };
       editingId ? await updateDoc(doc(db, "products", editingId), data) : await addDoc(collection(db, 'products'), { ...data, salesCount: 0, createdAt: serverTimestamp() });
+      
+      // Se é um produto novo, mostra opção de notificar usuários
+      if (isNewProduct) {
+        setLastPublishedProduct({ name: productName, slug: productSlug });
+      }
+      
       location.reload();
     } catch (e) { console.error(e); setLoading(false); }
+  };
+
+  const handleSendNewProductNotification = async () => {
+    if (!lastPublishedProduct) return;
+    setIsSendingPush(true);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/notifications/new-product', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(lastPublishedProduct),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(`🔔 Notificação enviada para ${data.sent} dispositivo(s)!`);
+        setLastPublishedProduct(null);
+      } else {
+        throw new Error(data.error || data.message);
+      }
+    } catch (err: any) {
+      alert('Erro ao enviar notificação: ' + err.message);
+    } finally {
+      setIsSendingPush(false);
+    }
   };
 
   if (authLoading) {
@@ -799,6 +859,35 @@ export default function AdminPage() {
                   </button>
                 </div>
               </form>
+
+              {/* BOTÃO DE NOTIFICAÇÃO — aparece após publicar novo produto */}
+              {lastPublishedProduct && (
+                <div className="bg-[#fe7302]/10 border border-[#fe7302]/30 rounded-[2rem] p-6 flex flex-col sm:flex-row items-start sm:items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="p-3 bg-[#fe7302]/20 rounded-2xl">
+                    <Megaphone size={24} className="text-[#fe7302]" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[11px] font-black text-white uppercase tracking-widest mb-1">Produto publicado!</p>
+                    <p className="text-[10px] text-gray-400 font-medium">Quer notificar todos os usuários sobre <span className="text-[#fe7302] font-bold">{lastPublishedProduct.name}</span>?</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={handleSendNewProductNotification}
+                      disabled={isSendingPush}
+                      className="bg-[#fe7302] text-white font-black text-[10px] uppercase tracking-widest px-5 py-3 rounded-2xl hover:bg-[#e56600] transition-all flex items-center gap-2 disabled:opacity-60"
+                    >
+                      {isSendingPush ? <Loader2 size={14} className="animate-spin" /> : <Megaphone size={14} />}
+                      {isSendingPush ? 'Enviando...' : 'Notificar Usuários'}
+                    </button>
+                    <button
+                      onClick={() => setLastPublishedProduct(null)}
+                      className="text-gray-600 hover:text-gray-400 transition-colors text-[10px] font-bold uppercase tracking-widest"
+                    >
+                      Agora não
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* LISTAGEM DE GESTÃO */}
               <div className="space-y-6">

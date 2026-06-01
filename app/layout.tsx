@@ -5,6 +5,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MainContainer from '@/components/MainContainer';
 import { GeoProvider } from '@/lib/i18n/GeoContext';
+import PwaInit from '@/components/PwaInit';
+import PwaInstallBanner from '@/components/PwaInstallBanner';
 
 // Configuração da fonte Inter (Padrão Google Premium)
 const inter = Inter({ 
@@ -20,10 +22,22 @@ export const metadata = {
     index: false,
     follow: false,
   },
+  manifest: '/manifest.json',
+  themeColor: '#fe7302',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default' as const,
+    title: 'Camisa Vetor',
+  },
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
+    icon: '/icons/icon-192.png',
+    shortcut: '/icons/icon-192.png',
+    apple: '/icons/icon-192.png',
+  },
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
   },
 };
 
@@ -40,6 +54,10 @@ export default function RootLayout({
         selection: muda a cor de quando o usuário seleciona um texto com o mouse.
       */}
       <body className="antialiased text-[#4a4a4a] bg-white selection:bg-orange-50 selection:text-[#fe7302]">
+        {/* PWA: Registro do Service Worker e gerenciamento de tokens FCM */}
+        <PwaInit />
+        {/* PWA: Banner de instalação para Android/Chrome */}
+        <PwaInstallBanner />
         <GeoProvider>
           {/* 
               IMPORTANTE: O Header DEVE estar dentro de um Suspense.
