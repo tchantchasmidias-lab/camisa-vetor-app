@@ -71,7 +71,7 @@ export default function PwaInstallBanner() {
             {/* Ícone do app */}
             <div className="flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden shadow-md">
               <Image
-                src="/icons/icon-192.png"
+                src="/pwa-icon-192.png"
                 alt="Camisa Vetor"
                 width={56}
                 height={56}
