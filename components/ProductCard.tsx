@@ -8,8 +8,12 @@ import { useGeo } from '@/lib/i18n/GeoContext';
 
 export default function ProductCard({ product }: any) {
   const [isFavorite, setIsFavorite] = useState(false);
-  const [imgSrc, setImgSrc] = useState(product?.urls?.capa || product?.urls?.destaque || '');
   const { formatPrice, tp } = useGeo();
+
+  const capaSrc = product?.urls?.capa || product?.urls?.destaque || '';
+  const destaqueSrc = product?.urls?.destaque || '';
+  // Só faz efeito se destaque existir e for diferente da capa
+  const hasHoverImage = destaqueSrc && destaqueSrc !== capaSrc;
 
   useEffect(() => {
     const currentFavorites = JSON.parse(localStorage.getItem('camisavetor_favorites') || '[]');
@@ -21,7 +25,7 @@ export default function ProductCard({ product }: any) {
     e.stopPropagation();
     const currentFavorites = JSON.parse(localStorage.getItem('camisavetor_favorites') || '[]');
     const isAlreadyFav = currentFavorites.some((item: any) => item.id === product.id);
-    const newFavorites = isAlreadyFav 
+    const newFavorites = isAlreadyFav
       ? currentFavorites.filter((item: any) => item.id !== product.id)
       : [...currentFavorites, product];
     localStorage.setItem('camisavetor_favorites', JSON.stringify(newFavorites));
@@ -37,21 +41,47 @@ export default function ProductCard({ product }: any) {
 
       <Link href={`/product/${product.slug || product.id}`} className="block">
         <div className="aspect-[4/5] relative overflow-hidden rounded-[1.5rem] bg-[#f8f8f8] mb-4 group-hover:shadow-xl group-hover:shadow-gray-100 transition-all duration-500">
-          {imgSrc ? (
-            <Image src={imgSrc} alt={product.name} fill sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw" quality={100} className="object-cover transition-transform duration-700 group-hover:scale-105" />
+
+          {capaSrc ? (
+            <>
+              {/* Imagem CAPA — visível por padrão, some no hover */}
+              <Image
+                src={capaSrc}
+                alt={product.name}
+                fill
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                quality={100}
+                className={`object-cover transition-all duration-500 group-hover:scale-105 ${
+                  hasHoverImage
+                    ? 'opacity-100 group-hover:opacity-0'
+                    : ''
+                }`}
+              />
+
+              {/* Imagem DESTAQUE — oculta por padrão, aparece no hover */}
+              {hasHoverImage && (
+                <Image
+                  src={destaqueSrc}
+                  alt={`${product.name} — destaque`}
+                  fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                  quality={100}
+                  priority={false}
+                  className="object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-105"
+                />
+              )}
+            </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-200">
-               <span className="text-gray-400 text-xs">Sem Imagem</span>
+              <span className="text-gray-400 text-xs">Sem Imagem</span>
             </div>
           )}
         </div>
 
         <div className="text-center px-2">
-          {/* Fonte Medium e Tracking wide para elegância */}
           <h3 className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em] mb-1.5 truncate">
             {tp(product.name)}
           </h3>
-          {/* Preço Semibold para destaque suave */}
           <span className="text-[15px] font-semibold text-[#333333] tracking-tight">
             {formatPrice(product.price)}
           </span>
