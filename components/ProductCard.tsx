@@ -44,21 +44,21 @@ export default function ProductCard({ product }: any) {
 
           {capaSrc ? (
             <>
-              {/* Imagem CAPA — visível por padrão, some no hover */}
+              {/* Imagem CAPA — some instantaneamente no hover */}
               <Image
                 src={capaSrc}
                 alt={product.name}
                 fill
                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                 quality={100}
-                className={`object-cover transition-all duration-500 group-hover:scale-105 ${
+                className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
                   hasHoverImage
-                    ? 'opacity-100 group-hover:opacity-0'
+                    ? 'group-hover:opacity-0'
                     : ''
                 }`}
               />
 
-              {/* Imagem DESTAQUE — oculta por padrão, aparece no hover */}
+              {/* Imagem DESTAQUE — aparece instantaneamente no hover */}
               {hasHoverImage && (
                 <Image
                   src={destaqueSrc}
@@ -67,7 +67,7 @@ export default function ProductCard({ product }: any) {
                   sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   quality={100}
                   priority={false}
-                  className="object-cover transition-all duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-105"
+                  className="object-cover transition-transform duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-105"
                 />
               )}
             </>
