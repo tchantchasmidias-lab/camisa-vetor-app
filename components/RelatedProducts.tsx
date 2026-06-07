@@ -11,7 +11,8 @@ interface RelatedProduct {
   slug?: string;
   name: string;
   price: number;
-  image: string;
+  capaSrc: string;
+  destaqueSrc: string;
 }
 
 import { useGeo } from '@/lib/i18n/GeoContext';
@@ -35,28 +36,29 @@ export default function RelatedProducts({
       }
 
       try {
-        // Busca produtos da mesma categoria
         const q = query(
           collection(db, 'products'),
           where('category', '==', category),
-          limit(6) // Busca um pouco a mais para garantir o filtro
+          limit(6)
         );
        
         const querySnapshot = await getDocs(q);
         const items = querySnapshot.docs
           .map(doc => {
             const data = doc.data();
+            const capa = data.urls?.capa || data.urls?.destaque || 'https://placehold.co/400x500?text=Camisa+Vetor';
+            const destaque = data.urls?.destaque || '';
             return {
               id: doc.id,
               slug: data.slug || doc.id,
               name: data.name || 'Vetor sem nome',
               price: Number(data.price) || 0,
-              // Mantém a lógica de separação: Prioriza a Capa para a vitrine
-              image: data.urls?.capa || data.urls?.destaque || 'https://placehold.co/400x500?text=Camisa+Vetor'
+              capaSrc: capa,
+              destaqueSrc: destaque !== capa ? destaque : '', // só usa se for diferente
             };
           })
-          .filter(item => item.id !== currentProductId) // Remove o produto que já está na tela
-          .slice(0, 4); // Exibe exatamente 4
+          .filter(item => item.id !== currentProductId)
+          .slice(0, 4);
 
         setProducts(items);
       } catch (error) {
@@ -69,41 +71,57 @@ export default function RelatedProducts({
     fetchRelated();
   }, [category, currentProductId]);
 
-  if (loading) return null; // O fallback do Suspense no pai cuida disso
+  if (loading) return null;
   if (products.length === 0) return null;
 
   return (
     <div className="mt-16 pt-12 border-t border-[#f1f3f4] animate-in fade-in duration-1000">
-      {/* Título Estilo Google Premium */}
       <h2 className="text-[11px] font-bold text-[#5f6368] uppercase tracking-[0.4em] mb-12 text-center">
         {t('youMayAlsoLike')}
       </h2>
 
-      {/* Grade Responsiva: 1 coluna no mobile, 4 no desktop */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
-        {products.map((rel) => (
-          <Link href={`/product/${rel.slug || rel.id}`} key={rel.id} className="group block">
-            <div className="aspect-[4/5] bg-[#fbfbfb] rounded-[2rem] relative overflow-hidden border border-[#dadce0] mb-5 transition-all duration-500 group-hover:shadow-xl group-hover:shadow-gray-100 group-hover:border-[#fe7302]/30">
-              <Image
-                src={rel.image}
-                alt={rel.name}
-                fill
-                sizes="(max-width: 768px) 100vw, 25vw"
-                className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-              />
-            </div>
-           
-            <div className="px-2 text-center">
-              <h3 className="text-[10px] font-semibold text-[#202124] uppercase tracking-wider mb-1.5 truncate">
-                {tp(rel.name)}
-              </h3>
+        {products.map((rel) => {
+          const hasHoverImage = !!rel.destaqueSrc;
+          return (
+            <Link href={`/product/${rel.slug || rel.id}`} key={rel.id} className="group block">
+              <div className="aspect-[4/5] bg-[#fbfbfb] rounded-[2rem] relative overflow-hidden border border-[#dadce0] mb-5 transition-all duration-500 group-hover:shadow-xl group-hover:shadow-gray-100 group-hover:border-[#fe7302]/30">
+                
+                {/* Imagem CAPA — some instantaneamente no hover */}
+                <Image
+                  src={rel.capaSrc}
+                  alt={rel.name}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 25vw"
+                  className={`object-cover transition-transform duration-500 group-hover:scale-110 ${
+                    hasHoverImage ? 'group-hover:opacity-0' : ''
+                  }`}
+                />
+
+                {/* Imagem DESTAQUE — aparece instantaneamente no hover */}
+                {hasHoverImage && (
+                  <Image
+                    src={rel.destaqueSrc}
+                    alt={`${rel.name} — destaque`}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    priority={false}
+                    className="object-cover transition-transform duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-110"
+                  />
+                )}
+              </div>
              
-              <p className="text-[14px] font-bold text-[#fe7302] tracking-tighter">
-                {formatPrice(rel.price)}
-              </p>
-            </div>
-          </Link>
-        ))}
+              <div className="px-2 text-center">
+                <h3 className="text-[10px] font-semibold text-[#202124] uppercase tracking-wider mb-1.5 truncate">
+                  {tp(rel.name)}
+                </h3>
+                <p className="text-[14px] font-bold text-[#fe7302] tracking-tighter">
+                  {formatPrice(rel.price)}
+                </p>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </div>
   );
