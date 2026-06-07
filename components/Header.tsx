@@ -59,6 +59,18 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
         };
     }, []);
 
+    // Bloquear rolagem do body quando o drawer estiver aberto (evita scroll do background)
+    useEffect(() => {
+        if (isDrawerOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isDrawerOpen]);
+
     // 🛡️ PROTEÇÃO ADMIN: Não renderiza o menu na página de admin
     if (pathname === '/admin') return null;
 
@@ -94,7 +106,7 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
         <>
             {isDrawerOpen && (
                 <div
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] touch-none"
                     onClick={() => setDrawerOpen(false)}
                 />
             )}
