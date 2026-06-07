@@ -23,8 +23,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || 'Camisa Vetor';
   const notificationOptions = {
     body: payload.notification?.body || '',
-    icon: '/pwa-icon-192.png',
-    badge: '/pwa-icon-192.png',
+    icon: '/icon.png',
+    badge: '/icon.png',
     vibrate: [200, 100, 200],
     tag: payload.data?.tag || 'camisa-vetor',
     renotify: true,
@@ -67,8 +67,8 @@ const CACHE_NAME = 'camisa-vetor-v1';
 const STATIC_ASSETS = [
   '/',
   '/offline',
-  '/pwa-icon-192.png',
-  '/pwa-icon-512.png',
+  '/icon.png',
+  '/manifest.json',
   '/logo.svg',
   '/logo-mobile.svg',
 ];

@@ -30,9 +30,9 @@ export const metadata = {
     title: 'Camisa Vetor',
   },
   icons: {
-    icon: '/icons/icon-192.png',
-    shortcut: '/icons/icon-192.png',
-    apple: '/icons/icon-192.png',
+    icon: '/icon.png',
+    shortcut: '/icon.png',
+    apple: '/icon.png',
   },
   viewport: {
     width: 'device-width',
