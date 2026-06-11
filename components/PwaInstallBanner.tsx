@@ -26,32 +26,15 @@ export default function PwaInstallBanner() {
     // Não mostra em desktop — apenas mobile (≤ 768px)
     if (window.innerWidth > 768) return;
 
-    const setupPrompt = (e: BeforeInstallPromptEvent) => {
-      setPrompt(e);
+    const handler = (e: Event) => {
+      e.preventDefault();
+      setPrompt(e as BeforeInstallPromptEvent);
       // Mostra o banner após 3 segundos
       setTimeout(() => setVisible(true), 3000);
     };
 
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setupPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    const checkGlobalPrompt = () => {
-      if ((window as any).deferredPrompt) {
-        setupPrompt((window as any).deferredPrompt);
-      }
-    };
-
-    checkGlobalPrompt();
-
     window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('cv-pwa-prompt-available', checkGlobalPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('cv-pwa-prompt-available', checkGlobalPrompt);
-    };
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleInstall = async () => {

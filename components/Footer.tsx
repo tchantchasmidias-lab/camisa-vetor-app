@@ -3,55 +3,11 @@
 import { usePathname } from 'next/navigation';
 import { useGeo } from '@/lib/i18n/GeoContext';
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
-import { Download } from 'lucide-react';
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
   const { t } = useGeo();
   const pathname = usePathname();
-  const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-
-  useEffect(() => {
-    // Não mostra se já estiver instalado (modo standalone)
-    if (window.matchMedia('(display-mode: standalone)').matches) return;
-
-    const checkGlobalPrompt = () => {
-      if ((window as any).deferredPrompt) {
-        setPrompt((window as any).deferredPrompt);
-      }
-    };
-
-    const handler = (e: Event) => {
-      e.preventDefault();
-      setPrompt(e as BeforeInstallPromptEvent);
-    };
-
-    checkGlobalPrompt();
-
-    window.addEventListener('beforeinstallprompt', handler);
-    window.addEventListener('cv-pwa-prompt-available', checkGlobalPrompt);
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('cv-pwa-prompt-available', checkGlobalPrompt);
-    };
-  }, []);
-
-  const handleInstall = async () => {
-    if (!prompt) return;
-    await prompt.prompt();
-    const choice = await prompt.userChoice;
-    if (choice.outcome === 'accepted') {
-      setPrompt(null);
-      (window as any).deferredPrompt = null;
-    }
-  };
 
   if (pathname === '/admin') return null;
 
@@ -65,7 +21,7 @@ export default function Footer() {
         </p>
 
         {/* LINKS SIMPLES */}
-        <nav className="flex items-center space-x-6 flex-wrap justify-center md:justify-end gap-y-2">
+        <nav className="flex items-center space-x-6">
           <Link 
             href="/termos" 
             className="text-[10px] font-bold text-gray-400 hover:text-[#fe7302] transition-colors uppercase tracking-widest"
@@ -85,18 +41,6 @@ export default function Footer() {
           >
             {t('support')}
           </Link>
-
-          {/* Botão de instalar app */}
-          {prompt && (
-            <button
-              onClick={handleInstall}
-              className="flex items-center gap-1.5 text-[10px] font-black text-[#fe7302] hover:text-orange-600 transition-colors uppercase tracking-widest cursor-pointer outline-none border-none bg-transparent"
-              aria-label="Instalar aplicativo"
-            >
-              <Download size={12} className="flex-shrink-0" />
-              {t('installApp')}
-            </button>
-          )}
         </nav>
 
       </div>

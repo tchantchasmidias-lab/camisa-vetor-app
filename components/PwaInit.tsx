@@ -62,18 +62,9 @@ export default function PwaInit() {
       }, 4000);
     });
 
-    // 3. Capturar evento de instalação para PWA
-    const handlePrompt = (e: Event) => {
-      e.preventDefault();
-      (window as any).deferredPrompt = e;
-      window.dispatchEvent(new CustomEvent('cv-pwa-prompt-available'));
-    };
-    window.addEventListener('beforeinstallprompt', handlePrompt);
-
     return () => {
       unsubAuth();
       unsubForeground.current?.();
-      window.removeEventListener('beforeinstallprompt', handlePrompt);
     };
   }, []);
 
