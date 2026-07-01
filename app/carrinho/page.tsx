@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
-import { Trash2, ShoppingCart, ArrowRight, ChevronLeft } from 'lucide-react';
+import { Trash2, ShoppingCart, ArrowRight, ChevronLeft, Tag, CheckCircle2, AlertCircle, Loader2, X } from 'lucide-react';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useGeo } from '@/lib/i18n/GeoContext';
@@ -17,16 +17,36 @@ interface CartItem {
   quantity: number;
 }
 
+interface CouponData {
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  discount: number;
+  finalTotal: number;
+}
+
 function CarrinhoContent() {
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
-  
+
+  // Estados do cupom
+  const [couponInput, setCouponInput] = useState('');
+  const [couponData, setCouponData] = useState<CouponData | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
+
   const { t, tp, formatPrice, isLoading: loadingGeo } = useGeo();
 
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem('camisavetor_cart') || '[]');
     setCartItems(savedCart);
+
+    // Restaurar cupom salvo (se voltou do checkout)
+    const savedCoupon = sessionStorage.getItem('camisavetor_coupon');
+    if (savedCoupon) {
+      try { setCouponData(JSON.parse(savedCoupon)); } catch {}
+    }
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
@@ -44,10 +64,55 @@ function CarrinhoContent() {
   const removeItem = (id: string) => {
     const newCart = cartItems.filter(item => item.id !== id);
     updateCart(newCart);
+    // Se removeu item e total mudou, limpa o cupom para revalidar
+    setCouponData(null);
+    setCouponError('');
+    sessionStorage.removeItem('camisavetor_coupon');
   };
 
-  // Como agora vendemos apenas 1 unidade de cada vetor, o subtotal ignora o multiplicador de quantidade manual
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const discount = couponData?.discount ?? 0;
+  const total = couponData?.finalTotal ?? subtotal;
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponLoading(true);
+    setCouponError('');
+    setCouponData(null);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, cartTotal: subtotal }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        const coupon: CouponData = {
+          code,
+          type: data.coupon.type,
+          value: data.coupon.value,
+          discount: data.discount,
+          finalTotal: data.finalTotal,
+        };
+        setCouponData(coupon);
+        sessionStorage.setItem('camisavetor_coupon', JSON.stringify(coupon));
+      } else {
+        setCouponError(data.error || 'Cupom inválido.');
+      }
+    } catch {
+      setCouponError('Erro ao verificar o cupom. Tente novamente.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponData(null);
+    setCouponInput('');
+    setCouponError('');
+    sessionStorage.removeItem('camisavetor_coupon');
+  };
 
   return (
     <div className="bg-[#f8f9fa] min-h-screen animate-in fade-in duration-700 font-sans text-[#4a4a4a]">
@@ -119,20 +184,79 @@ function CarrinhoContent() {
                 <div className="bg-[#1a1a1a] rounded-[2rem] p-8 md:p-10 text-white sticky top-28 shadow-2xl border border-white/5 overflow-hidden">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-[#fe7302]/10 rounded-full blur-[50px] -mr-16 -mt-16" />
 
-                  {/* TÍTULO CENTRALIZADO */}
-                  <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] mb-10 text-white/40 border-b border-white/10 pb-6 text-center">
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.4em] mb-8 text-white/40 border-b border-white/10 pb-6 text-center">
                     {t('orderSummaryTitle')}
                   </h2>
 
-                  <div className="space-y-5 mb-10 relative z-10">
+                  {/* CAMPO DE CUPOM */}
+                  <div className="mb-8 relative z-10">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-white/30 flex items-center gap-2 mb-3">
+                      <Tag size={11} /> Cupom de Desconto
+                    </p>
+
+                    {couponData ? (
+                      /* Cupom aplicado com sucesso */
+                      <div className="flex items-center justify-between bg-green-500/10 border border-green-500/30 rounded-2xl px-4 py-3 animate-in fade-in duration-300">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 size={14} className="text-green-400 flex-shrink-0" />
+                          <div>
+                            <p className="text-[11px] font-black text-green-400 uppercase tracking-wider">{couponData.code}</p>
+                            <p className="text-[9px] text-green-400/70 uppercase">
+                              {couponData.type === 'percent' ? `${couponData.value}% de desconto` : `R$ ${couponData.value.toFixed(2).replace('.', ',')} de desconto`}
+                            </p>
+                          </div>
+                        </div>
+                        <button onClick={handleRemoveCoupon} className="text-white/30 hover:text-red-400 transition-colors p-1">
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      /* Input para digitar o cupom */
+                      <div className="space-y-2">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={couponInput}
+                            onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
+                            onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+                            placeholder="DIGITE SEU CUPOM"
+                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-[11px] font-black text-white uppercase outline-none focus:border-[#fe7302]/50 transition-all placeholder-white/20 tracking-widest"
+                          />
+                          <button
+                            onClick={handleApplyCoupon}
+                            disabled={couponLoading || !couponInput.trim()}
+                            className="bg-[#fe7302] text-white text-[10px] font-black uppercase px-4 py-2.5 rounded-xl hover:bg-orange-500 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1 tracking-widest"
+                          >
+                            {couponLoading ? <Loader2 size={13} className="animate-spin" /> : 'OK'}
+                          </button>
+                        </div>
+                        {couponError && (
+                          <p className="text-[10px] text-red-400 flex items-center gap-1.5 animate-in fade-in duration-200 px-1">
+                            <AlertCircle size={11} /> {couponError}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* VALORES */}
+                  <div className="space-y-4 mb-10 relative z-10">
                     <div className="flex justify-between text-[11px] font-medium uppercase tracking-widest text-white/60">
                       <span>{t('subtotal')}</span>
                       <span className="text-white/90">{formatPrice(subtotal)}</span>
                     </div>
-                    <div className="pt-8 mt-4 border-t border-white/10 flex justify-between items-baseline">
+
+                    {couponData && (
+                      <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest text-green-400 animate-in fade-in duration-300">
+                        <span className="flex items-center gap-1.5"><Tag size={11} /> Cupom {couponData.code}</span>
+                        <span>- {formatPrice(discount)}</span>
+                      </div>
+                    )}
+
+                    <div className="pt-6 mt-2 border-t border-white/10 flex justify-between items-baseline">
                       <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-[#fe7302]">{t('total')}</span>
                       <div className="text-3xl font-semibold tracking-tighter text-white">
-                        {formatPrice(subtotal)}
+                        {formatPrice(total)}
                       </div>
                     </div>
                   </div>
@@ -150,8 +274,6 @@ function CarrinhoContent() {
                     <span>{t('finishPurchase')}</span>
                     <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
                   </button>
-
-                  {/* Informações de pagamento removidas conforme solicitado */}
                 </div>
               </div>
 

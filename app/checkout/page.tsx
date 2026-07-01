@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { 
   CreditCard, QrCode, ChevronLeft, Download, CheckCircle2, 
-  AlertCircle, Loader2, FileText
+  AlertCircle, Loader2, FileText, Tag, X
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,6 +13,14 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useGeo } from '@/lib/i18n/GeoContext';
+
+interface CouponData {
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  discount: number;
+  finalTotal: number;
+}
 
 function CheckoutContent() {
   const [paymentMethod, setPaymentMethod] = useState<'pix' | 'paypal'>('pix');
@@ -27,12 +35,24 @@ function CheckoutContent() {
   const [pixData, setPixData] = useState<{ qr_code_base64: string, qr_code: string, transactionId: string, id: number } | null>(null);
   const [isGeneratingPix, setIsGeneratingPix] = useState(false);
   const [isFulfilling, setIsFulfilling] = useState(false);
+
+  // Estados do cupom
+  const [couponInput, setCouponInput] = useState('');
+  const [couponData, setCouponData] = useState<CouponData | null>(null);
+  const [couponError, setCouponError] = useState('');
+  const [couponLoading, setCouponLoading] = useState(false);
   
   const { t, tp, formatPrice, isInternational, currencyCode, isLoading: loadingGeo } = useGeo();
 
   useEffect(() => {
     const savedCart = JSON.parse(localStorage.getItem('camisavetor_cart') || '[]');
     setCartItems(savedCart);
+
+    // Recuperar cupom aplicado no carrinho
+    const savedCoupon = sessionStorage.getItem('camisavetor_coupon');
+    if (savedCoupon) {
+      try { setCouponData(JSON.parse(savedCoupon)); } catch {}
+    }
     
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
@@ -41,7 +61,6 @@ function CheckoutContent() {
           const userRef = doc(db, 'users', currentUser.uid);
           const snap = await getDoc(userRef);
           
-          // Se for internacional, não exigimos CPF/Phone para entrar no checkout
           if (isInternational) {
             setUserData({
               nome: snap.data()?.nome || currentUser.displayName || 'Customer',
@@ -50,7 +69,7 @@ function CheckoutContent() {
               email: snap.data()?.email || currentUser.email || ''
             });
             setLoadingUser(false);
-            setPaymentMethod('paypal'); // Força PayPal para internacionais
+            setPaymentMethod('paypal');
             return;
           }
 
@@ -81,7 +100,24 @@ function CheckoutContent() {
     return () => unsubscribe();
   }, [router, isInternational]);
 
-  const total = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+  const discount = couponData?.discount ?? 0;
+  const total = couponData ? couponData.finalTotal : subtotal;
+
+  // Registra o uso do cupom após pagamento confirmado
+  const registerCouponUse = async () => {
+    if (!couponData) return;
+    try {
+      await fetch('/api/coupons/use', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: couponData.code }),
+      });
+      sessionStorage.removeItem('camisavetor_coupon');
+    } catch (e) {
+      console.error('Erro ao registrar uso do cupom:', e);
+    }
+  };
 
   const processFulfillment = async (transactionId: string, method: string) => {
     setIsFulfilling(true);
@@ -98,6 +134,7 @@ function CheckoutContent() {
         })
       });
       if (res.ok) {
+        await registerCouponUse();
         localStorage.removeItem('camisavetor_cart');
         window.dispatchEvent(new Event('cart-updated'));
         setIsPaid(true);
@@ -113,6 +150,46 @@ function CheckoutContent() {
     }
   };
 
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponLoading(true);
+    setCouponError('');
+    setCouponData(null);
+    try {
+      const res = await fetch('/api/coupons/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code, cartTotal: subtotal }),
+      });
+      const data = await res.json();
+      if (data.valid) {
+        const coupon: CouponData = {
+          code,
+          type: data.coupon.type,
+          value: data.coupon.value,
+          discount: data.discount,
+          finalTotal: data.finalTotal,
+        };
+        setCouponData(coupon);
+        sessionStorage.setItem('camisavetor_coupon', JSON.stringify(coupon));
+      } else {
+        setCouponError(data.error || 'Cupom inválido.');
+      }
+    } catch {
+      setCouponError('Erro ao verificar o cupom. Tente novamente.');
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponData(null);
+    setCouponInput('');
+    setCouponError('');
+    sessionStorage.removeItem('camisavetor_coupon');
+  };
+
   const handleFinalPayment = async () => {
     if (!userData) return;
 
@@ -126,7 +203,9 @@ function CheckoutContent() {
             items: cartItems,
             email: userData.email,
             firstName: userData.nome.split(' ')[0],
-            cpf: userData.cpf
+            cpf: userData.cpf,
+            // Passa o total com desconto para o gateway
+            totalOverride: couponData ? couponData.finalTotal : undefined,
           })
         });
         const data = await res.json();
@@ -160,11 +239,6 @@ function CheckoutContent() {
     }, 5000);
     return () => clearInterval(interval);
   }, [pixData, isPaid]);
-
-  const formattedValue = new Intl.NumberFormat('pt-BR', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(total);
 
   if (!user || loadingUser || loadingGeo) {
     return <div className="min-h-screen bg-[#f8f9fa] flex items-center justify-center"><Loader2 className="animate-spin text-[#fe7302]" size={32} /></div>;
@@ -202,6 +276,58 @@ function CheckoutContent() {
                   </button>
                 </div>
               </section>
+
+              {/* CAMPO DE CUPOM NO CHECKOUT */}
+              <section className="bg-white p-8 rounded-[2rem] border border-[#dadce0]">
+                <div className="flex items-center gap-4 mb-6">
+                  <span className="w-7 h-7 rounded-full bg-[#202124] text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                  <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#202124] flex items-center gap-2">
+                    <Tag size={14} className="text-[#fe7302]" /> Cupom de Desconto
+                  </h2>
+                </div>
+
+                {couponData ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-2xl px-5 py-4 animate-in fade-in duration-300">
+                    <div className="flex items-center gap-3">
+                      <CheckCircle2 size={18} className="text-green-500 flex-shrink-0" />
+                      <div>
+                        <p className="text-[12px] font-black text-green-700 uppercase tracking-wider">{couponData.code}</p>
+                        <p className="text-[10px] text-green-600 uppercase font-medium">
+                          {couponData.type === 'percent' ? `${couponData.value}% de desconto aplicado` : `R$ ${couponData.value.toFixed(2).replace('.', ',')} de desconto aplicado`}
+                        </p>
+                      </div>
+                    </div>
+                    <button onClick={handleRemoveCoupon} className="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50">
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex gap-3">
+                      <input
+                        type="text"
+                        value={couponInput}
+                        onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
+                        onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
+                        placeholder="DIGITE SEU CUPOM"
+                        className="flex-1 border border-[#dadce0] rounded-xl px-5 py-3 text-[12px] font-black uppercase outline-none focus:border-[#fe7302] transition-all placeholder-[#dadce0] tracking-widest text-[#202124]"
+                      />
+                      <button
+                        onClick={handleApplyCoupon}
+                        disabled={couponLoading || !couponInput.trim()}
+                        className="bg-[#202124] text-white text-[10px] font-black uppercase px-6 py-3 rounded-xl hover:bg-[#fe7302] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 tracking-widest"
+                      >
+                        {couponLoading ? <Loader2 size={14} className="animate-spin" /> : 'Aplicar'}
+                      </button>
+                    </div>
+                    {couponError && (
+                      <p className="text-[11px] text-red-500 flex items-center gap-1.5 animate-in fade-in duration-200">
+                        <AlertCircle size={13} /> {couponError}
+                      </p>
+                    )}
+                  </div>
+                )}
+              </section>
             </div>
 
             {/* COLUNA DA DIREITA: RESUMO */}
@@ -209,8 +335,10 @@ function CheckoutContent() {
               <div className={`rounded-[2.5rem] text-white shadow-2xl sticky top-28 border transition-all duration-700 ${isPaid ? 'bg-transparent border-transparent p-0' : 'bg-[#1a1a1a] border-white/5 p-10'}`}>
                 {!isPaid ? (
                   <>
-                    <h3 className="text-[11px] font-bold uppercase tracking-[0.4em] mb-10 text-white/30 border-b border-white/10 pb-5 text-center">{t('orderSummaryTitle')}</h3>
-                    <div className="space-y-4 mb-10 max-h-[350px] overflow-y-auto no-scrollbar pr-2">
+                    <h3 className="text-[11px] font-bold uppercase tracking-[0.4em] mb-8 text-white/30 border-b border-white/10 pb-5 text-center">{t('orderSummaryTitle')}</h3>
+                    
+                    {/* ITENS */}
+                    <div className="space-y-4 mb-8 max-h-[280px] overflow-y-auto no-scrollbar pr-2">
                       {cartItems.map((item) => (
                         <div key={item.id} className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-inner">
                           <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
@@ -222,8 +350,21 @@ function CheckoutContent() {
                           </div>
                         </div>
                       ))}
+                    </div>
 
-                      <div className="pt-8 mt-6 border-t border-white/10 flex justify-between items-baseline">
+                    {/* VALORES COM DESCONTO */}
+                    <div className="space-y-3 mb-8 border-t border-white/10 pt-6">
+                      <div className="flex justify-between text-[11px] font-medium uppercase tracking-widest text-white/50">
+                        <span>Subtotal</span>
+                        <span>{formatPrice(subtotal)}</span>
+                      </div>
+                      {couponData && (
+                        <div className="flex justify-between text-[11px] font-bold uppercase tracking-widest text-green-400 animate-in fade-in duration-300">
+                          <span className="flex items-center gap-1.5"><Tag size={11} /> {couponData.code}</span>
+                          <span>- {formatPrice(discount)}</span>
+                        </div>
+                      )}
+                      <div className="pt-4 border-t border-white/10 flex justify-between items-baseline">
                         <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/40">{t('total')}</span>
                         <div className="text-4xl font-bold tracking-tighter">
                           <span className="text-[#fe7302]">{formatPrice(total)}</span>
@@ -278,7 +419,8 @@ function CheckoutContent() {
                                     const res = await fetch("/api/checkout/paypal/create", {
                                       method: "POST",
                                       headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ items: cartItems, currency: currencyCode })
+                                      // Envia o total com desconto para o PayPal
+                                      body: JSON.stringify({ items: cartItems, currency: currencyCode, totalOverride: couponData ? couponData.finalTotal : undefined })
                                     });
                                     const order = await res.json();
                                     return order.id;
@@ -310,7 +452,6 @@ function CheckoutContent() {
                 ) : (
                   <div className="flex flex-col items-center text-center py-10 px-6 animate-in zoom-in-95 duration-500 bg-[#141414] rounded-[2.5rem] border border-[#1ea362] shadow-[0_0_25px_rgba(30,163,98,0.15)] relative overflow-hidden">
                     
-                    {/* ÍCONE CHECK LARANJA COM BRILHOS */}
                     <div className="relative mb-8 flex justify-center items-center">
                        <div className="absolute -top-4 -right-4 text-[#fe7302] animate-pulse">✨</div>
                        <CheckCircle2 size={70} className="text-[#fe7302]" strokeWidth={2.5} />

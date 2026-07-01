@@ -23,6 +23,8 @@ export default function AdminPage() {
   const [paginaAtual, setPaginaAtual] = useState(1);
   const ITENS_POR_PAGINA = 10;
   const [categorias, setCategorias] = useState<any[]>([]);
+  const [cupons, setCupons] = useState<any[]>([]);
+  const [novoCupom, setNovoCupom] = useState({ code: '', type: 'percent', value: '', minOrder: '', expiresAt: '' });
   const [metricas, setMetricas] = useState({ clientes: 0, topVendido: 'Nenhum', vendaMensal: 0, topAvaliado: 'Nenhum' });
   const [banner, setBanner] = useState({ imageUrl: '', link: '' });
   const [lastPublishedProduct, setLastPublishedProduct] = useState<{ name: string; slug: string } | null>(null);
@@ -95,6 +97,9 @@ export default function AdminPage() {
 
       const cSnap = await getDocs(query(collection(db, "categories"), orderBy("name", "asc")));
       setCategorias(cSnap.docs.map(d => ({ id: d.id, ...d.data() })));
+
+      const cupSnap = await getDocs(query(collection(db, "coupons"), orderBy("createdAt", "desc")));
+      setCupons(cupSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
       try {
         const token = await auth.currentUser?.getIdToken();
@@ -345,6 +350,29 @@ export default function AdminPage() {
     if (!name) return;
     await addDoc(collection(db, "categories"), { name, imageUrl: '', createdAt: serverTimestamp() });
     e.target.reset();
+    loadData();
+  };
+
+  const handleAddCoupon = async (e: any) => {
+    e.preventDefault();
+    const code = novoCupom.code.trim().toUpperCase();
+    if (!code || !novoCupom.value) return;
+    const data: any = {
+      type: novoCupom.type,
+      value: parseFloat(novoCupom.value),
+      minOrder: parseFloat(novoCupom.minOrder || '0') || 0,
+      usedCount: 0,
+      active: true,
+      createdAt: serverTimestamp(),
+      expiresAt: novoCupom.expiresAt ? new Date(novoCupom.expiresAt) : null,
+    };
+    await setDoc(doc(db, "coupons", code), data);
+    setNovoCupom({ code: '', type: 'percent', value: '', minOrder: '', expiresAt: '' });
+    loadData();
+  };
+
+  const handleToggleCoupon = async (id: string, currentActive: boolean) => {
+    await updateDoc(doc(db, "coupons", id), { active: !currentActive });
     loadData();
   };
 
@@ -1062,6 +1090,113 @@ export default function AdminPage() {
               </div>
 
               <div className="space-y-10">
+
+                {/* PAINEL DE CUPONS */}
+                <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl">
+                  <div className="flex items-center justify-between mb-10">
+                    <h2 className="text-[12px] font-black uppercase text-white flex items-center gap-4 tracking-widest"><Tag size={20} className="text-[#fe7302]"/> Cupons de Desconto</h2>
+                    <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">{cupons.length} CUPONS</span>
+                  </div>
+
+                  {/* FORMULÁRIO NOVO CUPOM */}
+                  <form onSubmit={handleAddCoupon} className="space-y-4 mb-10 bg-white/[0.02] p-6 rounded-[2rem] border border-white/5">
+                    <p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-4">Criar Novo Cupom</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      <input
+                        placeholder="CÓDIGO (ex: CORRIDA10)"
+                        value={novoCupom.code}
+                        onChange={e => setNovoCupom(p => ({ ...p, code: e.target.value.toUpperCase() }))}
+                        className="col-span-2 bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] font-black text-white uppercase outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700 tracking-widest"
+                        required
+                      />
+                      <select
+                        value={novoCupom.type}
+                        onChange={e => setNovoCupom(p => ({ ...p, type: e.target.value }))}
+                        className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] font-black text-white uppercase outline-none focus:border-[#fe7302]/50 transition-all cursor-pointer appearance-none"
+                      >
+                        <option value="percent" className="bg-[#111]">% Percentual</option>
+                        <option value="fixed" className="bg-[#111]">R$ Valor Fixo</option>
+                      </select>
+                      <input
+                        type="number"
+                        placeholder={novoCupom.type === 'percent' ? 'Valor (ex: 10)' : 'Valor R$ (ex: 5)'}
+                        value={novoCupom.value}
+                        onChange={e => setNovoCupom(p => ({ ...p, value: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                        className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] font-black text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700"
+                        required
+                      />
+                      <input
+                        type="number"
+                        placeholder="Pedido mínimo R$ (0 = sem mínimo)"
+                        value={novoCupom.minOrder}
+                        onChange={e => setNovoCupom(p => ({ ...p, minOrder: e.target.value }))}
+                        min="0"
+                        step="0.01"
+                        className="bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] font-black text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700"
+                      />
+                      <div className="col-span-2 space-y-1">
+                        <label className="text-[9px] font-black uppercase text-gray-600 ml-2 tracking-widest">Validade (deixe vazio = sem expiração)</label>
+                        <input
+                          type="datetime-local"
+                          value={novoCupom.expiresAt}
+                          onChange={e => setNovoCupom(p => ({ ...p, expiresAt: e.target.value }))}
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] font-black text-white outline-none focus:border-[#fe7302]/50 transition-all [color-scheme:dark]"
+                        />
+                      </div>
+                    </div>
+                    <button type="submit" className="w-full bg-[#fe7302] text-white py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-lg shadow-orange-600/20 flex items-center justify-center gap-2">
+                      <Plus size={16}/> Criar Cupom
+                    </button>
+                  </form>
+
+                  {/* LISTA DE CUPONS */}
+                  <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+                    {cupons.length === 0 && (
+                      <p className="text-[10px] text-gray-700 uppercase tracking-widest text-center py-8">Nenhum cupom cadastrado</p>
+                    )}
+                    {cupons.map(cup => {
+                      const expired = cup.expiresAt && (cup.expiresAt.toDate ? cup.expiresAt.toDate() : new Date(cup.expiresAt)) < new Date();
+                      return (
+                        <div key={cup.id} className={`flex items-center justify-between p-4 rounded-[1.5rem] border transition-all ${cup.active && !expired ? 'bg-white/[0.03] border-white/5 hover:bg-white/[0.06]' : 'bg-white/[0.01] border-white/[0.03] opacity-50'}`}>
+                          <div className="flex items-center gap-4">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${cup.active && !expired ? 'bg-green-500' : 'bg-gray-600'}`} />
+                            <div>
+                              <p className="text-[12px] font-black text-white uppercase tracking-wider">{cup.id}</p>
+                              <p className="text-[9px] text-gray-600 uppercase tracking-widest mt-0.5">
+                                {cup.type === 'percent' ? `${cup.value}% de desconto` : `R$ ${Number(cup.value).toFixed(2)} de desconto`}
+                                {cup.minOrder > 0 && ` · Mín. R$ ${Number(cup.minOrder).toFixed(2)}`}
+                                {` · ${cup.usedCount || 0} uso(s)`}
+                                {expired && ' · EXPIRADO'}
+                              </p>
+                              {cup.expiresAt && (
+                                <p className="text-[9px] text-gray-700 flex items-center gap-1 mt-0.5">
+                                  <Clock size={9}/> {(cup.expiresAt.toDate ? cup.expiresAt.toDate() : new Date(cup.expiresAt)).toLocaleDateString('pt-BR')}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => handleToggleCoupon(cup.id, cup.active)}
+                              className={`text-[9px] font-black uppercase px-3 py-1.5 rounded-xl transition-all ${ cup.active ? 'bg-green-500/10 text-green-500 hover:bg-red-500/10 hover:text-red-400' : 'bg-white/5 text-gray-600 hover:bg-green-500/10 hover:text-green-400'}`}
+                            >
+                              {cup.active ? 'Ativo' : 'Inativo'}
+                            </button>
+                            <button
+                              onClick={async () => { if (confirm(`Excluir cupom ${cup.id}?`)) { await deleteDoc(doc(db, 'coupons', cup.id)); loadData(); } }}
+                              className="p-2 text-gray-700 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 size={15}/>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl">
                   <h2 className="text-[12px] font-black uppercase text-white mb-10 flex items-center gap-4 tracking-widest"><Megaphone size={20} className="text-[#fe7302]"/> Banner Publicitário</h2>
                   <div className="relative aspect-[4/5] max-w-[280px] mx-auto bg-black/40 rounded-[2.5rem] border-2 border-dashed border-white/5 overflow-hidden flex items-center justify-center mb-10 group hover:border-[#fe7302]/30 transition-all">
