@@ -34,7 +34,10 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
             try {
                 const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
                 const snap = await getDocs(q);
-                setDbCategories([t('allCategories'), ...snap.docs.map(d => d.data().name)]);
+                const names = snap.docs
+                    .map(d => d.data().name as string)
+                    .sort((a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }));
+                setDbCategories([t('allCategories'), ...names]);
             } catch {
                 setDbCategories([t('allCategories'), 'Formatura', 'Futebol', 'Gospel', '9º Ano']);
             } finally {

@@ -457,6 +457,19 @@ export default function AdminPage() {
     const category = showNewCategory ? formData.get('newCategory')?.toString() : formData.get('category')?.toString();
     const isNewProduct = !editingId;
     try {
+      // Auto-criar categoria na coleção "categories" se vier do campo "Nova Categoria"
+      if (showNewCategory && category) {
+        const categoryNameNormalized = category.trim().toUpperCase();
+        const catQuery = query(collection(db, "categories"), where("name", "==", categoryNameNormalized));
+        const catSnap = await getDocs(catQuery);
+        if (catSnap.empty) {
+          await addDoc(collection(db, "categories"), {
+            name: categoryNameNormalized,
+            imageUrl: '',
+            createdAt: serverTimestamp(),
+          });
+        }
+      }
       let urlCapa = previews.capa, urlDestaque = previews.destaque, urlVetor = removeExistingVetor ? "" : products.find(p => p.id === editingId)?.urls?.download, galeriaUrls = previews.galeria.filter(url => !url.startsWith('blob:'));
       if (fileCapa) urlCapa = await uploadFile(fileCapa, 'capas');
       if (fileDestaque) urlDestaque = await uploadFile(fileDestaque, 'destaques');
