@@ -357,23 +357,60 @@ export default function AdminPage() {
     e.preventDefault();
     const code = novoCupom.code.trim().toUpperCase();
     if (!code || !novoCupom.value) return;
-    const data: any = {
-      type: novoCupom.type,
-      value: parseFloat(novoCupom.value),
-      minOrder: parseFloat(novoCupom.minOrder || '0') || 0,
-      usedCount: 0,
-      active: true,
-      createdAt: serverTimestamp(),
-      expiresAt: novoCupom.expiresAt ? new Date(novoCupom.expiresAt) : null,
-    };
-    await setDoc(doc(db, "coupons", code), data);
-    setNovoCupom({ code: '', type: 'percent', value: '', minOrder: '', expiresAt: '' });
-    loadData();
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/coupons/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({
+          action: 'create',
+          code,
+          type: novoCupom.type,
+          value: novoCupom.value,
+          minOrder: novoCupom.minOrder || '0',
+          expiresAt: novoCupom.expiresAt || null,
+        }),
+      });
+      const data = await res.json();
+      if (!data.success) { alert('Erro: ' + data.error); return; }
+      setNovoCupom({ code: '', type: 'percent', value: '', minOrder: '', expiresAt: '' });
+      loadData();
+    } catch (err: any) {
+      alert('Erro ao criar cupom: ' + err.message);
+    }
   };
 
   const handleToggleCoupon = async (id: string, currentActive: boolean) => {
-    await updateDoc(doc(db, "coupons", id), { active: !currentActive });
-    loadData();
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/coupons/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ action: 'toggle', code: id, active: !currentActive }),
+      });
+      const data = await res.json();
+      if (!data.success) { alert('Erro: ' + data.error); return; }
+      loadData();
+    } catch (err: any) {
+      alert('Erro ao atualizar cupom: ' + err.message);
+    }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    if (!confirm(`Excluir cupom ${id}?`)) return;
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/coupons/manage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        body: JSON.stringify({ action: 'delete', code: id }),
+      });
+      const data = await res.json();
+      if (!data.success) { alert('Erro: ' + data.error); return; }
+      loadData();
+    } catch (err: any) {
+      alert('Erro ao excluir cupom: ' + err.message);
+    }
   };
 
   const handleBannerUpload = async (file: File) => {
@@ -1185,7 +1222,7 @@ export default function AdminPage() {
                               {cup.active ? 'Ativo' : 'Inativo'}
                             </button>
                             <button
-                              onClick={async () => { if (confirm(`Excluir cupom ${cup.id}?`)) { await deleteDoc(doc(db, 'coupons', cup.id)); loadData(); } }}
+                              onClick={() => handleDeleteCoupon(cup.id)}
                               className="p-2 text-gray-700 hover:text-red-500 transition-colors"
                             >
                               <Trash2 size={15}/>
