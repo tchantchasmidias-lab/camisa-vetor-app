@@ -98,11 +98,18 @@ export default function AdminPage() {
       const cSnap = await getDocs(query(collection(db, "categories"), orderBy("name", "asc")));
       setCategorias(cSnap.docs.map(d => ({ id: d.id, ...d.data() })));
 
-      const cupSnap = await getDocs(query(collection(db, "coupons"), orderBy("createdAt", "desc")));
-      setCupons(cupSnap.docs.map(d => ({ id: d.id, ...d.data() })));
-
       try {
         const token = await auth.currentUser?.getIdToken();
+
+        // Carregar cupons via API (Admin SDK — ignora regras Firestore)
+        const cupRes = await fetch('/api/coupons/manage', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (cupRes.ok) {
+          const cupData = await cupRes.json();
+          setCupons(cupData.coupons || []);
+        }
+
         const statsRes = await fetch('/api/admin/stats', {
           headers: { 'Authorization': `Bearer ${token}` }
         });

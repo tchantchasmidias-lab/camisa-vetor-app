@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
 
-// Verifica se o usuário é admin (mesmo email de config)
+// Verifica se o usuário é admin
 async function isAdmin(req: Request): Promise<boolean> {
   try {
     const token = req.headers.get('Authorization')?.replace('Bearer ', '');
@@ -15,7 +15,30 @@ async function isAdmin(req: Request): Promise<boolean> {
   }
 }
 
-// POST /api/coupons/manage — criar cupom
+// GET /api/coupons/manage — listar todos os cupons
+export async function GET(req: Request) {
+  if (!(await isAdmin(req))) {
+    return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
+  }
+  try {
+    const snap = await adminDb.collection('coupons').orderBy('createdAt', 'desc').get();
+    const coupons = snap.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        ...data,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() ?? null,
+        expiresAt: data.expiresAt?.toDate?.()?.toISOString() ?? null,
+      };
+    });
+    return NextResponse.json({ coupons });
+  } catch (error: any) {
+    console.error('Erro ao listar cupons:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+// POST /api/coupons/manage — criar, toggle, delete
 export async function POST(req: Request) {
   if (!(await isAdmin(req))) {
     return NextResponse.json({ error: 'Não autorizado.' }, { status: 401 });
