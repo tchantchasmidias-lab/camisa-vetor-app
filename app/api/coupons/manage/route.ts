@@ -8,7 +8,7 @@ async function isAdmin(req: Request): Promise<boolean> {
     const token = req.headers.get('Authorization')?.replace('Bearer ', '');
     if (!token) return false;
     const decoded = await adminAuth.verifyIdToken(token);
-    const adminEmail = process.env.ADMIN_EMAIL || 'tchantchasmidias@gmail.com';
+    const adminEmail = process.env.ADMIN_EMAIL || 'camisavetor@gmail.com';
     return decoded.email === adminEmail;
   } catch {
     return false;
