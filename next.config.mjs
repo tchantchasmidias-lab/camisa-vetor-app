@@ -11,6 +11,23 @@ const nextConfig = {
       { protocol: 'https', hostname: 'firebasestorage.app' },
     ],
   },
+  async redirects() {
+    return [
+      // Redireciona camisavetor.com.br → camisavetor.com (domínio principal)
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'camisavetor.com.br' }],
+        destination: 'https://camisavetor.com/:path*',
+        permanent: true, // 301 - melhor para SEO
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.camisavetor.com.br' }],
+        destination: 'https://camisavetor.com/:path*',
+        permanent: true,
+      },
+    ];
+  },
   async rewrites() {
     return [
       {

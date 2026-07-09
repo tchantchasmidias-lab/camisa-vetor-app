@@ -7,7 +7,7 @@ import {
   deleteDoc, doc, updateDoc, setDoc, where, collectionGroup 
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithRedirect, GoogleAuthProvider, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
   Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
@@ -16,7 +16,7 @@ import {
 import Image from 'next/image';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos'>('produtos');
+  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos' | 'clientes'>('produtos');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [buscaProduto, setBuscaProduto] = useState('');
@@ -34,6 +34,10 @@ export default function AdminPage() {
   const [pedidos, setPedidos] = useState<any[]>([]);
   const [filtroStatus, setFiltroStatus] = useState<'todos' | 'pago' | 'pendente' | 'cancelado'>('todos');
   const [buscaPedido, setBuscaPedido] = useState('');
+
+  // ESTADOS DE CLIENTES
+  const [listaClientes, setListaClientes] = useState<any[]>([]);
+  const [buscaCliente, setBuscaCliente] = useState('');
   
   // ESTADOS DE EMAIL
   const [emailTemplates, setEmailTemplates] = useState({
@@ -146,7 +150,43 @@ export default function AdminPage() {
       } catch (err) {
         console.error("Erro ao buscar pedidos", err);
       }
+
+      // Buscar Clientes
+      try {
+        const token = await auth.currentUser?.getIdToken();
+        const clientesRes = await fetch('/api/admin/clientes', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (clientesRes.ok) {
+          const clientesData = await clientesRes.json();
+          setListaClientes(clientesData.clientes || []);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar clientes", err);
+      }
     } catch (e) { console.error(e); }
+  };
+
+  const handleDeleteCliente = async (uid: string, nome: string) => {
+    if (!confirm(`Tem certeza que deseja deletar o cliente "${nome}"? Esta ação não pode ser desfeita.`)) return;
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/admin/clientes', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ uid }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setListaClientes(prev => prev.filter(c => c.uid !== uid));
+      setMetricas(prev => ({ ...prev, clientes: prev.clientes - 1 }));
+      alert(`Cliente "${nome}" deletado com sucesso.`);
+    } catch (error: any) {
+      alert('Erro ao deletar cliente: ' + error.message);
+    }
   };
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: 'pago' | 'pendente' | 'cancelado') => {
@@ -269,27 +309,20 @@ export default function AdminPage() {
       setAuthLoading(false);
     });
 
-    const checkRedirect = async () => {
-      try {
-        await getRedirectResult(auth);
-      } catch (error: any) {
-        console.error("Erro no redirecionamento do Google:", error);
-        setLoginError('Falha ao autenticar com o Google. Tente novamente.');
-      }
-    };
-    checkRedirect();
-
     return () => unsubscribe();
   }, []);
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
     setLoginError('');
     try {
       const provider = new GoogleAuthProvider();
-      signInWithRedirect(auth, provider);
-    } catch (err) {
-      setLoginError('Erro ao iniciar login com Google.');
+      await signInWithPopup(auth, provider);
+      // O onAuthStateChanged vai lidar com o resto
+    } catch (err: any) {
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setLoginError('Erro ao iniciar login com Google.');
+      }
       setIsLoggingIn(false);
     }
   };
@@ -725,6 +758,7 @@ export default function AdminPage() {
           <div className="flex flex-wrap items-center gap-4 bg-[#111111] p-2 rounded-2xl border border-white/5">
              <button onClick={() => setActiveTab('produtos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
              <button onClick={() => setActiveTab('pedidos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pedidos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Vendas</button>
+             <button onClick={() => setActiveTab('clientes')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'clientes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Clientes</button>
              <button onClick={() => setActiveTab('design')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
              <button onClick={() => setActiveTab('emails')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
              <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
@@ -734,10 +768,10 @@ export default function AdminPage() {
         
         {/* MÉTRICAS PREMIUM */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-            <div className="bg-[#111111] p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-2xl group hover:border-[#fe7302]/30 transition-all">
+            <button onClick={() => setActiveTab('clientes')} className="bg-[#111111] p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-2xl group hover:border-blue-500/40 transition-all text-left w-full">
                 <div className="p-4 bg-blue-500/10 text-blue-500 rounded-2xl group-hover:scale-110 transition-transform"><Users size={28}/></div>
-                <div><p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Clientes</p><h3 className="text-2xl font-black text-white tracking-tighter">{metricas.clientes}</h3></div>
-            </div>
+                <div><p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Clientes</p><h3 className="text-2xl font-black text-white tracking-tighter">{metricas.clientes}</h3><p className="text-[8px] text-blue-500/60 font-bold uppercase tracking-widest mt-1">Ver lista →</p></div>
+            </button>
             <div className="bg-[#111111] p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-2xl group hover:border-[#fe7302]/30 transition-all">
                 <div className="p-4 bg-[#fe7302]/10 text-[#fe7302] rounded-2xl group-hover:scale-110 transition-transform"><Award size={28}/></div>
                 <div className="flex-1 overflow-hidden"><p className="text-[9px] font-black uppercase text-gray-500 tracking-widest mb-2">Mais Vendido</p><h3 className="text-[12px] font-black text-white uppercase truncate tracking-tight">{metricas.topVendido}</h3></div>
@@ -1700,6 +1734,90 @@ export default function AdminPage() {
                     );
                   });
                 })()}
+              </div>
+            </div>
+          )}
+
+          {/* ABA CLIENTES */}
+          {activeTab === 'clientes' && (
+            <div className="animate-in fade-in slide-in-from-bottom-6 duration-700">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="h-px flex-1 bg-white/5"></div>
+                <p className="text-[9px] font-black uppercase text-gray-500 tracking-[0.3em] flex items-center gap-2"><Users size={12}/> Lista de Clientes</p>
+                <div className="h-px flex-1 bg-white/5"></div>
+              </div>
+
+              {/* Busca */}
+              <div className="relative mb-8 max-w-md">
+                <Search size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Buscar por nome ou e-mail..."
+                  value={buscaCliente}
+                  onChange={e => setBuscaCliente(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 bg-[#111111] border border-white/5 rounded-2xl text-[12px] text-white placeholder-gray-600 focus:outline-none focus:border-blue-500/40 transition-colors"
+                />
+              </div>
+
+              {/* Lista */}
+              <div className="space-y-3">
+                {listaClientes
+                  .filter(c =>
+                    c.name?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+                    c.email?.toLowerCase().includes(buscaCliente.toLowerCase())
+                  )
+                  .map(cliente => (
+                    <div key={cliente.uid} className="bg-[#111111] border border-white/5 rounded-2xl p-5 flex items-center gap-5 hover:border-white/10 transition-all group">
+                      {/* Avatar */}
+                      <div className="w-11 h-11 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                        {cliente.photoURL ? (
+                          <img src={cliente.photoURL} alt={cliente.name} className="w-full h-full object-cover rounded-full" />
+                        ) : (
+                          <Users size={18} className="text-blue-400" />
+                        )}
+                      </div>
+
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[13px] font-black text-white truncate">{cliente.name || 'Sem nome'}</p>
+                        <p className="text-[10px] text-gray-500 font-medium truncate mt-0.5">{cliente.email}</p>
+                        {cliente.createdAt && (
+                          <p className="text-[9px] text-gray-600 font-bold uppercase tracking-wider mt-1">
+                            Cadastro: {new Date(cliente.createdAt?.seconds ? cliente.createdAt.seconds * 1000 : cliente.createdAt).toLocaleDateString('pt-BR')}
+                          </p>
+                        )}
+                      </div>
+
+                      {/* Botão Deletar */}
+                      <button
+                        onClick={() => handleDeleteCliente(cliente.uid, cliente.name || cliente.email)}
+                        className="p-2.5 rounded-xl text-red-500/30 hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+                        title="Deletar cliente"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
+
+                {listaClientes.filter(c =>
+                  c.name?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+                  c.email?.toLowerCase().includes(buscaCliente.toLowerCase())
+                ).length === 0 && (
+                  <div className="text-center py-16 text-gray-600">
+                    <Users size={40} className="mx-auto mb-4 opacity-30" />
+                    <p className="text-[12px] font-bold uppercase tracking-widest">Nenhum cliente encontrado</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Contador */}
+              <div className="mt-6 text-center">
+                <p className="text-[9px] text-gray-600 font-bold uppercase tracking-widest">
+                  {listaClientes.filter(c =>
+                    c.name?.toLowerCase().includes(buscaCliente.toLowerCase()) ||
+                    c.email?.toLowerCase().includes(buscaCliente.toLowerCase())
+                  ).length} de {listaClientes.length} clientes
+                </p>
               </div>
             </div>
           )}

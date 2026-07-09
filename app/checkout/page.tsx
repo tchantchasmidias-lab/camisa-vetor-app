@@ -201,11 +201,12 @@ function CheckoutContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             items: cartItems,
+            userId: user?.uid,
             email: userData.email,
             firstName: userData.nome.split(' ')[0],
             cpf: userData.cpf,
-            // Passa o total com desconto para o gateway
-            totalOverride: couponData ? couponData.finalTotal : undefined,
+            // Passa o código do cupom para validação no servidor
+            couponCode: couponData ? couponData.code : undefined,
           })
         });
         const data = await res.json();
@@ -303,19 +304,19 @@ function CheckoutContent() {
                   </div>
                 ) : (
                   <div className="space-y-3">
-                    <div className="flex gap-3">
+                    <div className="flex gap-2 overflow-hidden">
                       <input
                         type="text"
                         value={couponInput}
                         onChange={e => { setCouponInput(e.target.value.toUpperCase()); setCouponError(''); }}
                         onKeyDown={e => e.key === 'Enter' && handleApplyCoupon()}
                         placeholder="DIGITE SEU CUPOM"
-                        className="flex-1 border border-[#dadce0] rounded-xl px-5 py-3 text-[12px] font-black uppercase outline-none focus:border-[#fe7302] transition-all placeholder-[#dadce0] tracking-widest text-[#202124]"
+                        className="min-w-0 flex-1 border border-[#dadce0] rounded-xl px-4 py-3 text-[12px] font-black uppercase outline-none focus:border-[#fe7302] transition-all placeholder-[#dadce0] tracking-widest text-[#202124]"
                       />
                       <button
                         onClick={handleApplyCoupon}
                         disabled={couponLoading || !couponInput.trim()}
-                        className="bg-[#202124] text-white text-[10px] font-black uppercase px-6 py-3 rounded-xl hover:bg-[#fe7302] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 tracking-widest"
+                        className="flex-shrink-0 bg-[#202124] text-white text-[10px] font-black uppercase px-5 py-3 rounded-xl hover:bg-[#fe7302] transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2 tracking-widest"
                       >
                         {couponLoading ? <Loader2 size={14} className="animate-spin" /> : 'Aplicar'}
                       </button>
@@ -419,8 +420,13 @@ function CheckoutContent() {
                                     const res = await fetch("/api/checkout/paypal/create", {
                                       method: "POST",
                                       headers: { "Content-Type": "application/json" },
-                                      // Envia o total com desconto para o PayPal
-                                      body: JSON.stringify({ items: cartItems, currency: currencyCode, totalOverride: couponData ? couponData.finalTotal : undefined })
+                                      body: JSON.stringify({
+                                        items: cartItems,
+                                        userId: user?.uid,
+                                        email: userData?.email || user?.email,
+                                        currency: currencyCode,
+                                        couponCode: couponData ? couponData.code : undefined,
+                                      })
                                     });
                                     const order = await res.json();
                                     return order.id;

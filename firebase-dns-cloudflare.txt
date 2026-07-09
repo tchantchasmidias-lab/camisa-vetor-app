@@ -1,0 +1,17 @@
+$ORIGIN camisavetor.com.br.
+$TTL 3600
+
+; =============================================
+; REGISTRO A - Aponta domínio para Firebase
+; =============================================
+@ IN A 35.219.200.10
+
+; =============================================
+; REGISTRO TXT - Verificação de propriedade Firebase
+; =============================================
+@ IN TXT "fah-claim=002-02-e512036e-59f2-4f50-966f-5a06cc35bee8"
+
+; =============================================
+; REGISTRO CNAME - Verificação SSL (certificado)
+; =============================================
+_acme-challenge_gguz6lp36wrur55q IN CNAME 88a66e5a-0930-4e61-9cd8-40e8cf0c55a5.19.authorize.certificatemanager.goog.

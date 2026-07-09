@@ -4,7 +4,7 @@ var nextConfig = {
     // 🚀 OTIMIZAÇÃO: WebP apenas (sem AVIF para preservar qualidade das artes)
     formats: ["image/webp"],
     deviceSizes: [390, 430, 768, 1024, 1280, 1400, 1920],
-    imageSizes: [64, 128, 256, 384, 512],
+    imageSizes: [64, 128, 256, 384, 512, 750, 1e3],
     minimumCacheTTL: 31536e3,
     // 1 ano de cache para imagens otimizadas
     remotePatterns: [

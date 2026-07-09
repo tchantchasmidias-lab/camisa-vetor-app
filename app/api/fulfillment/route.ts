@@ -64,19 +64,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Pagamento não confirmado no provedor' }, { status: 403 });
     }
 
-    // 1. Salvar pedido no Firestore (Marcado como verificado)
+    // 1. Atualizar pedido no Firestore (Marcado como pago e verificado)
     const orderData = {
       userId,
       email,
       items, 
       transactionId,
       paymentMethod,
-      createdAt: new Date().toISOString(),
       status: 'pago',
-      verified: true
+      verified: true,
+      paidAt: new Date().toISOString()
     };
 
-    await adminDb.collection('pedidos').doc(transactionId).set(orderData);
+    await adminDb.collection('pedidos').doc(transactionId).set(orderData, { merge: true });
 
     // 2. Buscar links diretos
     const productsLinks = await Promise.all(items.map(async (item: any) => {

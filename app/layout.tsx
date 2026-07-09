@@ -15,15 +15,42 @@ const inter = Inter({
   display: 'swap',
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  themeColor: '#fe7302',
+};
+
 export const metadata = {
-  title: 'Camisa Vetor | Vetores Profissionais',
-  description: 'Os melhores vetores para estamparia e sublimação.',
+  title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
+  description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium. Camisas, times, personagens e muito mais.',
+  metadataBase: new URL('https://camisavetor.com'),
+  alternates: {
+    canonical: 'https://camisavetor.com',
+  },
   robots: {
-    index: false,
-    follow: false,
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
+  },
+  openGraph: {
+    title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
+    description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI.',
+    url: 'https://camisavetor.com',
+    siteName: 'Camisa Vetor',
+    locale: 'pt_BR',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
+    description: 'Baixe vetores profissionais para estamparia e sublimação.',
   },
   manifest: '/manifest.json',
-  themeColor: '#fe7302',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black' as const,
@@ -33,11 +60,6 @@ export const metadata = {
     icon: '/icon.png',
     shortcut: '/icon.png',
     apple: '/icon.png',
-  },
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 1,
   },
 };
 
