@@ -70,11 +70,15 @@ export async function POST(req: Request) {
     const totalAmount = parseFloat(finalTotal.toFixed(2));
     const transactionId = uuidv4();
 
+    const expirationDate = new Date();
+    expirationDate.setHours(expirationDate.getHours() + 1);
+
     const request = {
       body: {
         transaction_amount: totalAmount,
         description: `Compra Camisa Vetor - ${items.length} itens`,
         payment_method_id: 'pix',
+        date_of_expiration: expirationDate.toISOString(),
         payer: {
           email,
           first_name: firstName,
