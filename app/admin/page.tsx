@@ -139,14 +139,20 @@ export default function AdminPage() {
 
       // Buscar Pedidos
       try {
-        const pedSnap = await getDocs(collection(db, "pedidos"));
-        const pedList: any[] = pedSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-        pedList.sort((a, b) => {
-          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt || 0);
-          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt || 0);
-          return dateB.getTime() - dateA.getTime();
+        const token = await auth.currentUser?.getIdToken();
+        const pedRes = await fetch('/api/admin/pedidos', {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-        setPedidos(pedList);
+        if (pedRes.ok) {
+          const pedData = await pedRes.json();
+          const pedList = pedData.pedidos || [];
+          pedList.sort((a: any, b: any) => {
+            const dateA = new Date(a.createdAt || 0);
+            const dateB = new Date(b.createdAt || 0);
+            return dateB.getTime() - dateA.getTime();
+          });
+          setPedidos(pedList);
+        }
       } catch (err) {
         console.error("Erro ao buscar pedidos", err);
       }

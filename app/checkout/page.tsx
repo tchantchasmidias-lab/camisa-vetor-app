@@ -119,7 +119,7 @@ function CheckoutContent() {
     }
   };
 
-  const processFulfillment = async (transactionId: string, method: string) => {
+  const processFulfillment = async (transactionId: string, method: string, providerOrderId?: string) => {
     setIsFulfilling(true);
     try {
       const res = await fetch('/api/fulfillment', {
@@ -130,7 +130,8 @@ function CheckoutContent() {
           email: userData?.email || user?.email,
           items: cartItems,
           transactionId,
-          paymentMethod: method
+          paymentMethod: method,
+          providerOrderId
         })
       });
       if (res.ok) {
@@ -232,7 +233,7 @@ function CheckoutContent() {
         const data = await res.json();
         if (data.status === 'approved') {
           clearInterval(interval);
-          processFulfillment(pixData.transactionId, 'pix');
+          processFulfillment(pixData.transactionId, 'pix', String(pixData.id));
         }
       } catch (error) {
         console.error("Erro ao verificar status do Pix:", error);

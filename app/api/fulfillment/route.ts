@@ -5,7 +5,7 @@ import { MercadoPagoConfig, Payment } from 'mercadopago';
 
 export async function POST(req: Request) {
   try {
-    const { userId, email, items, transactionId, paymentMethod } = await req.json();
+    const { userId, email, items, transactionId, paymentMethod, providerOrderId } = await req.json();
 
     if (!userId || !email || !items || !transactionId) {
       return NextResponse.json({ error: 'Faltam parâmetros obrigatórios' }, { status: 400 });
@@ -22,11 +22,12 @@ export async function POST(req: Request) {
 
     if (paymentMethod === 'pix') {
       if (!process.env.MERCADOPAGO_ACCESS_TOKEN) throw new Error("MP Token não configurado");
+      if (!providerOrderId) throw new Error("ID do provedor não enviado");
       const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN });
       const payment = new Payment(client);
-      const result = await payment.get({ id: transactionId });
+      const result = await payment.get({ id: providerOrderId });
       
-      if (result.status === 'approved') {
+      if (result.status === 'approved' && result.external_reference === transactionId) {
         isVerified = true;
       }
     } else if (paymentMethod === 'paypal') {
