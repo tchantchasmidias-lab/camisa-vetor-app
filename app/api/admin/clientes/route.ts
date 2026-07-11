@@ -22,6 +22,15 @@ export async function GET(req: Request) {
 
     const usersSnap = await adminDb.collection('users').orderBy('createdAt', 'desc').get();
 
+    // Busca os usuários no Firebase Auth para saber o método de login (Google vs Email)
+    const listUsersResult = await adminAuth.listUsers(1000);
+    const authProviders = new Map<string, string>();
+    listUsersResult.users.forEach(userRecord => {
+      // Se não tiver providerData, assumimos que é password. Se tiver, pegamos o primeiro (ex: google.com)
+      const provider = userRecord.providerData.length > 0 ? userRecord.providerData[0].providerId : 'password';
+      authProviders.set(userRecord.uid, provider);
+    });
+
     const clientes = usersSnap.docs.map(doc => {
       const data = doc.data();
       return {
@@ -30,6 +39,7 @@ export async function GET(req: Request) {
         email: data.email || '',
         photoURL: data.photoURL || '',
         createdAt: data.createdAt || null,
+        provider: authProviders.get(doc.id) || 'desconhecido',
       };
     });
 

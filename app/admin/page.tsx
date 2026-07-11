@@ -1787,11 +1787,30 @@ export default function AdminPage() {
                       <div className="flex-1 min-w-0">
                         <p className="text-[13px] font-black text-white truncate">{cliente.name || 'Sem nome'}</p>
                         <p className="text-[10px] text-gray-500 font-medium truncate mt-0.5">{cliente.email}</p>
-                        {cliente.createdAt && (
-                          <p className="text-[9px] text-gray-600 font-bold uppercase tracking-wider mt-1">
-                            Cadastro: {new Date(cliente.createdAt?.seconds ? cliente.createdAt.seconds * 1000 : cliente.createdAt).toLocaleDateString('pt-BR')}
-                          </p>
-                        )}
+                        <div className="flex items-center gap-3 mt-1.5">
+                          {cliente.createdAt && (
+                            <p className="text-[9px] text-gray-600 font-bold uppercase tracking-wider">
+                              Cadastro: {new Date(cliente.createdAt?.seconds ? cliente.createdAt.seconds * 1000 : cliente.createdAt).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                          
+                          {/* Ícone do Método de Cadastro */}
+                          {cliente.provider && (
+                            <div className="flex items-center gap-1.5 bg-white/5 px-2 py-0.5 rounded text-[9px] text-gray-400 font-bold uppercase tracking-wider" title={`Cadastrado via ${cliente.provider}`}>
+                              {cliente.provider === 'google.com' ? (
+                                <>
+                                  <Image src="/google.svg" alt="Google" width={10} height={10} />
+                                  Google
+                                </>
+                              ) : (
+                                <>
+                                  <Mail size={10} />
+                                  E-mail
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       {/* Botão Deletar */}
