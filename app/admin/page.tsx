@@ -195,6 +195,11 @@ export default function AdminPage() {
     }
   };
 
+  // Conta pedidos pagos de um cliente
+  const getComprasCliente = (uid: string): number => {
+    return pedidos.filter(p => p.userId === uid && p.status === 'pago').length;
+  };
+
   const handleUpdateOrderStatus = async (orderId: string, newStatus: 'pago' | 'pendente' | 'cancelado') => {
     try {
       // Busca o pedido para obter o userId antes de atualizar
@@ -1812,6 +1817,20 @@ export default function AdminPage() {
                           )}
                         </div>
                       </div>
+
+                      {/* Contador de Pedidos */}
+                      {(() => {
+                        const total = getComprasCliente(cliente.uid);
+                        return (
+                          <div
+                            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg ${total > 0 ? 'text-orange-400/70' : 'text-gray-700'}`}
+                            title={`${total} pedido${total !== 1 ? 's' : ''} pago${total !== 1 ? 's' : ''}`}
+                          >
+                            <Package size={11} />
+                            <span className="text-[10px] font-bold tabular-nums">{total}</span>
+                          </div>
+                        );
+                      })()}
 
                       {/* Botão Deletar */}
                       <button
