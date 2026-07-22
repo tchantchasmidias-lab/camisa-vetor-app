@@ -29,23 +29,31 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'userId obrigatório' }, { status: 400 });
     }
 
-    // Busca o token FCM do usuário específico
-    const tokenDoc = await adminDb.collection('fcm_tokens').doc(userId).get();
+    // Busca TODOS os tokens FCM do usuário (suporte multi-device)
+    const tokensSnap = await adminDb
+      .collection('fcm_tokens')
+      .where('userId', '==', userId)
+      .get();
 
-    if (!tokenDoc.exists) {
+    if (tokensSnap.empty) {
       return NextResponse.json({
         success: false,
         message: 'Usuário sem dispositivo registrado para notificações',
       });
     }
 
-    const fcmToken = tokenDoc.data()?.token;
-    if (!fcmToken) {
-      return NextResponse.json({ success: false, message: 'Token FCM inválido' });
+    const fcmTokens: string[] = [];
+    tokensSnap.docs.forEach((d) => {
+      const t = d.data()?.token;
+      if (t) fcmTokens.push(t);
+    });
+
+    if (fcmTokens.length === 0) {
+      return NextResponse.json({ success: false, message: 'Tokens FCM inválidos' });
     }
 
-    const message: admin.messaging.Message = {
-      token: fcmToken,
+    const message: admin.messaging.MulticastMessage = {
+      tokens: fcmTokens,
       notification: {
         title: '✅ Pedido aprovado!',
         body: 'Seus vetores estão prontos para download. Clique para acessar.',
@@ -57,29 +65,35 @@ export async function POST(request: NextRequest) {
       },
       webpush: {
         notification: {
-          icon: '/icons/icon-192.png',
-          badge: '/icons/icon-192.png',
+          icon: 'https://camisavetor.com/pwa-icon-192.png',
+          badge: 'https://camisavetor.com/pwa-icon-192.png',
           vibrate: [300, 100, 300],
-          requireInteraction: true, // Mantém a notificação até o usuário interagir
+          requireInteraction: true,
         },
         fcmOptions: {
-          link: '/downloads',
+          link: 'https://camisavetor.com/downloads',
         },
       },
     };
 
-    await admin.messaging().send(message);
+    const response = await admin.messaging().sendEachForMulticast(message);
 
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    // Se o token é inválido, remove do Firestore
-    if (error.code === 'messaging/registration-token-not-registered') {
-      const body = await request.json().catch(() => ({}));
-      if (body.userId) {
-        await adminDb.collection('fcm_tokens').doc(body.userId).delete();
+    // Remove tokens inválidos
+    const batch = adminDb.batch();
+    let hasInvalid = false;
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success && resp.error?.code === 'messaging/registration-token-not-registered') {
+        const docToDelete = tokensSnap.docs.find((d) => d.data().token === fcmTokens[idx]);
+        if (docToDelete) {
+          batch.delete(docToDelete.ref);
+          hasInvalid = true;
+        }
       }
-    }
+    });
+    if (hasInvalid) await batch.commit();
 
+    return NextResponse.json({ success: true, sent: response.successCount, total: fcmTokens.length });
+  } catch (error: any) {
     console.error('[Notif] Erro ao enviar notificação de pedido aprovado:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

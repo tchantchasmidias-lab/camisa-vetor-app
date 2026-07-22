@@ -47,14 +47,34 @@ export async function requestNotificationPermission(): Promise<string | null> {
 }
 
 /**
- * Salva o token FCM no Firestore vinculado ao userId.
+ * Gera um ID único e estável para este dispositivo/browser.
+ * Armazenado no localStorage para persistência entre sessões.
+ */
+function getDeviceId(): string {
+  if (typeof window === 'undefined') return 'server';
+  const key = 'cv_device_id';
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+    localStorage.setItem(key, id);
+  }
+  return id;
+}
+
+/**
+ * Salva o token FCM no Firestore vinculado ao userId + deviceId.
+ * Cada dispositivo tem seu próprio documento, evitando que o login
+ * em um novo device sobrescreva o token do celular do usuário.
  */
 export async function saveFcmToken(userId: string, token: string): Promise<void> {
   try {
+    const deviceId = getDeviceId();
     await setDoc(
-      doc(db, 'fcm_tokens', userId),
+      doc(db, 'fcm_tokens', `${userId}_${deviceId}`),
       {
         token,
+        userId,
+        deviceId,
         updatedAt: serverTimestamp(),
         platform: 'web',
       },

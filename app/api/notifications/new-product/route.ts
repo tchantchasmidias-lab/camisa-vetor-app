@@ -65,12 +65,12 @@ export async function POST(request: NextRequest) {
         },
         webpush: {
           notification: {
-            icon: '/icons/icon-192.png',
-            badge: '/icons/icon-192.png',
+            icon: 'https://camisavetor.com/pwa-icon-192.png',
+            badge: 'https://camisavetor.com/pwa-icon-192.png',
             vibrate: [200, 100, 200],
           },
           fcmOptions: {
-            link: productSlug ? `/product/${productSlug}` : '/',
+            link: productSlug ? `https://camisavetor.com/product/${productSlug}` : 'https://camisavetor.com',
           },
         },
       };

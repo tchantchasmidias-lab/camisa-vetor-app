@@ -84,18 +84,27 @@ export default function PwaInit() {
     const unsub = onForegroundMessage((payload) => {
       console.log('[FCM] Notificação em foreground:', payload);
 
-      // Exibe como uma notificação nativa mesmo com app aberto
-      if (Notification.permission === 'granted') {
-        const title = payload.notification?.title || 'Camisa Vetor';
-        const body = payload.notification?.body || '';
-        const url = payload.data?.url || '/';
+      if (Notification.permission !== 'granted') return;
 
-        const notif = new Notification(title, {
-          body,
-          icon: '/icons/icon-192.png',
-          badge: '/icons/icon-192.png',
+      const title = payload.notification?.title || 'Camisa Vetor';
+      const body = payload.notification?.body || '';
+      const url = payload.data?.url || '/';
+
+      const options: NotificationOptions = {
+        body,
+        icon: '/pwa-icon-192.png',
+        badge: '/pwa-icon-192.png',
+        data: { url },
+      };
+
+      // Android PWA não suporta new Notification() — usa o Service Worker
+      if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.ready.then((reg) => {
+          reg.showNotification(title, options);
         });
-
+      } else {
+        // Fallback para desktop
+        const notif = new Notification(title, options);
         notif.onclick = () => {
           window.focus();
           window.location.href = url;

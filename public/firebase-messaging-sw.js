@@ -2,8 +2,8 @@
 // IMPORTANTE: Este arquivo DEVE se chamar "firebase-messaging-sw.js"
 // e ficar na raiz do /public para o FCM funcionar.
 
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
-importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-app-compat.js');
+importScripts('https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging-compat.js');
 
 firebase.initializeApp({
   apiKey: 'AIzaSyA7rCnhKpCrX-s5Y_BSmGq_N85V29-AUdA',
@@ -23,8 +23,8 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification?.title || 'Camisa Vetor';
   const notificationOptions = {
     body: payload.notification?.body || '',
-    icon: '/icon.png',
-    badge: '/icon.png',
+    icon: '/pwa-icon-192.png',
+    badge: '/pwa-icon-192.png',
     vibrate: [200, 100, 200],
     tag: payload.data?.tag || 'camisa-vetor',
     renotify: true,
