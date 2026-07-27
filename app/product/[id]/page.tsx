@@ -39,9 +39,16 @@ export async function generateMetadata(
   }
 
   const name = product.name || 'Vetor Profissional';
-  const category = product.category || 'Vetor';
   const description = product.description || `Baixe agora o ${name} em alta resolução. Arte editável ideal para sublimação, serigrafia e transfer. Download imediato após a compra.`;
-  const image = product.urls?.capa || product.urls?.destaque || '/logo-social.png';
+
+  // Prioridade: destaque (vitrine principal) → capa → logo do site
+  // O Google usa a primeira imagem como principal nos resultados
+  const ogImages = [
+    product.urls?.destaque,
+    product.urls?.capa,
+    ...(product.urls?.galeria || []),
+  ].filter(Boolean) as string[];
+  const primaryImage = ogImages[0] || '/logo-social.png';
 
   return {
     title: `${name} | Vetor Editável Profissional`,
@@ -49,14 +56,14 @@ export async function generateMetadata(
     openGraph: {
       title: `${name} | Camisa Vetor`,
       description: description,
-      images: [image],
+      images: ogImages.length > 0 ? ogImages : ['/logo-social.png'],
       type: 'website',
     },
     twitter: {
       card: 'summary_large_image',
       title: name,
       description: description,
-      images: [image],
+      images: [primaryImage],
     },
     alternates: {
       canonical: `https://camisavetor.com/product/${product.slug || product.id}`,
@@ -96,11 +103,19 @@ export default async function Page({ params }: Props) {
     const serializedProduct = JSON.parse(JSON.stringify(product));
 
     // Dados Estruturados (JSON-LD) para o Google
+    // Monta array completo de imagens: destaque primeiro (vitrine principal),
+    // depois capa, depois galeria — o Google usa a 1ª como imagem principal
+    const productImages = [
+      serializedProduct.urls?.destaque,
+      serializedProduct.urls?.capa,
+      ...(serializedProduct.urls?.galeria || []),
+    ].filter(Boolean);
+
     const jsonLd = {
       '@context': 'https://schema.org',
       '@type': 'Product',
       'name': serializedProduct.name,
-      'image': serializedProduct.urls?.capa || serializedProduct.urls?.destaque,
+      'image': productImages.length === 1 ? productImages[0] : productImages,
       'description': serializedProduct.description || `Vetor editável de ${serializedProduct.name}`,
       // Atributos obrigatórios do Google Merchant Center para produtos de vestuário/arte
       // Usa campo do Firestore se existir, senão aplica padrão ideal para produtos digitais

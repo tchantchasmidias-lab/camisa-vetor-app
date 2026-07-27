@@ -175,7 +175,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                  <div key={idx} className="w-full h-full flex-shrink-0 snap-center relative">
                     <Image 
                       src={url} 
-                      alt={`Imagem ${idx}`} 
+                      alt={idx === 0 ? tp(product.name) : `${tp(product.name)} — imagem ${idx + 1}`}
                       fill 
                       quality={100}
                       sizes="(max-width: 1024px) 100vw, 45vw"
@@ -199,7 +199,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   onClick={() => handleThumbnailClick(url, index)}
                   className={`aspect-square relative rounded-2xl overflow-hidden border-2 transition-all duration-300 ${selectedImage === url ? 'border-[#fe7302] shadow-md shadow-orange-100' : 'border-transparent opacity-60 hover:opacity-100'}`}
                 >
-                  <Image src={url} alt={`Preview ${index}`} fill sizes="128px" quality={100} className="object-cover" />
+                  <Image src={url} alt={`${tp(product.name)} — preview ${index + 1}`} fill sizes="128px" quality={100} className="object-cover" />
                 </button>
               ))}
             </div>
