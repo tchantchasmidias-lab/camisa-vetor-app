@@ -102,9 +102,12 @@ export default async function Page({ params }: Props) {
       'name': serializedProduct.name,
       'image': serializedProduct.urls?.capa || serializedProduct.urls?.destaque,
       'description': serializedProduct.description || `Vetor editável de ${serializedProduct.name}`,
-      // Cor padrão para produtos digitais (vetores multicoloridos)
-      // Atende ao requisito obrigatório do Google Merchant Center
+      // Atributos obrigatórios do Google Merchant Center para produtos de vestuário/arte
+      // Usa campo do Firestore se existir, senão aplica padrão ideal para produtos digitais
       'color': serializedProduct.color || 'Multicolor',
+      'gender': serializedProduct.gender || 'unisex',
+      'age_group': serializedProduct.ageGroup || 'adult',
+      'size': serializedProduct.size || 'One Size',
       'brand': {
         '@type': 'Brand',
         'name': 'Camisa Vetor'
