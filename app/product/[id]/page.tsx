@@ -59,7 +59,7 @@ export async function generateMetadata(
       images: [image],
     },
     alternates: {
-      canonical: `https://camisa-vetor-app.web.app/product/${product.slug || product.id}`,
+      canonical: `https://camisavetor.com/product/${product.slug || product.id}`,
     }
   };
 }
@@ -102,6 +102,9 @@ export default async function Page({ params }: Props) {
       'name': serializedProduct.name,
       'image': serializedProduct.urls?.capa || serializedProduct.urls?.destaque,
       'description': serializedProduct.description || `Vetor editável de ${serializedProduct.name}`,
+      // Cor padrão para produtos digitais (vetores multicoloridos)
+      // Atende ao requisito obrigatório do Google Merchant Center
+      'color': serializedProduct.color || 'Multicolor',
       'brand': {
         '@type': 'Brand',
         'name': 'Camisa Vetor'
@@ -111,7 +114,7 @@ export default async function Page({ params }: Props) {
         'price': serializedProduct.price,
         'priceCurrency': 'BRL',
         'availability': 'https://schema.org/InStock',
-        'url': `https://camisa-vetor-app.web.app/product/${serializedProduct.slug || serializedProduct.id}`
+        'url': `https://camisavetor.com/product/${serializedProduct.slug || serializedProduct.id}`
       }
     };
 
