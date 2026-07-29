@@ -5,7 +5,7 @@
  * Após login bem-sucedido, cria o cookie __session e redireciona ao editor.
  */
 
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuth, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
 import { initializeApp, getApps } from 'firebase/app';
@@ -24,7 +24,7 @@ const app = getApps().length === 0
   ? initializeApp(firebaseConfig)
   : getApps()[0];
 
-export default function StudioLoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') ?? '/studio';
@@ -164,5 +164,13 @@ export default function StudioLoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function StudioLoginPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#0e1014] flex items-center justify-center text-orange-500">Carregando...</div>}>
+      <LoginContent />
+    </Suspense>
   );
 }

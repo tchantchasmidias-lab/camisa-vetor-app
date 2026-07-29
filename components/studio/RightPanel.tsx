@@ -123,7 +123,7 @@ export default function RightPanel() {
   const currentStroke = hasObject ? String((activeObject as { stroke?: unknown }).stroke ?? '#000000') : '#000000';
 
   // Seleciona um objeto a partir do painel de camadas
-  const selectObject = (fabricObj: Parameters<typeof canvasRefs.current.front.setActiveObject>[0]) => {
+  const selectObject = (fabricObj: any) => {
     const canvas = canvasRefs.current[activePart];
     if (!canvas) return;
     canvas.setActiveObject(fabricObj);
@@ -303,7 +303,7 @@ export default function RightPanel() {
               return (
                 <li key={obj.id} className="group relative">
                   <button
-                    onClick={() => selectObject(obj.fabricObject as Parameters<typeof canvasRefs.current.front.setActiveObject>[0])}
+                    onClick={() => selectObject(obj.fabricObject as any)}
                     onDoubleClick={() => startEditing(obj.id, obj.label)}
                     className={`
                       w-full flex items-center gap-2 px-2.5 py-2 rounded-lg

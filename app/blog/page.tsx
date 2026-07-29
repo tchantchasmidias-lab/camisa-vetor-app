@@ -14,12 +14,18 @@ export const metadata = {
 };
 
 export default async function BlogIndex() {
-  const postsSnapshot = await adminDb.collection('blog_posts')
-    .where('status', '==', 'published')
-    .orderBy('createdAt', 'desc')
-    .get();
-    
-  const posts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+  let posts: BlogPost[] = [];
+  
+  try {
+    const postsSnapshot = await adminDb.collection('blog_posts')
+      .where('status', '==', 'published')
+      .orderBy('createdAt', 'desc')
+      .get();
+      
+    posts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+  } catch (error: any) {
+    console.error('Aviso de Build: O Firebase exige a criação de um Índice Composto para a busca do Blog.', error.message);
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans">

@@ -149,7 +149,7 @@ export function StudioProvider({ children }: { children: React.ReactNode }) {
   // ── Gera label legível para o painel de camadas ────────────────────────────
   const makeLabel = (obj: FabricObject, index: number): string => {
     // Se o objeto tiver um nome customizado salvo
-    if (obj.name) return obj.name;
+    if ((obj as any).name) return (obj as any).name;
 
     const type = obj.type ?? 'objeto';
     if (type === 'i-text' || type === 'text') {

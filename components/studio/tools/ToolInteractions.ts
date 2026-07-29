@@ -216,7 +216,7 @@ export async function enableShapeTool(canvas: FabricCanvas, onShapeComplete: () 
   poly.controls = {};
   
   // Função que lida com o arrasto do nó
-  const actionHandler = (eventData: MouseEvent, transform: import('fabric').Transform, x: number, y: number) => {
+  const actionHandler = (eventData: any, transform: any, x: number, y: number) => {
     const polygon = transform.target as any;
     const currentControl = polygon.controls[poly.__corner];
     const mouseLocalPosition = polygon.toLocalPoint(
@@ -235,7 +235,7 @@ export async function enableShapeTool(canvas: FabricCanvas, onShapeComplete: () 
 
   // Renderizador do nó (um pequeno círculo azul)
   const anchorWrapper = (anchorIndex: number, fn: any) => {
-    return function(eventData: MouseEvent, transform: import('fabric').Transform, x: number, y: number) {
+    return function(eventData: any, transform: any, x: number, y: number) {
       const fabricObject = transform.target as any;
       const absolutePoint = fabricObject.toAbsolutePoint(
         new (window as any).fabric.Point(fabricObject.points[anchorIndex].x - fabricObject.pathOffset.x, fabricObject.points[anchorIndex].y - fabricObject.pathOffset.y),

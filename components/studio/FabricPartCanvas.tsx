@@ -135,11 +135,11 @@ const FabricPartCanvas = forwardRef<FabricPartCanvasHandle, FabricPartCanvasProp
         // Eventos que disparam sincronização de textura
         const SYNC_EVENTS = [
           'object:added', 'object:modified', 'object:removed',
-          'object:scaled', 'object:rotated', 'object:moved',
+          'object:scaling', 'object:rotating', 'object:moving',
           'path:created', 'text:changed', 'erasing:end',
-        ] as const;
+        ] as string[];
 
-        SYNC_EVENTS.forEach(ev => canvas.on(ev, syncTexture));
+        SYNC_EVENTS.forEach(ev => canvas.on(ev as any, syncTexture));
 
         // Primeira sincronização (canvas vazio = transparente)
         syncTexture();
