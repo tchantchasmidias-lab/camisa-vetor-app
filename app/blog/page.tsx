@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { BlogPost } from '@/lib/types/blog';
 
-export const revalidate = 60; // Revalidate every 60 seconds
+export const dynamic = 'force-dynamic';
 
 export const metadata = {
   title: 'Blog - Camisa Vetor',

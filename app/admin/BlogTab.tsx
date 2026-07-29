@@ -1,5 +1,5 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { db, storage } from '@/lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -12,6 +12,21 @@ export default function BlogTab() {
   
   const [generatedPost, setGeneratedPost] = useState<Partial<BlogPost> | null>(null);
   const [coverImageFile, setCoverImageFile] = useState<File | null>(null);
+  const [publishedPosts, setPublishedPosts] = useState<any[]>([]);
+
+  const fetchPosts = async () => {
+    try {
+      const res = await fetch('/api/admin/blog/list');
+      const data = await res.json();
+      if (res.ok) setPublishedPosts(data);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const generateWithAI = async () => {
     if (!prompt) return;
@@ -82,6 +97,7 @@ export default function BlogTab() {
       setGeneratedPost(null);
       setCoverImageFile(null);
       setPrompt('');
+      fetchPosts();
     } catch (err) {
       console.error(err);
       alert("Erro ao publicar post");
@@ -196,6 +212,38 @@ export default function BlogTab() {
           </div>
         </div>
       )}
+
+      {/* Lista de Posts Publicados */}
+      <div className="mt-12 pt-8 border-t border-white/5">
+        <h3 className="text-xl font-bold text-white mb-6">Artigos Publicados</h3>
+        {publishedPosts.length === 0 ? (
+          <p className="text-gray-500 text-sm">Nenhum artigo encontrado no banco de dados.</p>
+        ) : (
+          <div className="space-y-3">
+            {publishedPosts.map(post => (
+              <div key={post.id} className="bg-black/50 border border-white/5 p-4 rounded-xl flex items-center justify-between hover:border-orange-500/30 transition-colors">
+                <div>
+                  <h4 className="text-white font-bold">{post.title}</h4>
+                  <div className="text-xs text-gray-500 mt-1 flex gap-3">
+                    <span>Slug: /{post.slug}</span>
+                    <span>•</span>
+                    <span>Data: {new Date(post.createdAt).toLocaleDateString('pt-BR')}</span>
+                    <span>•</span>
+                    <span className={post.status === 'published' ? 'text-green-500' : 'text-orange-500'}>
+                      {post.status.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <a href={`/blog/${post.slug}`} target="_blank" rel="noreferrer" className="text-sm bg-white/5 hover:bg-white/10 px-3 py-1.5 rounded-lg text-gray-300 transition-colors">
+                    Ver no site
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
