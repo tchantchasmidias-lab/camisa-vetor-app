@@ -68,7 +68,16 @@ export default function BlogTab() {
         updatedAt: Date.now(),
       };
 
-      await addDoc(collection(db, 'blog_posts'), postData);
+      const res = await fetch('/api/admin/blog/publish', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(postData)
+      });
+      
+      if (!res.ok) {
+         const errorData = await res.json();
+         throw new Error(errorData.error || "Erro na API de publicação");
+      }
       alert("Post publicado com sucesso!");
       setGeneratedPost(null);
       setCoverImageFile(null);
