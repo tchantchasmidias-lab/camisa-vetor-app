@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
     
     const systemPrompt = `Você é um especialista em SEO e redator de conteúdo para o site Camisa Vetor (venda de artes e vetores para sublimação e estamparia).
 O usuário pedirá para você criar um post para o blog baseado em um tema.
