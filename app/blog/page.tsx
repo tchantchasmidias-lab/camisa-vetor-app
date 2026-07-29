@@ -18,11 +18,12 @@ export default async function BlogIndex() {
   
   try {
     const postsSnapshot = await adminDb.collection('blog_posts')
-      .where('status', '==', 'published')
       .orderBy('createdAt', 'desc')
       .get();
       
-    posts = postsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+    posts = postsSnapshot.docs
+      .map(doc => ({ id: doc.id, ...doc.data() } as BlogPost))
+      .filter(post => post.status === 'published');
   } catch (error: any) {
     console.error('Aviso de Build: O Firebase exige a criação de um Índice Composto para a busca do Blog.', error.message);
   }
