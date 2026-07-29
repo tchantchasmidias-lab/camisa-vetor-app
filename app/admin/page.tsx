@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { db, storage, auth } from '@/lib/firebase';
+import BlogTab from './BlogTab';
 import { 
   collection, addDoc, serverTimestamp, getDocs, query, orderBy, 
   deleteDoc, doc, updateDoc, setDoc, where, collectionGroup 
@@ -16,7 +17,7 @@ import {
 import Image from 'next/image';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos' | 'clientes'>('produtos');
+  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos' | 'clientes' | 'blog'>('produtos');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [buscaProduto, setBuscaProduto] = useState('');
@@ -771,6 +772,7 @@ export default function AdminPage() {
              <button onClick={() => setActiveTab('pedidos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pedidos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Vendas</button>
              <button onClick={() => setActiveTab('clientes')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'clientes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Clientes</button>
              <button onClick={() => setActiveTab('design')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
+             <button onClick={() => setActiveTab('blog')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'blog' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Blog</button>
              <button onClick={() => setActiveTab('emails')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
              <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
              <button onClick={handleAdminLogout} className="p-3 text-red-500/50 hover:text-red-500 transition-colors"><X size={20}/></button>
@@ -1863,6 +1865,13 @@ export default function AdminPage() {
                   ).length} de {listaClientes.length} clientes
                 </p>
               </div>
+            </div>
+          )}
+
+          {/* ABA BLOG */}
+          {activeTab === 'blog' && (
+            <div className="animate-fade-in">
+              <BlogTab />
             </div>
           )}
         </div>

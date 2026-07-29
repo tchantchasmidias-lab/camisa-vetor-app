@@ -24,6 +24,9 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
     const searchParams = useSearchParams();
     const pathname = usePathname();
     const whatsappUrl = 'https://wa.me/558791425634';
+
+    // Studio é uma aplicação separada — o Header do e-commerce não deve aparecer
+    if (pathname.startsWith('/studio')) return null;
     
     const { t, tp } = useGeo();
 

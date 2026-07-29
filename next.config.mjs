@@ -32,9 +32,16 @@ const nextConfig = {
   },
   async rewrites() {
     return [
+      // Firebase Auth popup handler
       {
         source: '/__/auth/:path*',
         destination: `https://camisa-vetor-app.firebaseapp.com/__/auth/:path*`,
+      },
+      // Subdomínio studio.camisavetor.com → /studio/* (sem afetar e-commerce)
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'studio.camisavetor.com' }],
+        destination: '/studio/:path*',
       },
     ];
   },
