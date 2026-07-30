@@ -1,8 +1,6 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { BlogPost } from '@/lib/types/blog';
 
@@ -30,7 +28,6 @@ export default async function BlogIndex() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans">
-      <Header />
       <main className="flex-grow max-w-7xl mx-auto w-full px-6 pt-32 pb-24">
         <div className="mb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#fe7302] to-[#ff9800] mb-4">Blog</h1>
@@ -79,7 +76,6 @@ export default async function BlogIndex() {
           </div>
         )}
       </main>
-      <Footer />
     </div>
   );
 }

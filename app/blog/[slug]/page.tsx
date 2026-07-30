@@ -2,8 +2,6 @@ import React from 'react';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { BlogPost } from '@/lib/types/blog';
 import { notFound } from 'next/navigation';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -48,7 +46,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white flex flex-col font-sans">
-      <Header />
       <main className="flex-grow w-full pt-32 pb-20">
         <article className="max-w-3xl mx-auto px-6">
           <header className="mb-12 text-center">
@@ -90,7 +87,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
           `}} />
         </article>
       </main>
-      <Footer />
     </div>
   );
 }
