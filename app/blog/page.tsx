@@ -3,6 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { BlogPost } from '@/lib/types/blog';
+import CategoryCarousel from '@/components/CategoryCarousel';
 
 export const dynamic = 'force-dynamic';
 
@@ -29,6 +30,12 @@ export default async function BlogIndex() {
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
       <main className="flex-grow max-w-7xl mx-auto w-full px-6 pt-32 pb-24">
+        
+        {/* Carrossel de Categorias Padrão */}
+        <div className="mb-12 -mx-3 md:mx-0">
+          <CategoryCarousel />
+        </div>
+
         <div className="mb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#fe7302] to-[#ff9800] mb-4">Blog</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">Conteúdos, dicas e tutoriais exclusivos sobre design, vetores e sublimação para impulsionar o seu negócio.</p>
