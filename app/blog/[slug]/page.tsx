@@ -47,7 +47,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
-      <div className="pt-24 md:pt-28">
+      <div className="pt-4 md:pt-4 pb-[28px] md:pb-10">
         <div className="w-full px-3 md:px-5">
           <CategoryCarousel />
         </div>
