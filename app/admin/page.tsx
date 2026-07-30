@@ -363,11 +363,43 @@ export default function AdminPage() {
   };
 
   // 2. FUNÇÕES DE UPLOAD
+
+  // Converte qualquer imagem (PNG, JPG, etc.) para WebP no navegador antes do upload.
+  // Garante máxima qualidade na fonte e arquivos menores no Firebase Storage.
+  const convertToWebP = (file: File, quality = 0.95): Promise<File> =>
+    new Promise<File>((resolve) => {
+      // Se já for WebP, devolve sem reprocessar
+      if (file.type === 'image/webp') { resolve(file); return; }
+      const img = document.createElement('img');
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')?.drawImage(img, 0, 0);
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(objectUrl);
+          if (blob) {
+            const baseName = file.name.replace(/\.[^/.]+$/, '');
+            resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+          } else {
+            resolve(file); // fallback: mantém original se conversão falhar
+          }
+        }, 'image/webp', quality);
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
+      img.src = objectUrl;
+    });
+
   const uploadFile = async (file: File, path: string) => {
-    const sRef = ref(storage, `${path}/${Date.now()}_${file.name}`);
-    await uploadBytes(sRef, file);
+    // Converte imagens para WebP antes de salvar (exceto arquivos de download/vetores)
+    const isImage = path !== 'downloads';
+    const fileToUpload = isImage ? await convertToWebP(file, 0.95) : file;
+    const sRef = ref(storage, `${path}/${Date.now()}_${fileToUpload.name}`);
+    await uploadBytes(sRef, fileToUpload);
     return await getDownloadURL(sRef);
   };
+
 
   // UPLOAD DE IMAGEM DA CATEGORIA
   const handleCategoryImageUpload = async (file: File, catId: string) => {
