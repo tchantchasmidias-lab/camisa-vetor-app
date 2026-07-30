@@ -35,7 +35,7 @@ export default async function BlogIndex() {
         </div>
       </div>
 
-      <main className="flex-grow max-w-7xl mx-auto w-full px-6 pt-12 pb-24">
+      <main className="flex-grow max-w-7xl mx-auto w-full px-6 pt-2 md:pt-4 pb-24">
         <div className="mb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#fe7302] to-[#ff9800] mb-4">Blog</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">Conteúdos, dicas e tutoriais exclusivos sobre design, vetores e sublimação para impulsionar o seu negócio.</p>

@@ -53,7 +53,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         </div>
       </div>
 
-      <main className="flex-grow w-full pt-12 pb-20">
+      <main className="flex-grow w-full pt-2 md:pt-4 pb-20">
         <article className="max-w-3xl mx-auto px-6">
           <header className="mb-12 text-center">
             <span className="text-[#fe7302] font-black tracking-widest text-[10px] uppercase mb-4 block">
