@@ -29,13 +29,13 @@ export default async function BlogIndex() {
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
-      <main className="flex-grow max-w-7xl mx-auto w-full px-6 pt-32 pb-24">
-        
-        {/* Carrossel de Categorias Padrão */}
-        <div className="mb-12 -mx-3 md:mx-0">
+      <div className="pt-24 md:pt-28">
+        <div className="w-full px-3 md:px-5">
           <CategoryCarousel />
         </div>
+      </div>
 
+      <main className="flex-grow max-w-7xl mx-auto w-full px-6 pt-12 pb-24">
         <div className="mb-16 text-center">
           <h1 className="text-4xl md:text-5xl font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#fe7302] to-[#ff9800] mb-4">Blog</h1>
           <p className="text-gray-600 max-w-2xl mx-auto">Conteúdos, dicas e tutoriais exclusivos sobre design, vetores e sublimação para impulsionar o seu negócio.</p>

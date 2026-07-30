@@ -2,6 +2,7 @@ import React from 'react';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { BlogPost } from '@/lib/types/blog';
 import { notFound } from 'next/navigation';
+import CategoryCarousel from '@/components/CategoryCarousel';
 import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
@@ -46,7 +47,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
-      <main className="flex-grow w-full pt-32 pb-20">
+      <div className="pt-24 md:pt-28">
+        <div className="w-full px-3 md:px-5">
+          <CategoryCarousel />
+        </div>
+      </div>
+
+      <main className="flex-grow w-full pt-12 pb-20">
         <article className="max-w-3xl mx-auto px-6">
           <header className="mb-12 text-center">
             <span className="text-[#fe7302] font-black tracking-widest text-[10px] uppercase mb-4 block">
