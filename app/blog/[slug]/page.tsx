@@ -55,13 +55,26 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
       <main className="flex-grow w-full pt-2 md:pt-4 pb-20">
         <article className="max-w-3xl mx-auto px-6">
-          <header className="mb-12 text-center">
-            <span className="text-[#fe7302] font-black tracking-widest text-[10px] uppercase mb-4 block">
-               Publicado em {new Date(post.createdAt).toLocaleDateString('pt-BR')}
-            </span>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black mb-8 leading-tight">
+          <header className="mb-10 text-left">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-black text-[#111] mb-4 leading-[1.15] tracking-tight">
               {post.title}
             </h1>
+            <span className="text-[#fe7302] font-extrabold tracking-widest text-[11px] uppercase block">
+               Publicado em {
+                 (() => {
+                   const rawDate: any = post.createdAt;
+                   const createdAtMs = typeof rawDate === 'number'
+                     ? rawDate
+                     : typeof rawDate === 'string'
+                     ? new Date(rawDate).getTime()
+                     : rawDate?.seconds
+                     ? rawDate.seconds * 1000
+                     : Date.now();
+                   const d = new Date(createdAtMs);
+                   return isNaN(d.getTime()) ? 'Data não definida' : d.toLocaleDateString('pt-BR');
+                 })()
+               }
+            </span>
           </header>
           
           {post.coverImage && (
