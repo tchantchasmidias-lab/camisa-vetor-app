@@ -188,11 +188,11 @@ export default function BlogTab() {
           <h2 className="text-xl font-bold text-white">Gerador de Blog IA</h2>
         </div>
         <p className="text-gray-400 text-sm mb-4">Descreva o post que você deseja criar (ex: "As 5 maiores tendências de estampas para 2026").</p>
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-3">
           <input 
             type="text" 
             className="flex-1 bg-black border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#fe7302]"
-            placeholder="Digite seu comando..."
+            placeholder="Digite o tema para gerar com IA..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && generateWithAI()}
@@ -213,6 +213,23 @@ export default function BlogTab() {
                 Gerar com IA
               </>
             )}
+          </button>
+          
+          <button 
+            onClick={() => {
+              setEditingPostId(null);
+              setGeneratedPost({
+                title: '',
+                slug: '',
+                content: '',
+                status: 'published',
+                seoMetadata: { title: '', description: '', keywords: [] }
+              });
+              setCoverImageFile(null);
+            }}
+            className="bg-white/10 hover:bg-white/20 text-white px-5 py-3 rounded-xl font-bold transition-colors whitespace-nowrap flex items-center justify-center gap-2 border border-white/10"
+          >
+            + Novo Artigo
           </button>
         </div>
       </div>
