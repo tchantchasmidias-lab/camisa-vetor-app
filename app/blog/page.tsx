@@ -16,15 +16,38 @@ export default async function BlogIndex() {
   let posts: BlogPost[] = [];
   
   try {
-    const postsSnapshot = await adminDb.collection('blog_posts')
-      .orderBy('createdAt', 'desc')
-      .get();
+    let postsSnapshot;
+    try {
+      postsSnapshot = await adminDb.collection('blog_posts')
+        .orderBy('createdAt', 'desc')
+        .get();
+    } catch {
+      postsSnapshot = await adminDb.collection('blog_posts').get();
+    }
       
     posts = postsSnapshot.docs
-      .map(doc => ({ id: doc.id, ...doc.data() } as BlogPost))
+      .map(doc => {
+        const data = doc.data();
+        const rawDate = data.createdAt;
+        const createdAtMs = typeof rawDate === 'number' 
+          ? rawDate 
+          : typeof rawDate === 'string' 
+          ? new Date(rawDate).getTime() 
+          : rawDate?.seconds 
+          ? rawDate.seconds * 1000 
+          : Date.now();
+
+        return { 
+          id: doc.id, 
+          ...data,
+          createdAt: isNaN(createdAtMs) ? Date.now() : createdAtMs,
+        } as BlogPost;
+      })
       .filter(post => post.status === 'published');
+
+    posts.sort((a, b) => b.createdAt - a.createdAt);
   } catch (error: any) {
-    console.error('Aviso de Build: O Firebase exige a criação de um Índice Composto para a busca do Blog.', error.message);
+    console.error('Erro ao buscar posts do blog:', error.message);
   }
 
   return (

@@ -6,18 +6,33 @@ export async function POST(req: NextRequest) {
     const postData = await req.json();
     
     if (!postData || !postData.title) {
-      return NextResponse.json({ error: 'Post data is missing or invalid' }, { status: 400 });
+      return NextResponse.json({ error: 'Dados do post inválidos ou ausentes' }, { status: 400 });
     }
 
-    const docRef = await adminDb.collection('blog_posts').add({
-      ...postData,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-    });
+    const { id, ...dataToSave } = postData;
 
-    return NextResponse.json({ success: true, id: docRef.id });
+    let docId = id;
+    const now = Date.now();
+
+    if (docId) {
+      // Atualiza post existente
+      await adminDb.collection('blog_posts').doc(docId).set({
+        ...dataToSave,
+        updatedAt: now,
+      }, { merge: true });
+    } else {
+      // Cria novo post
+      const docRef = await adminDb.collection('blog_posts').add({
+        ...dataToSave,
+        createdAt: dataToSave.createdAt || now,
+        updatedAt: now,
+      });
+      docId = docRef.id;
+    }
+
+    return NextResponse.json({ success: true, id: docId });
   } catch (error: any) {
     console.error('Error publishing blog post:', error);
-    return NextResponse.json({ error: error.message || 'Error publishing post' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Erro ao publicar post' }, { status: 500 });
   }
 }
