@@ -147,29 +147,29 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
             {/* COLUNA LATERAL: ARTIGOS RECENTES */}
             <aside className="w-full lg:w-[360px] xl:w-[380px] lg:sticky lg:top-28 flex-shrink-0">
-              <div className="bg-[#f8f9fa] border border-[#dadce0] rounded-3xl p-6 shadow-sm">
+              <div className="bg-[#111111] border border-white/10 rounded-3xl p-6 shadow-2xl text-white">
                 
                 {/* CABEÇALHO DA LATERAL */}
-                <div className="flex items-center gap-2.5 pb-4 mb-6 border-b border-[#dadce0]">
+                <div className="flex items-center gap-2.5 pb-4 mb-6 border-b border-white/10">
                   <BookOpen size={18} className="text-[#fe7302]" />
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-[#202124]">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-white">
                     Artigos Recentes
                   </h3>
                 </div>
 
                 {/* LISTA DE POSTS RECENTES */}
                 {recentPosts.length === 0 ? (
-                  <p className="text-xs text-gray-400 py-4 text-center">Nenhum outro artigo recente encontrado.</p>
+                  <p className="text-xs text-gray-500 py-4 text-center">Nenhum outro artigo recente encontrado.</p>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-3">
                     {recentPosts.map(recent => (
                       <Link 
                         key={recent.id || recent.slug} 
                         href={`/blog/${recent.slug}`}
-                        className="group flex items-center gap-3.5 p-2 rounded-2xl hover:bg-white transition-all duration-200 border border-transparent hover:border-gray-200 hover:shadow-md"
+                        className="group flex items-center gap-3.5 p-2.5 rounded-2xl hover:bg-white/5 transition-all duration-200 border border-transparent hover:border-white/10"
                       >
                         {recent.coverImage ? (
-                          <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-gray-100">
+                          <div className="relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 bg-black/40 border border-white/10">
                             <Image 
                               src={recent.coverImage} 
                               alt={recent.title} 
@@ -178,13 +178,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                             />
                           </div>
                         ) : (
-                          <div className="w-20 h-20 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center flex-shrink-0">
+                          <div className="w-20 h-20 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0">
                             <span className="text-[#fe7302] font-black text-xs">CV</span>
                           </div>
                         )}
 
                         <div className="flex-1 min-w-0">
-                          <h4 className="text-xs font-bold text-[#202124] group-hover:text-[#fe7302] transition-colors leading-snug line-clamp-2 mb-1.5">
+                          <h4 className="text-xs font-bold text-gray-200 group-hover:text-[#fe7302] transition-colors leading-snug line-clamp-2 mb-1.5">
                             {recent.title}
                           </h4>
                           <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider block">
@@ -197,10 +197,10 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 )}
 
                 {/* LINK VER TODOS OS ARTIGOS */}
-                <div className="mt-6 pt-4 border-t border-[#dadce0]">
+                <div className="mt-6 pt-4 border-t border-white/10">
                   <Link 
                     href="/blog"
-                    className="flex items-center justify-center gap-2 w-full py-3 bg-white border border-[#dadce0] rounded-xl text-[11px] font-bold uppercase tracking-wider text-[#202124] hover:border-[#fe7302] hover:text-[#fe7302] transition-all shadow-sm group"
+                    className="flex items-center justify-center gap-2 w-full py-3 bg-black border border-white/15 rounded-xl text-[11px] font-bold uppercase tracking-wider text-white hover:border-[#fe7302] hover:text-[#fe7302] transition-all shadow-sm group"
                   >
                     Ver Todos os Artigos
                     <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform text-[#fe7302]" />
