@@ -146,7 +146,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
             </article>
 
             {/* COLUNA LATERAL: ARTIGOS RECENTES */}
-            <aside className="w-full lg:w-[360px] xl:w-[380px] lg:sticky lg:top-28 flex-shrink-0">
+            <aside className="w-full lg:w-[360px] xl:w-[380px] flex-shrink-0">
               <div className="bg-[#111111] border border-white/10 rounded-3xl p-6 shadow-2xl text-white">
                 
                 {/* CABEÇALHO DA LATERAL */}
