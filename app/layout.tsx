@@ -8,6 +8,8 @@ import { GeoProvider } from '@/lib/i18n/GeoContext';
 import PwaInit from '@/components/PwaInit';
 import PwaInstallBanner from '@/components/PwaInstallBanner';
 
+import Script from 'next/script';
+
 // Configuração da fonte Inter (Padrão Google Premium)
 const inter = Inter({ 
   subsets: ['latin'],
@@ -70,11 +72,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-br" className={inter.className}>
-      {/* 
-        text-[#4a4a4a] é o cinza grafite (70% preto).
-        antialiased deixa a fonte mais elegante e leve.
-        selection: muda a cor de quando o usuário seleciona um texto com o mouse.
-      */}
+      <head>
+        {/* Google Tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=GT-MJKT5LH7"
+          strategy="afterInteractive"
+        />
+        <Script id="google-gtag" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+            gtag('config', 'GT-MJKT5LH7');
+          `}
+        </Script>
+      </head>
       <body className="antialiased text-[#4a4a4a] bg-white selection:bg-orange-50 selection:text-[#fe7302]">
         {/* PWA: Registro do Service Worker e gerenciamento de tokens FCM */}
         <PwaInit />
