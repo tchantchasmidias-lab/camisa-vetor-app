@@ -1,6 +1,14 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+
+// ── Set de controle de duplicatas compartilhado entre TODOS os componentes ──
+// (módulo-level: persiste enquanto a aba estiver aberta)
+const globalPendingTranslations = new Set<string>();
+
+// ── Flag de emergência: desativa chamadas dinâmicas à API de tradução ──
+// Para ativar: NEXT_PUBLIC_DISABLE_DYNAMIC_TRANSLATE=true no .env.local e no App Hosting
+const DISABLE_DYNAMIC_TRANSLATE = process.env.NEXT_PUBLIC_DISABLE_DYNAMIC_TRANSLATE === 'true';
 import { translations, Language } from './translations';
 
 export interface GeoInfo {
@@ -114,8 +122,8 @@ export function GeoProvider({ children }: { children: ReactNode }) {
     return translations[lang]?.[key] ?? translations['pt']?.[key] ?? key;
   };
 
-  // Referência para evitar múltiplos pedidos simultâneos para o mesmo texto
-  const pendingTranslations = useRef<Set<string>>(new Set());
+  // Usa o Set global (módulo-level) para deduplicação real entre todos os componentes
+  const pendingTranslations = useRef(globalPendingTranslations);
 
   // Função de tradução inteligente para produtos (dinâmica)
   const tp = (text: string): string => {
@@ -141,12 +149,18 @@ export function GeoProvider({ children }: { children: ReactNode }) {
     });
 
     // 3. Se não for uma correspondência exata do dicionário e for um texto longo, busca na API
+    //    — só executa se a tradução dinâmica não estiver desativada via flag de emergência
     const cacheKey = `${lang}:${text}`;
-    if (text.length > 3 && !dynamicCache[lang]?.[text] && !pendingTranslations.current.has(cacheKey)) {
-       // Marca como pendente IMEDIATAMENTE para evitar duplicatas em renderizações rápidas
+    if (
+      !DISABLE_DYNAMIC_TRANSLATE &&
+      text.length > 3 &&
+      !dynamicCache[lang]?.[text] &&
+      !pendingTranslations.current.has(cacheKey)
+    ) {
+       // Marca como pendente IMEDIATAMENTE (Set global = compartilhado entre todos os componentes)
        pendingTranslations.current.add(cacheKey);
 
-       // Pequeno delay para não sobrecarregar no carregamento inicial da página
+       // Delay maior (300ms) para reduzir o burst de chamadas no carregamento inicial da página
        setTimeout(() => {
          fetch('/api/translate', {
            method: 'POST',
@@ -170,10 +184,10 @@ export function GeoProvider({ children }: { children: ReactNode }) {
          })
          .catch(err => {
            console.error('Translation error:', err);
-           // Em caso de erro, removemos do pending após um tempo para permitir tentar de novo
-           setTimeout(() => pendingTranslations.current.delete(cacheKey), 5000);
+           // Em caso de erro, remove do pending após 10s para permitir nova tentativa
+           setTimeout(() => pendingTranslations.current.delete(cacheKey), 10000);
          });
-       }, 100);
+       }, 300);
     }
 
     return translated;
