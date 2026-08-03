@@ -122,10 +122,13 @@ export default function ProductDetailView({ product }: { product: any }) {
 
   if (!product) return null;
 
-  const galleryImages = [
-    product.urls?.destaque,
-    ...(product.urls?.galeria || [])
-  ].filter(Boolean);
+  const galleryImages = Array.from(
+    new Set([
+      product.urls?.destaque,
+      product.urls?.capa,
+      ...(product.urls?.galeria || [])
+    ].filter(Boolean))
+  );
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isZoomed) return;
@@ -178,7 +181,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                       alt={idx === 0 ? tp(product.name) : `${tp(product.name)} — imagem ${idx + 1}`}
                       fill 
                       quality={100}
-                      sizes="(max-width: 1024px) 100vw, 45vw"
+                      sizes="(max-width: 768px) 100vw, 1600px"
                       className={`object-cover transition-transform duration-500 ease-out pointer-events-none lg:pointer-events-auto ${isZoomed && selectedImage === url ? 'scale-[2.5]' : 'scale-100'}`}
                       style={{ transformOrigin: zoomPos }}
                       priority={idx === 0}
