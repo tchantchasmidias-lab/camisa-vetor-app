@@ -181,8 +181,9 @@ export default function ProductDetailView({ product }: { product: any }) {
                       alt={idx === 0 ? tp(product.name) : `${tp(product.name)} — imagem ${idx + 1}`}
                       fill 
                       quality={100}
-                      sizes="(max-width: 768px) 100vw, 1600px"
-                      className={`object-cover transition-transform duration-500 ease-out pointer-events-none lg:pointer-events-auto ${isZoomed && selectedImage === url ? 'scale-[2.5]' : 'scale-100'}`}
+                      unoptimized={true}
+                      sizes="(max-width: 768px) 100vw, 1000px"
+                      className={`object-cover transition-transform duration-300 ease-out pointer-events-none lg:pointer-events-auto ${isZoomed && selectedImage === url ? 'scale-[1.8]' : 'scale-100'}`}
                       style={{ transformOrigin: zoomPos }}
                       priority={idx === 0}
                     />
