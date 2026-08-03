@@ -125,7 +125,6 @@ export default function ProductDetailView({ product }: { product: any }) {
   const galleryImages = Array.from(
     new Set([
       product.urls?.destaque,
-      product.urls?.capa,
       ...(product.urls?.galeria || [])
     ].filter(Boolean))
   );
