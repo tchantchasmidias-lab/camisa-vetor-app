@@ -15,28 +15,72 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Páginas estáticas
   const staticPages: MetadataRoute.Sitemap = [
-    { url: baseUrl, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
-    { url: `${baseUrl}/sobre`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${baseUrl}/privacidade`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
-    { url: `${baseUrl}/termos`, lastModified: new Date(), changeFrequency: 'yearly', priority: 0.2 },
+    { url: baseUrl,                      lastModified: new Date(), changeFrequency: 'daily',   priority: 1.0 },
+    { url: `${baseUrl}/blog`,            lastModified: new Date(), changeFrequency: 'weekly',  priority: 0.7 },
+    { url: `${baseUrl}/privacidade`,     lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.2 },
+    { url: `${baseUrl}/termos`,          lastModified: new Date(), changeFrequency: 'yearly',  priority: 0.2 },
   ];
 
-  // Páginas dinâmicas dos produtos
+  // Páginas dinâmicas dos produtos — COM IMAGENS para indexação pelo Google
+  let productPages: MetadataRoute.Sitemap = [];
   try {
     const productsSnap = await adminDb.collection('products').get();
-    const productPages: MetadataRoute.Sitemap = productsSnap.docs.map(doc => {
+
+    productPages = productsSnap.docs.map(doc => {
       const data = doc.data();
-      const slug = data.slug || doc.id;
+      const slug  = data.slug || doc.id;
+      const name  = data.name  || 'Vetor';
+
+      // Monta lista de imagens: destaque → capa → galeria
+      // O Google usa a 1ª imagem como principal nos resultados de busca
+      const images: { url: string; title?: string; caption?: string }[] = [];
+
+      if (data.urls?.destaque) {
+        images.push({ url: data.urls.destaque, title: name, caption: `${name} — Camisa Vetor` });
+      }
+      if (data.urls?.capa && data.urls.capa !== data.urls?.destaque) {
+        images.push({ url: data.urls.capa, title: `${name} — Capa` });
+      }
+      if (Array.isArray(data.urls?.galeria)) {
+        (data.urls.galeria as string[]).forEach((imgUrl, i) => {
+          if (imgUrl) images.push({ url: imgUrl, title: `${name} — foto ${i + 1}` });
+        });
+      }
+
       return {
         url: `${baseUrl}/product/${slug}`,
         lastModified: safeDate(data.updatedAt || data.createdAt),
         changeFrequency: 'weekly' as const,
-        priority: 0.8,
+        priority: 0.9,
+        // Propriedade de extensão de imagens para o Google Image Search
+        images: images.length > 0 ? images : undefined,
       };
     });
-
-    return [...staticPages, ...productPages];
-  } catch {
-    return staticPages;
+  } catch (error) {
+    console.error('Sitemap: erro ao buscar produtos', error);
   }
+
+  // Posts do blog publicados
+  let blogPages: MetadataRoute.Sitemap = [];
+  try {
+    const blogSnap = await adminDb
+      .collection('blog_posts')
+      .where('published', '==', true)
+      .get();
+
+    blogPages = blogSnap.docs.map(doc => {
+      const data = doc.data();
+      const slug = data.slug || doc.id;
+      return {
+        url: `${baseUrl}/blog/${slug}`,
+        lastModified: safeDate(data.updatedAt || data.createdAt),
+        changeFrequency: 'monthly' as const,
+        priority: 0.6,
+      };
+    });
+  } catch (error) {
+    console.error('Sitemap: erro ao buscar posts do blog', error);
+  }
+
+  return [...staticPages, ...productPages, ...blogPages];
 }

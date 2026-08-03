@@ -41,16 +41,25 @@ export const metadata = {
   },
   openGraph: {
     title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
-    description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI.',
+    description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium.',
     url: 'https://camisavetor.com',
     siteName: 'Camisa Vetor',
     locale: 'pt_BR',
     type: 'website',
+    images: [
+      {
+        url: 'https://camisavetor.com/icon.png',
+        width: 512,
+        height: 512,
+        alt: 'Camisa Vetor — Vetores Profissionais para Estamparia',
+      },
+    ],
   },
   twitter: {
     card: 'summary_large_image',
     title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
     description: 'Baixe vetores profissionais para estamparia e sublimação.',
+    images: ['https://camisavetor.com/icon.png'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
