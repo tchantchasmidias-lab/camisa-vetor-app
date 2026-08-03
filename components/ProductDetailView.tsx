@@ -317,9 +317,9 @@ export default function ProductDetailView({ product }: { product: any }) {
             <div className="mb-12">
               <nav className="space-y-1">
                 {dbCategories.map((cat: string) => (
-                  <Link key={cat} href={`/?category=${encodeURIComponent(cat)}`} className="flex items-center gap-2.5 py-1.5 px-4 rounded-xl hover:bg-[#f8f9fa] transition-all group">
-                    <Shirt size={14} className="text-[#dadce0] group-hover:text-[#fe7302] flex-shrink-0" />
-                    <span className="text-[10px] font-bold text-[#5f6368] uppercase tracking-wider group-hover:text-[#202124]">{tp(cat)}</span>
+                  <Link key={cat} href={`/?category=${encodeURIComponent(cat)}`} className="flex items-center gap-2.5 py-2 px-3 rounded-xl hover:bg-[#f8f9fa] transition-all group">
+                    <Shirt size={16} className="text-[#dadce0] group-hover:text-[#fe7302] flex-shrink-0" />
+                    <span className="text-[12px] font-bold text-[#5f6368] uppercase tracking-wider group-hover:text-[#202124]">{tp(cat)}</span>
                   </Link>
                 ))}
               </nav>
