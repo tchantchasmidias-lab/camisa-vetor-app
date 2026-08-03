@@ -59,7 +59,7 @@ export default function ProductCard({ product }: any) {
                 }`}
               />
 
-              {/* Imagem DESTAQUE — aparece instantaneamente no hover */}
+              {/* Imagem DESTAQUE — pré-carregada para evitar borrão no hover */}
               {hasHoverImage && (
                 <Image
                   src={destaqueSrc}
@@ -67,8 +67,8 @@ export default function ProductCard({ product }: any) {
                   fill
                   sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
                   quality={100}
-                  priority={false}
-                  className="object-cover transition-transform duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-105"
+                  loading="eager"
+                  className="object-contain transition-opacity duration-500 opacity-0 group-hover:opacity-100"
                 />
               )}
             </>
