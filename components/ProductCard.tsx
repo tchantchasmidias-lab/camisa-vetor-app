@@ -59,7 +59,7 @@ export default function ProductCard({ product }: any) {
                 }`}
               />
 
-              {/* Imagem DESTAQUE — pré-carregada para evitar borrão no hover */}
+              {/* Imagem DESTAQUE — pré-carregada para evitar borrão, com zoom no hover */}
               {hasHoverImage && (
                 <Image
                   src={destaqueSrc}
@@ -68,7 +68,7 @@ export default function ProductCard({ product }: any) {
                   sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
                   quality={100}
                   loading="eager"
-                  className="object-contain transition-opacity duration-500 opacity-0 group-hover:opacity-100"
+                  className="object-contain transition-all duration-500 opacity-0 scale-100 group-hover:opacity-100 group-hover:scale-105"
                 />
               )}
             </>
