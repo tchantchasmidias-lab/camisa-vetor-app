@@ -65,6 +65,15 @@ export async function generateMetadata(
       description: description,
       images: [primaryImage],
     },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        'max-image-preview': 'large',
+      },
+    },
     alternates: {
       canonical: `https://camisavetor.com/product/${product.slug || product.id}`,
     }
