@@ -111,6 +111,13 @@ export default async function Page({ params }: Props) {
     // Converte Timestamps e outros objetos do Firebase em tipos simples (string/number)
     const serializedProduct = JSON.parse(JSON.stringify(product));
 
+    // 🛡️ SEGURANÇA: Remove links diretos de download do payload público enviado ao navegador
+    if (serializedProduct.urls) {
+      delete serializedProduct.urls.download;
+    }
+    delete serializedProduct.downloadUrl;
+    delete serializedProduct.fileUrl;
+
     // Dados Estruturados (JSON-LD) para o Google
     // Monta array completo de imagens: destaque primeiro (vitrine principal),
     // depois capa, depois galeria — o Google usa a 1ª como imagem principal

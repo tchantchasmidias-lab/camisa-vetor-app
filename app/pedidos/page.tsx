@@ -150,13 +150,13 @@ export default function PedidosPage() {
                        
                         {pedido.status === 'pago' ? (
                           <div className="flex flex-wrap gap-3">
-                            <a 
-                              href={item.downloadUrl || '/downloads'} 
+                            <Link 
+                              href="/downloads" 
                               className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest bg-black text-white px-5 py-3 rounded-xl hover:bg-[#fe7302] transition-all shadow-lg shadow-gray-200 active:scale-95"
                             >
                               <Download size={14} />
                               {t('downloadVector')}
-                            </a>
+                            </Link>
                             <button className="text-[9px] font-bold text-gray-300 hover:text-black uppercase tracking-widest transition-colors flex items-center gap-2">
                               <ExternalLink size={14} />
                               {t('orderNote')}

@@ -37,6 +37,37 @@ export default function DownloadsPage() {
     return () => unsubscribe();
   }, []);
 
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  // SOLICITA DOWNLOAD SEGURO VIA API BACKEND
+  const handleSecureDownload = async (productId: string) => {
+    try {
+      setDownloadingId(productId);
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        alert(t('loginRequiredDownloads'));
+        return;
+      }
+      const token = await currentUser.getIdToken();
+      const res = await fetch(`/api/downloads/${productId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (res.ok && data.downloadUrl) {
+        window.open(data.downloadUrl, '_blank');
+      } else {
+        alert(data.error || 'Erro ao realizar download.');
+      }
+    } catch (err) {
+      console.error('Erro ao solicitar download seguro:', err);
+      alert('Erro de conexão ao solicitar arquivo.');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
   // BUSCA OS DOWNLOADS REAIS NO FIRESTORE
   const fetchUserDownloads = async (uid: string) => {
     try {
@@ -80,7 +111,7 @@ export default function DownloadsPage() {
               name: data.name || basicInfo.name,
               format: data.formats || ['CDR'],
               image: data.urls?.capa || data.images?.[0] || data.image || basicInfo.image,
-              downloadUrl: data.urls?.download || data.downloadUrl || data.fileUrl || '#'
+              downloadUrl: '#'
             });
           } else {
             allProducts.push({
@@ -191,14 +222,20 @@ export default function DownloadsPage() {
                       </div>
                     </div>
 
-                    <a 
-                      href={file.downloadUrl} 
-                      download
-                      className="w-full bg-[#fe7302] text-white py-3.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-[#56c271] transition-all duration-300 active:scale-95"
+                    <button 
+                      onClick={() => handleSecureDownload(file.id)}
+                      disabled={downloadingId === file.id}
+                      className="w-full bg-[#fe7302] text-white py-3.5 rounded-xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-[#56c271] transition-all duration-300 active:scale-95 disabled:opacity-50"
                     >
-                      <Download size={14} />
-                      {t('downloadAction')}
-                    </a>
+                      {downloadingId === file.id ? (
+                        <Loader2 size={14} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Download size={14} />
+                          {t('downloadAction')}
+                        </>
+                      )}
+                    </button>
                   </div>
                 </div>
               ))}
