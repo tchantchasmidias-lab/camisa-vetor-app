@@ -2,6 +2,7 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import { notFound, permanentRedirect } from 'next/navigation';
 import ProductDetailsWrapper from '@/components/ProductDetailsWrapper';
 import { Metadata, ResolvingMetadata } from 'next';
+import { buildCleanImageUrl } from '@/lib/mediaUtils';
 
 interface Props {
   params: { id: string };
@@ -38,17 +39,21 @@ export async function generateMetadata(
     return { title: 'Produto não encontrado | Camisa Vetor' };
   }
 
+  const slug = product.slug || product.id;
   const name = product.name || 'Vetor Profissional';
   const description = product.description || `Baixe agora o ${name} em alta resolução. Arte editável ideal para sublimação, serigrafia e transfer. Download imediato após a compra.`;
 
-  // Prioridade: destaque (vitrine principal) → capa → logo do site
-  // O Google usa a primeira imagem como principal nos resultados
-  const ogImages = [
-    product.urls?.destaque,
-    product.urls?.capa,
-    ...(product.urls?.galeria || []),
+  // 🚀 TAREFA 1: Exposição de URLs limpas e amigáveis para mídias
+  const rawOgImages = [
+    product.urls?.destaque ? buildCleanImageUrl(product.urls.destaque, slug, 'destaque') : null,
+    product.urls?.capa ? buildCleanImageUrl(product.urls.capa, slug, 'capa') : null,
+    ...(product.urls?.galeria || []).map((imgUrl: string, i: number) =>
+      imgUrl ? buildCleanImageUrl(imgUrl, slug, `galeria-${i + 1}`) : null
+    ),
   ].filter(Boolean) as string[];
-  const primaryImage = ogImages[0] || '/logo-social.png';
+
+  const ogImages = rawOgImages.length > 0 ? rawOgImages : ['https://camisavetor.com.br/opengraph-image'];
+  const primaryImage = ogImages[0];
 
   return {
     title: `${name} | Vetor Editável Profissional`,
@@ -121,10 +126,13 @@ export default async function Page({ params }: Props) {
     // Dados Estruturados (JSON-LD) para o Google
     // Monta array completo de imagens: destaque primeiro (vitrine principal),
     // depois capa, depois galeria — o Google usa a 1ª como imagem principal
+    const slug = serializedProduct.slug || serializedProduct.id;
     const productImages = [
-      serializedProduct.urls?.destaque,
-      serializedProduct.urls?.capa,
-      ...(serializedProduct.urls?.galeria || []),
+      serializedProduct.urls?.destaque ? buildCleanImageUrl(serializedProduct.urls.destaque, slug, 'destaque') : null,
+      serializedProduct.urls?.capa ? buildCleanImageUrl(serializedProduct.urls.capa, slug, 'capa') : null,
+      ...(serializedProduct.urls?.galeria || []).map((imgUrl: string, i: number) =>
+        imgUrl ? buildCleanImageUrl(imgUrl, slug, `galeria-${i + 1}`) : null
+      ),
     ].filter(Boolean);
 
     const jsonLd = {

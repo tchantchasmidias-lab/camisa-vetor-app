@@ -1,6 +1,13 @@
 User-agent: *
 Allow: /
+Allow: /media/
+Allow: /api/media/
 Disallow: /admin
 Disallow: /api/
+
+User-agent: Googlebot-Image
+Allow: /
+Allow: /media/
+Allow: /api/media/
 
 Sitemap: https://camisavetor.com.br/sitemap.xml
