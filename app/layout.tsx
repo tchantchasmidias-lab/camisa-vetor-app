@@ -54,9 +54,9 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://camisavetor.com.br/icon.png',
-        width: 512,
-        height: 512,
+        url: 'https://camisavetor.com.br/opengraph-image',
+        width: 1200,
+        height: 630,
         alt: 'Camisa Vetor — Vetores Profissionais para Estamparia',
       },
     ],
@@ -65,7 +65,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
     description: 'Baixe vetores profissionais para estamparia e sublimação.',
-    images: ['https://camisavetor.com.br/icon.png'],
+    images: ['https://camisavetor.com.br/opengraph-image'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -80,6 +80,16 @@ export const metadata = {
   },
 };
 
+const orgJsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'OnlineStore',
+  'name': 'Camisa Vetor',
+  'url': 'https://camisavetor.com.br',
+  'logo': 'https://camisavetor.com.br/icon.png',
+  'image': 'https://camisavetor.com.br/opengraph-image',
+  'description': 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium.',
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -88,6 +98,11 @@ export default function RootLayout({
   return (
     <html lang="pt-br" className={inter.className}>
       <head>
+        {/* Schema.org Organization/OnlineStore para o Snippet do Google */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
         {/* Google Tag (gtag.js) */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=GT-MJKT5LH7"
