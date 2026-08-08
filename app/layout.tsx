@@ -31,6 +31,9 @@ export const metadata = {
   alternates: {
     canonical: 'https://camisavetor.com.br',
   },
+  verification: {
+    google: 'google132aa16ad0af4cd4',
+  },
   robots: {
     index: true,
     follow: true,
