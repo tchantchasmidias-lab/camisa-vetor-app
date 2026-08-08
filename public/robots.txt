@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /api/
 
-Sitemap: https://camisavetor.com/sitemap.xml
+Sitemap: https://camisavetor.com.br/sitemap.xml

@@ -15,17 +15,23 @@ const nextConfig = {
   },
   async redirects() {
     return [
-      // Redireciona camisavetor.com.br → camisavetor.com (domínio principal)
+      // Redireciona camisavetor.com → camisavetor.com.br (domínio principal)
       {
         source: '/:path*',
-        has: [{ type: 'host', value: 'camisavetor.com.br' }],
-        destination: 'https://camisavetor.com/:path*',
-        permanent: true, // 301 - melhor para SEO
+        has: [{ type: 'host', value: 'camisavetor.com' }],
+        destination: 'https://camisavetor.com.br/:path*',
+        permanent: true, // 301 - preserva SEO
+      },
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'www.camisavetor.com' }],
+        destination: 'https://camisavetor.com.br/:path*',
+        permanent: true,
       },
       {
         source: '/:path*',
         has: [{ type: 'host', value: 'www.camisavetor.com.br' }],
-        destination: 'https://camisavetor.com/:path*',
+        destination: 'https://camisavetor.com.br/:path*',
         permanent: true,
       },
     ];

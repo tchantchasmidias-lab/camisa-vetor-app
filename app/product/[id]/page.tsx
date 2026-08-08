@@ -75,7 +75,7 @@ export async function generateMetadata(
       },
     },
     alternates: {
-      canonical: `https://camisavetor.com/product/${product.slug || product.id}`,
+      canonical: `https://camisavetor.com.br/product/${product.slug || product.id}`,
     }
   };
 }
@@ -148,7 +148,7 @@ export default async function Page({ params }: Props) {
         'price': serializedProduct.price,
         'priceCurrency': 'BRL',
         'availability': 'https://schema.org/InStock',
-        'url': `https://camisavetor.com/product/${serializedProduct.slug || serializedProduct.id}`
+        'url': `https://camisavetor.com.br/product/${serializedProduct.slug || serializedProduct.id}`
       }
     };
 

@@ -3,15 +3,15 @@ import { Mail, MapPin, ShieldCheck, Star, Package, HeartHandshake, Zap, Users } 
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: 'Sobre Nós | Camisa Vetor',
-  description: 'Conheça a Camisa Vetor: sua plataforma especializada em vetores profissionais para estamparia e sublimação. Saiba quem somos, nossa missão e nossos valores.',
+  title: 'Sobre a Camisa Vetor | Nossa História e Missão',
+  description: 'Conheça a Camisa Vetor, o maior portal de artes e vetores editáveis para sublimação e estamparia do Brasil.',
   alternates: {
-    canonical: 'https://camisavetor.com/sobre',
+    canonical: 'https://camisavetor.com.br/sobre',
   },
   openGraph: {
-    title: 'Sobre Nós | Camisa Vetor',
-    description: 'Conheça a Camisa Vetor: vetores profissionais para estamparia e sublimação.',
-    url: 'https://camisavetor.com/sobre',
+    title: 'Sobre a Camisa Vetor',
+    description: 'Conheça nossa história e missão.',
+    url: 'https://camisavetor.com.br/sobre',
   },
 };
 

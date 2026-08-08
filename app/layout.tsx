@@ -27,9 +27,9 @@ export const viewport = {
 export const metadata = {
   title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
   description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium. Camisas, times, personagens e muito mais.',
-  metadataBase: new URL('https://camisavetor.com'),
+  metadataBase: new URL('https://camisavetor.com.br'),
   alternates: {
-    canonical: 'https://camisavetor.com',
+    canonical: 'https://camisavetor.com.br',
   },
   robots: {
     index: true,
@@ -45,13 +45,13 @@ export const metadata = {
   openGraph: {
     title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
     description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium.',
-    url: 'https://camisavetor.com',
+    url: 'https://camisavetor.com.br',
     siteName: 'Camisa Vetor',
     locale: 'pt_BR',
     type: 'website',
     images: [
       {
-        url: 'https://camisavetor.com/icon.png',
+        url: 'https://camisavetor.com.br/icon.png',
         width: 512,
         height: 512,
         alt: 'Camisa Vetor — Vetores Profissionais para Estamparia',
@@ -62,7 +62,7 @@ export const metadata = {
     card: 'summary_large_image',
     title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
     description: 'Baixe vetores profissionais para estamparia e sublimação.',
-    images: ['https://camisavetor.com/icon.png'],
+    images: ['https://camisavetor.com.br/icon.png'],
   },
   manifest: '/manifest.json',
   appleWebApp: {

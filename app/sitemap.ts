@@ -11,7 +11,7 @@ function safeDate(val: any): Date {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = 'https://camisavetor.com';
+  const baseUrl = 'https://camisavetor.com.br';
 
   // Páginas estáticas
   const staticPages: MetadataRoute.Sitemap = [
