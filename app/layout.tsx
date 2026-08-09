@@ -101,6 +101,7 @@ export default function RootLayout({
   return (
     <html lang="pt-br" className={inter.className}>
       <head>
+        <meta name="p:domain_verify" content="788d73b308d72aa601b7864641f7218a" />
         {/* Schema.org Organization/OnlineStore para o Snippet do Google */}
         <script
           type="application/ld+json"
