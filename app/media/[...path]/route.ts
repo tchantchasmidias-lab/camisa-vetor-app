@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import sharp from 'sharp';
 
-export const runtime = 'nodejs'; // Node.js runtime para suporte completo a streaming e fetch de mídia
+export const runtime = 'nodejs'; // Node.js runtime para suporte completo ao Sharp
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,16 +33,47 @@ export async function GET(request: NextRequest) {
       return new NextResponse('Failed to fetch media from upstream storage', { status: response.status });
     }
 
-    const contentType = response.headers.get('content-type') || 'image/webp';
-    const imageBuffer = await response.arrayBuffer();
+    const rawArrayBuffer = await response.arrayBuffer();
+    const inputBuffer = Buffer.from(rawArrayBuffer);
 
-    // Retorna a imagem com URLs amigáveis, cache agressivo de CDN e cabeçalhos liberados para o Googlebot-Image
-    return new NextResponse(imageBuffer, {
+    // 🚀 REGRAS DE PROCESSAMENTO DE IMAGEM WEBP (QUALIDADE 90% + LARGURA MÍNIMA 1200PX)
+    let processedBuffer: Buffer;
+    try {
+      const imagePipeline = sharp(inputBuffer);
+      const metadata = await imagePipeline.metadata();
+
+      let pipeline = imagePipeline;
+
+      // Garantia de Dimensão: Se a imagem for menor que 1200px de largura, amplia com filtro Lanczos3
+      if (metadata.width && metadata.width < 1200) {
+        pipeline = pipeline.resize({
+          width: 1200,
+          fit: 'contain',
+          kernel: sharp.kernel.lanczos3,
+          background: { r: 255, g: 255, b: 255, alpha: 0 },
+        });
+      }
+
+      // Qualidade da Conversão WebP: 90% de qualidade sem compressão agressiva e subsampling inteligente
+      processedBuffer = await pipeline
+        .webp({
+          quality: 90,           // Qualidade mínima de 90% (evita artefatos em mockups e vetores)
+          smartSubsample: true,  // Preserva detalhes em linhas finas de estampas
+          effort: 6,             // Otimização máxima de renderização
+        })
+        .toBuffer();
+    } catch (sharpError) {
+      console.warn('Sharp processing failed, serving raw input buffer:', sharpError);
+      processedBuffer = inputBuffer;
+    }
+
+    // Retorna a imagem WebP otimizada em alta definição com cabeçalhos autorizados para o Googlebot-Image
+    return new NextResponse(new Uint8Array(processedBuffer), {
       status: 200,
       headers: {
-        'Content-Type': contentType,
+        'Content-Type': 'image/webp',
         'Cache-Control': 'public, max-age=31536000, immutable',
-        // 🚀 TAREFA 3: Garante que NUNCA envie noindex e autorize explicitamente o Googlebot-Image
+        // 🚀 METATAG & CABEÇALHOS: Permite exibição em alta resolução no Google Imagens (max-image-preview:large)
         'X-Robots-Tag': 'index, follow, max-image-preview:large',
         'Access-Control-Allow-Origin': '*',
       },
