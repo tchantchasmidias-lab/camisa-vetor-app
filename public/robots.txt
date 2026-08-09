@@ -2,8 +2,15 @@ User-agent: *
 Allow: /
 Allow: /media/
 Allow: /api/media/
+Allow: /feed/
 Disallow: /admin
 Disallow: /api/
+
+User-agent: Pinterestbot
+Allow: /
+Allow: /media/
+Allow: /api/media/
+Allow: /feed/
 
 User-agent: Googlebot-Image
 Allow: /
