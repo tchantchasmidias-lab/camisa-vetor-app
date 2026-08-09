@@ -33,6 +33,9 @@ export const metadata = {
   },
   verification: {
     google: 'google132aa16ad0af4cd4',
+    other: {
+      'p:domain_verify': '788d73b308d72aa601b7864641f7218a',
+    },
   },
   robots: {
     index: true,
