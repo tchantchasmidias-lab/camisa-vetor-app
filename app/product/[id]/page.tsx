@@ -52,7 +52,7 @@ export async function generateMetadata(
     ),
   ].filter(Boolean) as string[];
 
-  const ogImages = rawOgImages.length > 0 ? rawOgImages : ['https://camisavetor.com.br/opengraph-image'];
+  const ogImages = rawOgImages.length > 0 ? rawOgImages : ['https://camisavetor.com.br/icon.png'];
   const primaryImage = ogImages[0];
 
   return {

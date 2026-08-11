@@ -57,18 +57,18 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://camisavetor.com.br/opengraph-image',
-        width: 1200,
-        height: 630,
+        url: 'https://camisavetor.com.br/icon.png',
+        width: 512,
+        height: 512,
         alt: 'Camisa Vetor — Vetores Profissionais para Estamparia',
       },
     ],
   },
   twitter: {
-    card: 'summary_large_image',
+    card: 'summary',
     title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
     description: 'Baixe vetores profissionais para estamparia e sublimação.',
-    images: ['https://camisavetor.com.br/opengraph-image'],
+    images: ['https://camisavetor.com.br/icon.png'],
   },
   manifest: '/manifest.json',
   appleWebApp: {
@@ -89,7 +89,7 @@ const orgJsonLd = {
   'name': 'Camisa Vetor',
   'url': 'https://camisavetor.com.br',
   'logo': 'https://camisavetor.com.br/icon.png',
-  'image': 'https://camisavetor.com.br/opengraph-image',
+  'image': 'https://camisavetor.com.br/icon.png',
   'description': 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium.',
 };
 
