@@ -126,9 +126,9 @@ function HomeContent() {
                 // Skeletons enquanto carrega
                 [...Array(8)].map((_, i) => <ProductCardSkeleton key={i} />)
               ) : (
-                // Lista Filtrada
-                filteredProducts.map(product => (
-                  <ProductCard key={product.id} product={product} />
+                // Lista Filtrada (LCP prioritário para os primeiros 4 cards da tela)
+                filteredProducts.map((product, index) => (
+                  <ProductCard key={product.id} product={product} priority={index < 4} />
                 ))
               )}
             </div>

@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Heart } from 'lucide-react';
 import { useGeo } from '@/lib/i18n/GeoContext';
 
-export default function ProductCard({ product }: any) {
+export default function ProductCard({ product, priority = false }: { product: any; priority?: boolean }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const { formatPrice, tp } = useGeo();
 
@@ -44,11 +44,12 @@ export default function ProductCard({ product }: any) {
 
           {capaSrc ? (
             <>
-              {/* Imagem CAPA — some instantaneamente no hover */}
+              {/* Imagem CAPA — prioridade de carregamento para LCP nos primeiros cards */}
               <Image
                 src={capaSrc}
                 alt={product.name}
                 fill
+                priority={priority}
                 // Breakpoints corretos: mobile é 1 coluna (100vw), md=3 colunas, lg=5 colunas
                 sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
                 quality={100}

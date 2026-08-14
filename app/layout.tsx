@@ -101,6 +101,10 @@ export default function RootLayout({
   return (
     <html lang="pt-br" className={inter.className}>
       <head>
+        {/* Otimização de Conexão (Preconnect & DNS Prefetch para Firebase Storage) */}
+        <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+
         <meta name="p:domain_verify" content="788d73b308d72aa601b7864641f7218a" />
         {/* Schema.org Organization/OnlineStore para o Snippet do Google */}
         <script
