@@ -52,7 +52,7 @@ export default function ProductCard({ product, priority = false }: { product: an
                 priority={priority}
                 // Breakpoints corretos: mobile é 1 coluna (100vw), md=3 colunas, lg=5 colunas
                 sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
-                quality={100}
+                quality={85}
                 className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
                   hasHoverImage
                     ? 'group-hover:opacity-0'
@@ -60,15 +60,15 @@ export default function ProductCard({ product, priority = false }: { product: an
                 }`}
               />
 
-              {/* Imagem DESTAQUE — pré-carregada para evitar borrão, com zoom no hover */}
+              {/* Imagem DESTAQUE — carregada de forma lazy pois fica invisível até o hover */}
               {hasHoverImage && (
                 <Image
                   src={destaqueSrc}
                   alt={`${product.name} — destaque`}
                   fill
                   sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
-                  quality={100}
-                  loading="eager"
+                  quality={85}
+                  loading="lazy"
                   className="object-contain transition-transform duration-500 opacity-0 scale-100 group-hover:opacity-100 group-hover:scale-105"
                 />
               )}

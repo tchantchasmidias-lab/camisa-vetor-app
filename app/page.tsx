@@ -36,5 +36,24 @@ async function getInitialProducts(): Promise<Product[]> {
 
 export default async function HomePage() {
   const initialProducts = await getInitialProducts();
-  return <HomeClient initialProducts={initialProducts} />;
+
+  // Preload da imagem LCP (primeiro produto) — reduz o gap entre FCP e LCP no PageSpeed
+  const lcpImageUrl = initialProducts[0]?.urls?.capa || '';
+
+  return (
+    <>
+      {/* Hint de Preload injetado no <head> pelo Next.js App Router */}
+      {lcpImageUrl && (
+        <link
+          rel="preload"
+          as="image"
+          href={lcpImageUrl}
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore — fetchpriority é atributo HTML válido mas não tipado em React 18
+          fetchpriority="high"
+        />
+      )}
+      <HomeClient initialProducts={initialProducts} />
+    </>
+  );
 }
