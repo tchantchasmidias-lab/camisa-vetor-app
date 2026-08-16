@@ -12,10 +12,7 @@ interface RelatedProduct {
   name: string;
   price: number;
   slug?: string;
-  urls: {
-    capa?: string;
-    destaque?: string;
-  };
+  urls: { capa?: string; destaque?: string };
 }
 
 interface RelatedProductsProps {
@@ -30,21 +27,19 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
 
   useEffect(() => {
     if (!category) return;
-
     const fetchRelated = async () => {
       try {
-        // Busca produtos da mesma categoria (máximo 6 para filtrar o atual e exibir 5)
         const q = query(
           collection(db, 'products'),
           where('category', '==', category),
           orderBy('createdAt', 'desc'),
-          limit(6)
+          limit(5)
         );
         const snap = await getDocs(q);
         const items = snap.docs
           .map((d) => ({ id: d.id, ...d.data() } as RelatedProduct))
           .filter((p) => p.id !== currentProductId)
-          .slice(0, 5);
+          .slice(0, 4);
         setProducts(items);
       } catch (e) {
         console.error('Erro ao carregar produtos relacionados:', e);
@@ -52,19 +47,20 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
         setIsLoading(false);
       }
     };
-
     fetchRelated();
   }, [category, currentProductId]);
 
   if (isLoading || products.length === 0) return null;
 
   return (
-    <section className="mt-16 pt-10 border-t border-[#f1f3f4]">
+    <section className="mt-14 pt-10 border-t border-[#f1f3f4]">
+      {/* Heading */}
       <h2 className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em] mb-6">
-        Produtos Relacionados em {category}
+        ✨ Você Também Pode Gostar
       </h2>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+      {/* Grid 4 colunas — 2 no mobile */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
         {products.map((product) => {
           const imgSrc = product.urls?.capa || product.urls?.destaque || '';
           const href = `/product/${product.slug || product.id}`;
@@ -76,14 +72,14 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
               className="group block"
               aria-label={`Ver ${tp(product.name)}`}
             >
-              {/* Thumbnail com lazy loading — não é LCP */}
-              <div className="aspect-[4/5] relative rounded-[1.5rem] overflow-hidden bg-[#f8f9fa] group-hover:bg-black transition-all duration-300 group-hover:shadow-lg group-hover:shadow-black/20 mb-3">
+              {/* Card imagem — lazy load */}
+              <div className="aspect-[4/5] relative rounded-[1.5rem] overflow-hidden bg-[#f8f9fa] group-hover:bg-black transition-all duration-300 group-hover:shadow-xl group-hover:shadow-black/20 mb-3 border border-[#f1f3f4] group-hover:border-transparent">
                 {imgSrc ? (
                   <Image
                     src={imgSrc}
                     alt={`Arte em vetor para camiseta ${tp(product.name)} - CDR, PDF, SVG, PNG`}
                     fill
-                    sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
+                    sizes="(max-width: 640px) 45vw, 25vw"
                     quality={75}
                     loading="lazy"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -95,9 +91,12 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
                 )}
               </div>
 
-              <h3 className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em] mb-1 truncate text-center">
+              {/* Título */}
+              <h3 className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em] mb-1 truncate text-center px-1">
                 {tp(product.name)}
               </h3>
+
+              {/* Preço */}
               <p className="text-[14px] font-semibold text-[#333333] tracking-tight text-center">
                 {formatPrice(product.price || 0)}
               </p>
