@@ -1,128 +1,110 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, where, limit, orderBy } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
-import { db } from '@/lib/firebase';
-import { collection, query, where, limit, getDocs } from 'firebase/firestore';
+import { useGeo } from '@/lib/i18n/GeoContext';
 
 interface RelatedProduct {
   id: string;
-  slug?: string;
   name: string;
   price: number;
-  capaSrc: string;
-  destaqueSrc: string;
+  slug?: string;
+  urls: {
+    capa?: string;
+    destaque?: string;
+  };
 }
 
-import { useGeo } from '@/lib/i18n/GeoContext';
-
-export default function RelatedProducts({
-  category,
-  currentProductId
-}: {
+interface RelatedProductsProps {
   category: string;
   currentProductId: string;
-}) {
+}
+
+export default function RelatedProducts({ category, currentProductId }: RelatedProductsProps) {
   const [products, setProducts] = useState<RelatedProduct[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { t, tp, formatPrice } = useGeo();
+  const [isLoading, setIsLoading] = useState(true);
+  const { tp, formatPrice } = useGeo();
 
   useEffect(() => {
-    async function fetchRelated() {
-      if (!category) {
-        setLoading(false);
-        return;
-      }
+    if (!category) return;
 
+    const fetchRelated = async () => {
       try {
+        // Busca produtos da mesma categoria (máximo 6 para filtrar o atual e exibir 5)
         const q = query(
           collection(db, 'products'),
           where('category', '==', category),
+          orderBy('createdAt', 'desc'),
           limit(6)
         );
-       
-        const querySnapshot = await getDocs(q);
-        const items = querySnapshot.docs
-          .map(doc => {
-            const data = doc.data();
-            const capa = data.urls?.capa || data.urls?.destaque || 'https://placehold.co/400x500?text=Camisa+Vetor';
-            const destaque = data.urls?.destaque || '';
-            return {
-              id: doc.id,
-              slug: data.slug || doc.id,
-              name: data.name || 'Vetor sem nome',
-              price: Number(data.price) || 0,
-              capaSrc: capa,
-              destaqueSrc: destaque !== capa ? destaque : '', // só usa se for diferente
-            };
-          })
-          .filter(item => item.id !== currentProductId)
-          .slice(0, 4);
-
+        const snap = await getDocs(q);
+        const items = snap.docs
+          .map((d) => ({ id: d.id, ...d.data() } as RelatedProduct))
+          .filter((p) => p.id !== currentProductId)
+          .slice(0, 5);
         setProducts(items);
-      } catch (error) {
-        console.error("Erro ao carregar relacionados:", error);
+      } catch (e) {
+        console.error('Erro ao carregar produtos relacionados:', e);
       } finally {
-        setLoading(false);
+        setIsLoading(false);
       }
-    }
+    };
 
     fetchRelated();
   }, [category, currentProductId]);
 
-  if (loading) return null;
-  if (products.length === 0) return null;
+  if (isLoading || products.length === 0) return null;
 
   return (
-    <div className="mt-16 pt-12 border-t border-[#f1f3f4] animate-in fade-in duration-1000">
-      <h2 className="text-[11px] font-bold text-[#5f6368] uppercase tracking-[0.4em] mb-12 text-center">
-        {t('youMayAlsoLike')}
+    <section className="mt-16 pt-10 border-t border-[#f1f3f4]">
+      <h2 className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em] mb-6">
+        Produtos Relacionados em {category}
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10 md:gap-8">
-        {products.map((rel) => {
-          const hasHoverImage = !!rel.destaqueSrc;
-          return (
-            <Link href={`/product/${rel.slug || rel.id}`} key={rel.id} className="group block">
-              <div className="aspect-[4/5] bg-[#fbfbfb] rounded-[2rem] relative overflow-hidden border border-[#dadce0] mb-5 transition-all duration-500 group-hover:shadow-xl group-hover:shadow-gray-100 group-hover:border-[#fe7302]/30">
-                
-                {/* Imagem CAPA — some instantaneamente no hover */}
-                <Image
-                  src={rel.capaSrc}
-                  alt={rel.name}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 25vw"
-                  className={`object-cover transition-transform duration-500 group-hover:scale-110 ${
-                    hasHoverImage ? 'group-hover:opacity-0' : ''
-                  }`}
-                />
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-5">
+        {products.map((product) => {
+          const imgSrc = product.urls?.capa || product.urls?.destaque || '';
+          const href = `/product/${product.slug || product.id}`;
 
-                {/* Imagem DESTAQUE — aparece instantaneamente no hover */}
-                {hasHoverImage && (
+          return (
+            <Link
+              key={product.id}
+              href={href}
+              className="group block"
+              aria-label={`Ver ${tp(product.name)}`}
+            >
+              {/* Thumbnail com lazy loading — não é LCP */}
+              <div className="aspect-[4/5] relative rounded-[1.5rem] overflow-hidden bg-[#f8f9fa] group-hover:bg-black transition-all duration-300 group-hover:shadow-lg group-hover:shadow-black/20 mb-3">
+                {imgSrc ? (
                   <Image
-                    src={rel.destaqueSrc}
-                    alt={`${rel.name} — destaque`}
+                    src={imgSrc}
+                    alt={`Arte em vetor para camiseta ${tp(product.name)} - CDR, PDF, SVG, PNG`}
                     fill
-                    sizes="(max-width: 768px) 100vw, 25vw"
-                    priority={false}
-                    className="object-cover transition-transform duration-500 opacity-0 group-hover:opacity-100 group-hover:scale-110"
+                    sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
+                    quality={75}
+                    loading="lazy"
+                    className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <span className="text-gray-300 text-xs">Sem imagem</span>
+                  </div>
                 )}
               </div>
-             
-              <div className="px-2 text-center">
-                <h3 className="text-[10px] font-semibold text-[#202124] uppercase tracking-wider mb-1.5 truncate">
-                  {tp(rel.name)}
-                </h3>
-                <p className="text-[14px] font-bold text-[#fe7302] tracking-tighter">
-                  {formatPrice(rel.price)}
-                </p>
-              </div>
+
+              <h3 className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em] mb-1 truncate text-center">
+                {tp(product.name)}
+              </h3>
+              <p className="text-[14px] font-semibold text-[#333333] tracking-tight text-center">
+                {formatPrice(product.price || 0)}
+              </p>
             </Link>
           );
         })}
       </div>
-    </div>
+    </section>
   );
 }

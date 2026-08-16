@@ -8,26 +8,25 @@ interface Props {
   params: { id: string };
 }
 
-// 🚀 GERADOR DE METADATA (SEO PREMIUM)
+// ─────────────────────────────────────────────────────────────────
+// GERADOR DE METADATA SEO PREMIUM
+// ─────────────────────────────────────────────────────────────────
 export async function generateMetadata(
   { params }: Props,
   parent: ResolvingMetadata
 ): Promise<Metadata> {
   const id = params.id;
-  
-  // Busca o produto (tenta por ID primeiro, depois por Slug)
+
   let product: any = null;
   const docRef = adminDb.collection('products').doc(id);
   const docSnap = await docRef.get();
 
   if (docSnap.exists) {
     product = { id: docSnap.id, ...docSnap.data() };
-    // Se o acesso foi por ID mas o produto tem slug, redireciona permanentemente (SEO 301/308)
     if (product.slug && product.slug !== id) {
       permanentRedirect(`/product/${product.slug}`);
     }
   } else {
-    // Tenta buscar por slug (RG)
     const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
     if (!slugQuery.empty) {
       const doc = slugQuery.docs[0];
@@ -41,9 +40,18 @@ export async function generateMetadata(
 
   const slug = product.slug || product.id;
   const name = product.name || 'Vetor Profissional';
-  const description = product.description || `Baixe agora o ${name} em alta resolução. Arte editável ideal para sublimação, serigrafia e transfer. Download imediato após a compra.`;
+  const category = product.category || '';
 
-  // 🚀 TAREFA 1: Exposição de URLs limpas e amigáveis para mídias
+  // Descrição rica para SEO (inclui formatos e técnicas)
+  const description = product.description
+    ? product.description
+    : `Baixe ${name} em vetor editável profissional. Pacote completo com arquivos CDR, PDF, SVG e PNG em alta resolução. ` +
+      `Ideal para sublimação, DTF, serigrafia e transfer. Download imediato após aprovação do pagamento.`;
+
+  // Padrão de título com palavras-chave de cauda longa
+  const title = `${name} | Vetor Editável (CDR, PDF, SVG, PNG) - Camisa Vetor`;
+
+  // URLs limpas de mídia (SEO-friendly, sem tokens Firebase)
   const rawOgImages = [
     product.urls?.destaque ? buildCleanImageUrl(product.urls.destaque, slug, 'destaque') : null,
     product.urls?.capa ? buildCleanImageUrl(product.urls.capa, slug, 'capa') : null,
@@ -55,19 +63,29 @@ export async function generateMetadata(
   const ogImages = rawOgImages.length > 0 ? rawOgImages : ['https://camisavetor.com.br/icon.png'];
   const primaryImage = ogImages[0];
 
+  // alt dinâmico da imagem principal
+  const imageAlt = `Arte em vetor para camiseta ${name} - CDR, PDF, SVG, PNG`;
+
   return {
-    title: `${name} | Vetor Editável Profissional`,
-    description: description,
+    title,
+    description,
     openGraph: {
       title: `${name} | Camisa Vetor`,
-      description: description,
-      images: ogImages.length > 0 ? ogImages : ['/logo-social.png'],
+      description,
+      url: `https://camisavetor.com.br/product/${slug}`,
+      siteName: 'Camisa Vetor',
       type: 'website',
+      images: ogImages.map((url, i) => ({
+        url,
+        width: 1200,
+        height: 1200,
+        alt: i === 0 ? imageAlt : `${name} — imagem ${i + 1}`,
+      })),
     },
     twitter: {
       card: 'summary_large_image',
-      title: name,
-      description: description,
+      title: `${name} | Vetor Editável - Camisa Vetor`,
+      description,
       images: [primaryImage],
     },
     robots: {
@@ -80,14 +98,17 @@ export async function generateMetadata(
       },
     },
     alternates: {
-      canonical: `https://camisavetor.com.br/product/${product.slug || product.id}`,
-    }
+      canonical: `https://camisavetor.com.br/product/${slug}`,
+    },
   };
 }
 
+// ─────────────────────────────────────────────────────────────────
+// PAGE SERVER COMPONENT
+// ─────────────────────────────────────────────────────────────────
 export default async function Page({ params }: Props) {
   const id = params.id;
-  
+
   try {
     let product: any = null;
     const docRef = adminDb.collection('products').doc(id);
@@ -95,12 +116,10 @@ export default async function Page({ params }: Props) {
 
     if (docSnap.exists) {
       product = { id: docSnap.id, ...docSnap.data() };
-      // Se o acesso foi por ID mas o produto tem slug, redireciona permanentemente (SEO 301/308)
       if (product.slug && product.slug !== id) {
         permanentRedirect(`/product/${product.slug}`);
       }
     } else {
-      // Tenta buscar por slug (RG)
       const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
       if (!slugQuery.empty) {
         const doc = slugQuery.docs[0];
@@ -108,69 +127,113 @@ export default async function Page({ params }: Props) {
       }
     }
 
-    if (!product) {
-      return notFound();
-    }
+    if (!product) return notFound();
 
-    // 🧹 LIMPEZA DE DADOS (IMPORTANTE PARA SERVER COMPONENTS)
-    // Converte Timestamps e outros objetos do Firebase em tipos simples (string/number)
+    // Limpeza de dados — converte Timestamps do Firebase em tipos simples
     const serializedProduct = JSON.parse(JSON.stringify(product));
 
-    // 🛡️ SEGURANÇA: Remove links diretos de download do payload público enviado ao navegador
-    if (serializedProduct.urls) {
-      delete serializedProduct.urls.download;
-    }
+    // Segurança: remove URLs de download do payload público enviado ao navegador
+    if (serializedProduct.urls) delete serializedProduct.urls.download;
     delete serializedProduct.downloadUrl;
     delete serializedProduct.fileUrl;
 
-    // Dados Estruturados (JSON-LD) para o Google
-    // Monta array completo de imagens: destaque primeiro (vitrine principal),
-    // depois capa, depois galeria — o Google usa a 1ª como imagem principal
     const slug = serializedProduct.slug || serializedProduct.id;
+    const name = serializedProduct.name || 'Vetor Profissional';
+    const category = serializedProduct.category || '';
+
+    // ── IMAGENS LIMPAS PARA O JSON-LD ──────────────────────────
     const productImages = [
-      serializedProduct.urls?.destaque ? buildCleanImageUrl(serializedProduct.urls.destaque, slug, 'destaque') : null,
-      serializedProduct.urls?.capa ? buildCleanImageUrl(serializedProduct.urls.capa, slug, 'capa') : null,
+      serializedProduct.urls?.destaque
+        ? buildCleanImageUrl(serializedProduct.urls.destaque, slug, 'destaque')
+        : null,
+      serializedProduct.urls?.capa
+        ? buildCleanImageUrl(serializedProduct.urls.capa, slug, 'capa')
+        : null,
       ...(serializedProduct.urls?.galeria || []).map((imgUrl: string, i: number) =>
         imgUrl ? buildCleanImageUrl(imgUrl, slug, `galeria-${i + 1}`) : null
       ),
     ].filter(Boolean);
 
-    const jsonLd = {
-      '@context': 'https://schema.org',
+    // ── PRODUCT JSON-LD (Rich Snippet) ─────────────────────────
+    const productJsonLd = {
+      '@context': 'https://schema.org/',
       '@type': 'Product',
-      'name': serializedProduct.name,
-      'image': productImages.length === 1 ? productImages[0] : productImages,
-      'description': serializedProduct.description || `Vetor editável de ${serializedProduct.name}`,
-      // Atributos obrigatórios do Google Merchant Center para produtos de vestuário/arte
-      // Usa campo do Firestore se existir, senão aplica padrão ideal para produtos digitais
-      'color': serializedProduct.color || 'Multicolor',
-      'gender': serializedProduct.gender || 'unisex',
-      'age_group': serializedProduct.ageGroup || 'adult',
-      'size': serializedProduct.size || 'One Size',
-      'brand': {
-        '@type': 'Brand',
-        'name': 'Camisa Vetor'
+      name,
+      image: productImages.length === 1 ? productImages[0] : productImages,
+      description:
+        serializedProduct.description ||
+        `Arte em vetor editável ${name}. Inclui CDR, PDF, SVG e PNG em alta resolução.`,
+      sku: serializedProduct.id,
+      identifier: {
+        '@type': 'PropertyValue',
+        name: 'sku',
+        value: serializedProduct.id,
       },
-      'offers': {
+      brand: {
+        '@type': 'Brand',
+        name: 'Camisa Vetor',
+      },
+      color: serializedProduct.color || 'Multicolor',
+      offers: {
         '@type': 'Offer',
-        'price': serializedProduct.price,
-        'priceCurrency': 'BRL',
-        'availability': 'https://schema.org/InStock',
-        'url': `https://camisavetor.com.br/product/${serializedProduct.slug || serializedProduct.id}`
-      }
+        url: `https://camisavetor.com.br/product/${slug}`,
+        priceCurrency: 'BRL',
+        price: String(serializedProduct.price || '0'),
+        availability: 'https://schema.org/InStock',
+        seller: {
+          '@type': 'Organization',
+          name: 'Camisa Vetor',
+        },
+      },
+    };
+
+    // ── BREADCRUMBLIST JSON-LD ──────────────────────────────────
+    const breadcrumbItems: any[] = [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Início',
+        item: 'https://camisavetor.com.br',
+      },
+    ];
+
+    if (category) {
+      breadcrumbItems.push({
+        '@type': 'ListItem',
+        position: 2,
+        name: category,
+        item: `https://camisavetor.com.br/?category=${encodeURIComponent(category)}`,
+      });
+    }
+
+    breadcrumbItems.push({
+      '@type': 'ListItem',
+      position: breadcrumbItems.length + 1,
+      name,
+      item: `https://camisavetor.com.br/product/${slug}`,
+    });
+
+    const breadcrumbJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'BreadcrumbList',
+      itemListElement: breadcrumbItems,
     };
 
     return (
       <>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
         />
         <ProductDetailsWrapper product={serializedProduct} />
       </>
     );
   } catch (error) {
-    console.error("Erro ao renderizar produto:", error);
+    console.error('Erro ao renderizar produto:', error);
     return notFound();
   }
 }
