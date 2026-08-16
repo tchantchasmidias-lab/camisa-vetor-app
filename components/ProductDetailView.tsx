@@ -318,16 +318,9 @@ export default function ProductDetailView({ product }: { product: any }) {
               {productName}
             </h1>
 
-            {/* Badges de Confiança (Qualidade & Suporte) */}
-            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center md:justify-start gap-2.5">
-              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-[#f8f9fa] border border-[#dadce0]/70 rounded-xl text-[12px] font-medium text-[#3c4043] shadow-2xs">
-                <span>⭐</span>
-                <span><strong className="font-semibold text-[#202124]">Qualidade Garantida</strong> | Arte testada para produção</span>
-              </div>
-              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-[#f8f9fa] border border-[#dadce0]/70 rounded-xl text-[12px] font-medium text-[#3c4043] shadow-2xs">
-                <span>🔒</span>
-                <span><strong className="font-semibold text-[#202124]">Suporte Especializado</strong> | Auxílio técnico com os arquivos</span>
-              </div>
+            {/* Contador de Downloads (Único item na área superior abaixo do título) */}
+            <div className="flex items-center justify-center md:justify-start gap-1.5 text-[12px] md:text-[13px] font-semibold text-[#fe7302]">
+              <span>🔥 + Mais de {product.salesCount || product.downloadsCount || 100} downloads realizados</span>
             </div>
 
             {/* Descrição curta */}
@@ -384,6 +377,24 @@ export default function ProductDetailView({ product }: { product: any }) {
                 <><Loader2 size={18} className="animate-spin mr-3" />{t('processing')}...</>
               ) : t('addToCart')}
             </button>
+
+            {/* Badges de Confiança em Linha Horizontal (Abaixo do Botão de Compra) */}
+            <div className="w-full max-w-md mx-auto md:mx-0 mt-3.5 flex items-center justify-center gap-2.5 md:gap-3 text-[13px] md:text-[14px] font-semibold text-[#1a202c]">
+              <span className="flex items-center gap-1.5">
+                <span className="text-[16px]">🛡️</span>
+                <span>Compra segura</span>
+              </span>
+              <span className="text-gray-300 font-normal">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-[16px]">⚡</span>
+                <span>Liberação rápida</span>
+              </span>
+              <span className="text-gray-300 font-normal">•</span>
+              <span className="flex items-center gap-1.5">
+                <span className="text-[16px]">👤</span>
+                <span>Suporte</span>
+              </span>
+            </div>
 
             {/* Botão WhatsApp */}
             <button
