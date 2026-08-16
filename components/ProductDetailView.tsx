@@ -308,6 +308,16 @@ export default function ProductDetailView({ product }: { product: any }) {
                 ))}
               </div>
             )}
+
+            {/* Card de Aviso — Imagem meramente ilustrativa */}
+            <div className="mt-3.5 px-3.5 py-2.5 bg-[#f8fafc] border border-[#e2e8f0] rounded-lg text-center">
+              <p className="text-[13px] leading-[1.4] text-[#334155] mb-1">
+                📸 <strong className="font-semibold text-[#1e293b]">Imagem meramente ilustrativa</strong> — Você receberá o <strong className="font-semibold text-[#1e293b]">arquivo digital aberto e 100% editável</strong> (frente, costas e mangas separadas), pronto para personalizar e produzir.
+              </p>
+              <p className="text-[12px] text-[#64748b] italic m-0">
+                Essa imagem serve apenas para demonstrar o resultado final da estampa.
+              </p>
+            </div>
           </div>
 
           {/* ── COL 2: DETALHES DE COMPRA ──────────────────────── */}
