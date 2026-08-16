@@ -318,42 +318,16 @@ export default function ProductDetailView({ product }: { product: any }) {
               {productName}
             </h1>
 
-            {/* Avaliações */}
-            <div className="flex items-center justify-center md:justify-start gap-2">
-              <div className="flex items-center gap-1">
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    disabled={!!(isSubmittingRating || (user && userRating !== null))}
-                    onMouseEnter={() => !userRating && setHoverRating(star)}
-                    onMouseLeave={() => !userRating && setHoverRating(0)}
-                    onClick={() => { if (!user) router.push('/login'); else if (!userRating) handleRate(star); }}
-                    className={`transition-all transform ${!userRating ? 'hover:scale-125 active:scale-95' : 'cursor-default'}`}
-                    title={!user ? t('loginToReview') : userRating ? t('ratingSuccess') : `${t('rate')} ${star}`}
-                  >
-                    <Star
-                      size={20}
-                      className={`transition-colors ${
-                        star <= (hoverRating || (userRating || Math.round(averageRating)))
-                          ? 'text-[#fe7302] fill-[#fe7302]'
-                          : 'text-gray-300'
-                      }`}
-                    />
-                  </button>
-                ))}
+            {/* Badges de Confiança (Qualidade & Suporte) */}
+            <div className="flex flex-col sm:flex-row flex-wrap items-center justify-center md:justify-start gap-2.5">
+              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-[#f8f9fa] border border-[#dadce0]/70 rounded-xl text-[12px] font-medium text-[#3c4043] shadow-2xs">
+                <span>⭐</span>
+                <span><strong className="font-semibold text-[#202124]">Qualidade Garantida</strong> | Arte testada para produção</span>
               </div>
-              <span className="text-[12px] font-bold text-[#5f6368] ml-1">
-                {averageRating > 0 ? averageRating.toFixed(1) : t('new')}
-              </span>
-              <span className="text-[11px] text-gray-400">
-                ({totalRatings} {totalRatings === 1 ? t('review') : t('reviews')})
-              </span>
-              {isSubmittingRating && <Loader2 size={12} className="animate-spin text-[#fe7302]" />}
-              {userRating && (
-                <span className="text-[10px] font-bold text-green-600 uppercase tracking-wider ml-1">
-                  {t('ratingSuccess')}
-                </span>
-              )}
+              <div className="flex items-center gap-1.5 px-3.5 py-2 bg-[#f8f9fa] border border-[#dadce0]/70 rounded-xl text-[12px] font-medium text-[#3c4043] shadow-2xs">
+                <span>🔒</span>
+                <span><strong className="font-semibold text-[#202124]">Suporte Especializado</strong> | Auxílio técnico com os arquivos</span>
+              </div>
             </div>
 
             {/* Descrição curta */}
