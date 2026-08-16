@@ -323,22 +323,75 @@ export default function ProductDetailView({ product }: { product: any }) {
           {/* ── COL 2: DETALHES DE COMPRA ──────────────────────── */}
           <div className="flex-1 w-full min-w-0 space-y-6">
 
-            {/* H1 — Nome */}
+            {/* 1. H1 — Nome */}
             <h1 className="text-2xl md:text-3xl font-black text-[#202124] uppercase tracking-tight leading-[1.1] text-center md:text-left">
               {productName}
             </h1>
 
-            {/* Contador de Downloads (Único item na área superior abaixo do título) */}
+            {/* 2. Contador de Downloads */}
             <div className="flex items-center justify-center md:justify-start gap-1.5 text-[12px] md:text-[13px] font-semibold text-[#fe7302]">
               <span>🔥 + Mais de {product.salesCount || product.downloadsCount || 100} downloads realizados</span>
             </div>
 
-            {/* Descrição curta */}
+            {/* 3. BLOCO DE AÇÃO DE COMPRA */}
+            <div className="space-y-4">
+              {/* Preço em Destaque */}
+              <div className="text-center md:text-left">
+                <span className="text-3xl md:text-4xl font-black text-[#202124] tracking-tighter">
+                  {formatPrice(product.price || 0)}
+                </span>
+              </div>
+
+              {/* Botão Comprar */}
+              <button
+                onClick={handleBuyNow}
+                disabled={isAdding}
+                className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
+                  isAdding ? 'bg-[#202124] text-white' : 'bg-[#fe7302] text-white hover:bg-[#202124]'
+                }`}
+              >
+                {isAdding ? (
+                  <><Loader2 size={18} className="animate-spin mr-3" />{t('processing')}...</>
+                ) : t('addToCart')}
+              </button>
+
+              {/* Linha de Badges de Confiança */}
+              <div className="w-full max-w-md mx-auto md:mx-0 pt-1 flex items-center justify-center gap-2.5 md:gap-3 text-[13px] md:text-[14px] font-semibold text-[#1a202c]">
+                <span className="flex items-center gap-1.5">
+                  <span className="text-[16px]">🛡️</span>
+                  <span>Compra segura</span>
+                </span>
+                <span className="text-gray-300 font-normal">•</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="text-[16px]">⚡</span>
+                  <span>Liberação rápida</span>
+                </span>
+                <span className="text-gray-300 font-normal">•</span>
+                <span className="flex items-center gap-1.5">
+                  <span className="text-[16px]">👤</span>
+                  <span>Suporte</span>
+                </span>
+              </div>
+
+              {/* Botão WhatsApp */}
+              <button
+                onClick={() => {
+                  const text = `Olha essa estampa incrível na Camisa Vetor: ${product.name}`;
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + '\n' + window.location.href)}`, '_blank');
+                }}
+                className="w-full max-w-md mx-auto md:mx-0 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10 uppercase tracking-widest text-[10px]"
+              >
+                <MessageCircle size={16} />
+                Compartilhar no WhatsApp
+              </button>
+            </div>
+
+            {/* 4. Descrição curta */}
             <p className="text-[#5f6368] text-[15px] leading-relaxed font-medium mx-auto md:mx-0 text-center md:text-left max-w-xl">
               {tp(product.description)}
             </p>
 
-            {/* Badge Produto Digital */}
+            {/* 5. Badge Produto Digital */}
             <div className="p-4 bg-[#e6f4ea]/60 border border-[#ceead6] rounded-[1.25rem] flex items-start gap-3 shadow-sm">
               <Info size={18} className="text-[#1e8e3e] flex-shrink-0 mt-0.5" />
               <div>
@@ -351,7 +404,7 @@ export default function ProductDetailView({ product }: { product: any }) {
               </div>
             </div>
 
-            {/* Badges de Formato */}
+            {/* 6. Badges de Formato */}
             <div className="text-center md:text-left">
               <h3 className="text-[10px] font-bold text-[#999] uppercase tracking-[0.2em] mb-3">
                 {t('availableFormats')}:
@@ -367,56 +420,6 @@ export default function ProductDetailView({ product }: { product: any }) {
                 ))}
               </div>
             </div>
-
-            {/* Preço */}
-            <div className="text-center md:text-left">
-              <span className="text-3xl md:text-4xl font-black text-[#202124] tracking-tighter">
-                {formatPrice(product.price || 0)}
-              </span>
-            </div>
-
-            {/* Botão Comprar */}
-            <button
-              onClick={handleBuyNow}
-              disabled={isAdding}
-              className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
-                isAdding ? 'bg-[#202124] text-white' : 'bg-[#fe7302] text-white hover:bg-[#202124]'
-              }`}
-            >
-              {isAdding ? (
-                <><Loader2 size={18} className="animate-spin mr-3" />{t('processing')}...</>
-              ) : t('addToCart')}
-            </button>
-
-            {/* Badges de Confiança em Linha Horizontal (Abaixo do Botão de Compra) */}
-            <div className="w-full max-w-md mx-auto md:mx-0 mt-3.5 flex items-center justify-center gap-2.5 md:gap-3 text-[13px] md:text-[14px] font-semibold text-[#1a202c]">
-              <span className="flex items-center gap-1.5">
-                <span className="text-[16px]">🛡️</span>
-                <span>Compra segura</span>
-              </span>
-              <span className="text-gray-300 font-normal">•</span>
-              <span className="flex items-center gap-1.5">
-                <span className="text-[16px]">⚡</span>
-                <span>Liberação rápida</span>
-              </span>
-              <span className="text-gray-300 font-normal">•</span>
-              <span className="flex items-center gap-1.5">
-                <span className="text-[16px]">👤</span>
-                <span>Suporte</span>
-              </span>
-            </div>
-
-            {/* Botão WhatsApp */}
-            <button
-              onClick={() => {
-                const text = `Olha essa estampa incrível na Camisa Vetor: ${product.name}`;
-                window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + '\n' + window.location.href)}`, '_blank');
-              }}
-              className="w-full max-w-md mx-auto md:mx-0 font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10 uppercase tracking-widest text-[10px]"
-            >
-              <MessageCircle size={16} />
-              Compartilhar no WhatsApp
-            </button>
           </div>
 
           {/* ── COL 3: SIDEBAR — CATEGORIAS ────────────────────── */}
