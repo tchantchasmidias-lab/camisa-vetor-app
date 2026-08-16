@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
-import { collection, getDocs, query, where, limit, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useGeo } from '@/lib/i18n/GeoContext';
@@ -29,11 +29,11 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
     if (!category) return;
     const fetchRelated = async () => {
       try {
+        // Sem orderBy para evitar exigência de índice composto no Firestore
         const q = query(
           collection(db, 'products'),
           where('category', '==', category),
-          orderBy('createdAt', 'desc'),
-          limit(5)
+          limit(6)
         );
         const snap = await getDocs(q);
         const items = snap.docs
