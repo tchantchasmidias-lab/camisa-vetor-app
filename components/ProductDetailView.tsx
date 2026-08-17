@@ -357,8 +357,10 @@ export default function ProductDetailView({ product }: { product: any }) {
 
               {/* Linha de Badges de Confiança */}
               <div className="w-full max-w-md mx-auto md:mx-0 pt-1 flex items-center justify-center gap-2.5 md:gap-3 text-[13px] md:text-[14px] font-semibold text-[#1a202c]">
-                <span className="flex items-center gap-1.5">
-                  <span className="text-[16px]">🛡️</span>
+                <span className="flex items-center gap-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="#2563eb" className="inline-block shrink-0">
+                    <path d="M18 10v-4c0-3.313-2.687-6-6-6s-6 2.687-6 6v4h-3v14h18v-14h-3zm-10-4c0-2.206 1.794-4 4-4s4 1.794 4 4v4h-8v-4zm6 10.722v2.278c0 .552-.447 1-1 1s-1-.448-1-1v-2.278c-.595-.347-1-.984-1-1.722 0-1.104.896-2 2-2s2 .896 2 2c0 .738-.405 1.375-1 1.722z"/>
+                  </svg>
                   <span>Compra segura</span>
                 </span>
                 <span className="text-gray-300 font-normal">•</span>
