@@ -46,23 +46,58 @@ export default function Footer() {
           <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white block mb-3">
             Links
           </span>
-          <nav className="flex flex-col gap-2">
-            <Link href="/blog" className="text-[12px] text-[#94a3b8] hover:text-[#fe7302] transition-colors uppercase tracking-widest font-bold">
-              Blog
-            </Link>
-            <Link href="/sobre" className="text-[12px] text-[#94a3b8] hover:text-[#fe7302] transition-colors uppercase tracking-widest font-bold">
-              Sobre Nós
-            </Link>
-            <Link href="/termos" className="text-[12px] text-[#94a3b8] hover:text-[#fe7302] transition-colors uppercase tracking-widest font-bold">
-              {t('termsOfUse')}
-            </Link>
-            <Link href="/privacidade" className="text-[12px] text-[#94a3b8] hover:text-[#fe7302] transition-colors uppercase tracking-widest font-bold">
-              {t('privacyPolicy')}
-            </Link>
-            <Link href="https://wa.me/558791425634" target="_blank" className="text-[12px] text-[#94a3b8] hover:text-[#fe7302] transition-colors uppercase tracking-widest font-bold">
-              {t('support')}
-            </Link>
-          </nav>
+          <ul className="footer-links-list flex flex-col gap-[10px] p-0 m-0 list-none">
+            <li>
+              <Link href="/blog" className="footer-nav-link inline-flex items-center gap-2 text-white no-underline text-[13px] font-medium transition-all duration-200 hover:text-[#fe7302] hover:translate-x-[3px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fe7302" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="footer-nav-icon shrink-0 transition-transform duration-200">
+                  <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                  <path d="M6 6h10"></path>
+                  <path d="M6 10h10"></path>
+                </svg>
+                <span>BLOG</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/sobre" className="footer-nav-link inline-flex items-center gap-2 text-white no-underline text-[13px] font-medium transition-all duration-200 hover:text-[#fe7302] hover:translate-x-[3px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fe7302" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="footer-nav-icon shrink-0 transition-transform duration-200">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="9" cy="7" r="4"></circle>
+                  <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                </svg>
+                <span>SOBRE NÓS</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/termos" className="footer-nav-link inline-flex items-center gap-2 text-white no-underline text-[13px] font-medium transition-all duration-200 hover:text-[#fe7302] hover:translate-x-[3px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fe7302" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="footer-nav-icon shrink-0 transition-transform duration-200">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+                <span>TERMOS DE USO</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="/privacidade" className="footer-nav-link inline-flex items-center gap-2 text-white no-underline text-[13px] font-medium transition-all duration-200 hover:text-[#fe7302] hover:translate-x-[3px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fe7302" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="footer-nav-icon shrink-0 transition-transform duration-200">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>PRIVACIDADE</span>
+              </Link>
+            </li>
+            <li>
+              <Link href="https://wa.me/558791425634" target="_blank" className="footer-nav-link inline-flex items-center gap-2 text-white no-underline text-[13px] font-medium transition-all duration-200 hover:text-[#fe7302] hover:translate-x-[3px]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fe7302" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="footer-nav-icon shrink-0 transition-transform duration-200">
+                  <path d="M3 18v-6a9 9 0 0 1 18 0v6"></path>
+                  <path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"></path>
+                </svg>
+                <span>SUPORTE</span>
+              </Link>
+            </li>
+          </ul>
         </div>
 
         {/* COLUNA CONTATO, REDES SOCIAIS & PAGAMENTO SEGURO */}
