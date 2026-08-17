@@ -404,24 +404,16 @@ export default function ProductDetailView({ product }: { product: any }) {
               </button>
 
               {/* Linha de Badges de Confiança */}
-              <div className="w-full max-w-md mx-auto md:mx-0 pt-1 flex items-center justify-center gap-2.5 md:gap-3 text-[13px] md:text-[14px] font-semibold text-[#1a202c]">
-                <span className="flex items-center gap-1">
+              <div className="product-trust-badges w-full max-w-md mx-auto md:mx-0 pt-1 flex items-center justify-center gap-2.5 md:gap-3 text-[13px] md:text-[14px] font-semibold text-[#1a202c]">
+                <span className="badge-item badge-compra-segura flex items-center gap-1">
                   <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="#2563eb" className="inline-block shrink-0">
                     <path d="M18 10v-4c0-3.313-2.687-6-6-6s-6 2.687-6 6v4h-3v14h18v-14h-3zm-10-4c0-2.206 1.794-4 4-4s4 1.794 4 4v4h-8v-4zm6 10.722v2.278c0 .552-.447 1-1 1s-1-.448-1-1v-2.278c-.595-.347-1-.984-1-1.722 0-1.104.896-2 2-2s2 .896 2 2c0 .738-.405 1.375-1 1.722z"/>
                   </svg>
-                  <span>Compra segura</span>
+                  <strong>Compra segura</strong>
                 </span>
-                <span className="text-gray-300 font-normal">•</span>
-                <span className="flex items-center gap-1.5">
-                  <span className="text-[16px]">⚡</span>
-                  <span>Liberação rápida</span>
-                </span>
-                <span className="text-gray-300 font-normal">•</span>
-                <span className="flex items-center gap-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#25D366" className="inline-block shrink-0">
-                    <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
-                  </svg>
-                  <span>Suporte</span>
+                <span className="badge-separator text-gray-300 font-normal">•</span>
+                <span className="badge-item badge-liberacao-rapida flex items-center gap-1.5">
+                  ⚡ <strong>Liberação rápida</strong>
                 </span>
               </div>
             </div>
