@@ -73,11 +73,6 @@ export default function Footer() {
             Contato
           </h4>
           <ul className="footer-list space-y-2 mb-5">
-            <li>
-              <Link href="/contato" className="footer-link text-[13px] text-[#94a3b8] hover:text-[#fe7302] transition-colors block">
-                Página de Contato
-              </Link>
-            </li>
             <li className="footer-info text-[13px] text-[#94a3b8] block">
               Atendimento: Todos os dias 24hs
             </li>
@@ -126,9 +121,9 @@ export default function Footer() {
             Pagamento seguro
           </h4>
           <div className="footer-payment-icons flex items-center gap-3 flex-wrap">
-            <img src="/icon_pix_b.svg" alt="Pix" className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
-            <img src="/mercadopago.svg" alt="Mercado Pago" className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
-            <img src="/PayPal.svg" alt="PayPal" className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
+            <img src="/icon_pix_b.svg" alt="Pix" style={{ filter: 'brightness(0) invert(1)' }} className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
+            <img src="/mercadopago.svg" alt="Mercado Pago" style={{ filter: 'brightness(0) invert(1)' }} className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
+            <img src="/PayPal.svg" alt="PayPal" style={{ filter: 'brightness(0) invert(1)' }} className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
           </div>
 
         </div>
