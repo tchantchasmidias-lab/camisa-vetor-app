@@ -123,7 +123,7 @@ export default function Footer() {
           <div className="footer-payment-icons flex items-center gap-3 flex-wrap">
             <img src="/icon_pix_b.svg" alt="Pix" style={{ filter: 'brightness(0) invert(1)' }} className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
             <img src="/mercadopago.svg" alt="Mercado Pago" style={{ filter: 'brightness(0) invert(1)' }} className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
-            <img src="/PayPal.svg" alt="PayPal" style={{ filter: 'brightness(0) invert(1)' }} className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
+            <img src="/PayPal.png" alt="PayPal" style={{ filter: 'brightness(0) invert(1)' }} className="payment-icon h-[24px] w-auto object-contain opacity-90 hover:opacity-100 transition-opacity" />
           </div>
 
         </div>
