@@ -10,6 +10,7 @@ export interface BlogPost {
     keywords: string[];
   };
   status: 'draft' | 'published';
+  views?: number;
   createdAt: number;
   updatedAt: number;
 }

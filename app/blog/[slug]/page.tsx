@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import { BlogPost } from '@/lib/types/blog';
 import { notFound } from 'next/navigation';
 import CategoryCarousel from '@/components/CategoryCarousel';
+import BlogViewTracker from '@/components/BlogViewTracker';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, BookOpen } from 'lucide-react';
@@ -164,6 +165,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
+      <BlogViewTracker slug={params.slug} />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostJsonLd) }}

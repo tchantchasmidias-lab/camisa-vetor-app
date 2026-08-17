@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { db, storage } from '@/lib/firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { BlogPost } from '@/lib/types/blog';
-import { RefreshCw, Trash2, Edit3, Eye, Sparkles, Image as ImageIcon, ExternalLink } from 'lucide-react';
+import { RefreshCw, Trash2, Edit3, Eye, Sparkles, Image as ImageIcon, ExternalLink, BookOpen, TrendingUp } from 'lucide-react';
 
 export default function BlogTab() {
   const [prompt, setPrompt] = useState('');
@@ -180,8 +180,66 @@ export default function BlogTab() {
     return isNaN(d.getTime()) ? 'Data não definida' : d.toLocaleDateString('pt-BR');
   };
 
+  // Métricas do Blog
+  const totalViews = publishedPosts.reduce((sum, p) => sum + (p.views || 0), 0);
+  const mostViewedPost = publishedPosts.length > 0
+    ? [...publishedPosts].sort((a, b) => (b.views || 0) - (a.views || 0))[0]
+    : null;
+
   return (
     <div className="bg-[#111111] p-6 rounded-2xl border border-white/5 space-y-6">
+      
+      {/* PAINEL DE ESTATÍSTICAS / MÉTRICAS DE ACESSO AO BLOG */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-2">
+        <div className="bg-black/60 border border-white/10 p-4 rounded-2xl flex items-center gap-4 shadow-lg">
+          <div className="w-12 h-12 rounded-xl bg-[#fe7302]/10 text-[#fe7302] flex items-center justify-center shrink-0 border border-[#fe7302]/20">
+            <Eye size={22} />
+          </div>
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+              Total de Acessos
+            </span>
+            <span className="text-2xl font-black text-white">
+              {totalViews.toLocaleString('pt-BR')}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-black/60 border border-white/10 p-4 rounded-2xl flex items-center gap-4 shadow-lg">
+          <div className="w-12 h-12 rounded-xl bg-blue-500/10 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+            <BookOpen size={22} />
+          </div>
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+              Artigos Publicados
+            </span>
+            <span className="text-2xl font-black text-white">
+              {publishedPosts.length}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-black/60 border border-white/10 p-4 rounded-2xl flex items-center gap-4 shadow-lg">
+          <div className="w-12 h-12 rounded-xl bg-green-500/10 text-green-400 flex items-center justify-center shrink-0 border border-green-500/20">
+            <TrendingUp size={22} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block">
+              Mais Acessado
+            </span>
+            <span className="text-xs font-bold text-white truncate block">
+              {mostViewedPost?.title ? mostViewedPost.title : 'Nenhum'}
+            </span>
+            {mostViewedPost && (
+              <span className="text-[10px] text-green-400 font-semibold">
+                {(mostViewedPost.views || 0).toLocaleString('pt-BR')} acessos
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* GERADOR DE BLOG IA */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <Sparkles className="text-[#fe7302]" size={22} />
@@ -440,13 +498,18 @@ export default function BlogTab() {
 
                   <div>
                     <h4 className="text-white font-bold text-base leading-snug">{post.title}</h4>
-                    <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <div className="text-xs text-gray-500 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
                       <span className="font-mono text-gray-400">/{post.slug}</span>
                       <span>•</span>
                       <span>{formatDate(post.createdAt)}</span>
                       <span>•</span>
                       <span className={post.status === 'published' ? 'text-green-400 font-semibold' : 'text-orange-400 font-semibold'}>
                         {(post.status || 'published').toUpperCase()}
+                      </span>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1.5 text-xs text-[#fe7302] font-semibold bg-[#fe7302]/10 px-2.5 py-0.5 rounded-md border border-[#fe7302]/20">
+                        <Eye size={13} />
+                        {(post.views || 0).toLocaleString('pt-BR')} acessos
                       </span>
                     </div>
                   </div>
@@ -495,4 +558,3 @@ export default function BlogTab() {
     </div>
   );
 }
-
