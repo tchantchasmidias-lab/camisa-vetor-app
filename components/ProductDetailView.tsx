@@ -495,12 +495,12 @@ export default function ProductDetailView({ product }: { product: any }) {
           {/* Coluna Esquerda — Especificações Técnicas */}
           <div>
             <h3 className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em] mb-5">
-              📦 Especificações Técnicas do Arquivo
+              Especificações Técnicas do Arquivo
             </h3>
-            <div className="border border-[#dadce0] rounded-[1.5rem] overflow-hidden">
-              <ul className="divide-y divide-[#f1f3f4]">
+            <div className="border border-[#dadce0] rounded-[1.5rem] overflow-hidden py-2">
+              <ul>
                 {TECH_SPECS.map((spec, i) => (
-                  <li key={i} className="flex items-start gap-3 px-5 py-4">
+                  <li key={i} className="flex items-start gap-3 px-5 py-3.5">
                     {spec.icon}
                     <div>
                       <span className="text-[10px] font-bold text-[#5f6368] uppercase tracking-wider block mb-0.5">
