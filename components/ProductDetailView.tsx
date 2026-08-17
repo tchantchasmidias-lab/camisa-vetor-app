@@ -11,7 +11,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import {
   Star, Shirt, Info, Loader2, Search, MessageCircle,
   ChevronDown, ChevronUp, FileText, Zap, Package,
-  CheckCircle2, Download
+  CheckCircle2, Download, X, ChevronLeft, ChevronRight, Maximize2
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -142,6 +142,7 @@ export default function ProductDetailView({ product }: { product: any }) {
   const [dbCategories, setDbCategories] = useState<string[]>([]);
   const [zoomPos, setZoomPos] = useState('center');
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [averageRating, setAverageRating] = useState<number>(0);
@@ -250,6 +251,37 @@ export default function ProductDetailView({ product }: { product: any }) {
     setTimeout(() => router.push('/carrinho'), 500);
   };
 
+  const handlePrevLightbox = () => {
+    const currentIndex = galleryImages.indexOf(selectedImage);
+    const prevIndex = (currentIndex - 1 + galleryImages.length) % galleryImages.length;
+    setSelectedImage(galleryImages[prevIndex]);
+  };
+
+  const handleNextLightbox = () => {
+    const currentIndex = galleryImages.indexOf(selectedImage);
+    const nextIndex = (currentIndex + 1) % galleryImages.length;
+    setSelectedImage(galleryImages[nextIndex]);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isLightboxOpen) return;
+      if (e.key === 'Escape') setIsLightboxOpen(false);
+      if (e.key === 'ArrowLeft') handlePrevLightbox();
+      if (e.key === 'ArrowRight') handleNextLightbox();
+    };
+    if (isLightboxOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isLightboxOpen, selectedImage, galleryImages]);
+
   return (
     <div className="w-full bg-white font-sans text-[#4a4a4a] animate-in fade-in duration-700">
       <div className="max-w-[1400px] mx-auto px-4 pt-4 pb-12">
@@ -266,12 +298,12 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* ── COL 1: GALERIA ─────────────────────────────────── */}
           <div className="w-full lg:w-[42%] xl:w-[45%]">
-            {/* Imagem Principal com Zoom (Troca Instantânea Direta) */}
+            {/* Imagem Principal com Zoom & Fullscreen Lightbox */}
             <div
-              className={`relative aspect-square w-full bg-[#f8f9fa] rounded-[2.5rem] overflow-hidden border border-[#dadce0] shadow-sm select-none ${
+              className={`product-image-wrapper relative aspect-square w-full bg-[#f8f9fa] rounded-xl overflow-hidden border border-[#dadce0] shadow-sm select-none group cursor-pointer ${
                 isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
               }`}
-              onClick={() => setIsZoomed(!isZoomed)}
+              onClick={() => setIsLightboxOpen(true)}
               onMouseMove={handleMouseMove}
               onMouseLeave={() => { setIsZoomed(false); setZoomPos('center'); }}
             >
@@ -283,18 +315,16 @@ export default function ProductDetailView({ product }: { product: any }) {
                   quality={90}
                   unoptimized
                   sizes="(max-width: 768px) 100vw, 700px"
-                  className={`object-cover transition-transform duration-300 ease-out pointer-events-none lg:pointer-events-auto ${
+                  className={`product-gallery-main-image object-cover transition-transform duration-300 ease-out pointer-events-none lg:pointer-events-auto rounded-xl ${
                     isZoomed ? 'scale-[1.8]' : 'scale-100'
                   }`}
                   style={{ transformOrigin: zoomPos }}
                   priority
                 />
               )}
-              {!isZoomed && (
-                <div className="hidden lg:flex absolute bottom-6 right-6 bg-white/80 backdrop-blur p-3 rounded-full shadow-lg pointer-events-none animate-bounce">
-                  <Search size={18} className="text-[#fe7302]" />
-                </div>
-              )}
+              <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-md text-gray-700 group-hover:bg-[#fe7302] group-hover:text-white transition-all flex items-center justify-center">
+                <Maximize2 size={16} />
+              </div>
             </div>
 
             {/* Thumbnails — lazy load */}
@@ -304,7 +334,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <button
                     key={index}
                     onClick={() => handleThumbnailClick(url)}
-                    className={`aspect-square relative rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
+                    className={`aspect-square relative rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       selectedImage === url
                         ? 'border-[#fe7302] shadow-md shadow-orange-100'
                         : 'border-transparent opacity-50 hover:opacity-100'
@@ -317,7 +347,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                       sizes="128px"
                       quality={70}
                       loading="lazy"
-                      className="object-cover"
+                      className="object-cover rounded-lg"
                     />
                   </button>
                 ))}
@@ -531,6 +561,87 @@ export default function ProductDetailView({ product }: { product: any }) {
             category={productCategory}
             currentProductId={product.id}
           />
+        )}
+
+        {/* ══════════════════════════════════════════════════════
+            MODAL LIGHTBOX — FULLSCREEN ZOOM
+        ══════════════════════════════════════════════════════ */}
+        {isLightboxOpen && (
+          <div
+            className="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex flex-col justify-between p-4 md:p-6 animate-in fade-in duration-200"
+            onClick={() => setIsLightboxOpen(false)}
+          >
+            {/* Barra Superior */}
+            <div className="flex items-center justify-between w-full max-w-7xl mx-auto z-10 pt-2 px-2">
+              <span className="text-white/80 text-[12px] md:text-[13px] font-bold tracking-widest uppercase truncate pr-4">
+                {productName} {galleryImages.length > 1 ? `— (${galleryImages.indexOf(selectedImage) + 1}/${galleryImages.length})` : ''}
+              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsLightboxOpen(false); }}
+                className="p-2.5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all shrink-0 active:scale-95"
+                aria-label="Fechar zoom"
+              >
+                <X size={22} />
+              </button>
+            </div>
+
+            {/* Container da Imagem em Tela Cheia */}
+            <div
+              className="relative flex-1 w-full max-w-6xl mx-auto my-3 flex items-center justify-center overflow-hidden select-none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {selectedImage && (
+                <Image
+                  src={selectedImage}
+                  alt={productName}
+                  fill
+                  quality={100}
+                  unoptimized
+                  className="object-contain max-h-[82vh] rounded-lg"
+                />
+              )}
+
+              {/* Botões de Navegação Anterior / Próxima */}
+              {galleryImages.length > 1 && (
+                <>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handlePrevLightbox(); }}
+                    className="absolute left-1 md:left-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/60 hover:bg-[#fe7302] rounded-full transition-all border border-white/10 shadow-xl active:scale-90"
+                    aria-label="Imagem anterior"
+                  >
+                    <ChevronLeft size={28} />
+                  </button>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleNextLightbox(); }}
+                    className="absolute right-1 md:right-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/60 hover:bg-[#fe7302] rounded-full transition-all border border-white/10 shadow-xl active:scale-90"
+                    aria-label="Próxima imagem"
+                  >
+                    <ChevronRight size={28} />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Faixa de Miniaturas no Rodapé */}
+            {galleryImages.length > 1 && (
+              <div
+                className="flex items-center justify-center gap-2 max-w-xl mx-auto z-10 py-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {galleryImages.map((url: string, index: number) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(url)}
+                    className={`w-12 h-12 relative rounded-lg overflow-hidden border-2 transition-all ${
+                      selectedImage === url ? 'border-[#fe7302] scale-105 shadow-md shadow-orange-500/30' : 'border-transparent opacity-40 hover:opacity-100'
+                    }`}
+                  >
+                    <Image src={url} alt={`Thumb ${index}`} fill className="object-cover rounded-lg" />
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
