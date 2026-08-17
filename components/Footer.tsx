@@ -23,19 +23,19 @@ export default function Footer() {
           <span className="text-[11px] font-black uppercase tracking-[0.25em] text-white block mb-3">
             Camisa Vetor
           </span>
-          <p className="text-[12px] text-[#94a3b8] leading-relaxed mb-4">
+          <p className="footer-about-text text-[12px] text-white leading-relaxed mb-4">
             Plataforma brasileira de vetores profissionais para estamparia, sublimação e personalização de produtos.
           </p>
           <div className="flex flex-col gap-2">
             <a
               href="mailto:contato@camisavetor.com"
-              className="flex items-center gap-2 text-[12px] text-[#94a3b8] hover:text-[#fe7302] transition-colors font-medium"
+              className="footer-contact-info flex items-center gap-2 text-[12px] text-white hover:text-[#fe7302] transition-colors font-medium"
             >
-              <Mail size={14} className="text-[#fe7302] flex-shrink-0" />
+              <Mail size={14} className="footer-contact-icon text-[#fe7302] stroke-[#fe7302] flex-shrink-0" />
               contato@camisavetor.com
             </a>
-            <div className="flex items-start gap-2 text-[12px] text-[#94a3b8] font-medium">
-              <MapPin size={14} className="text-[#fe7302] flex-shrink-0 mt-0.5" />
+            <div className="footer-address flex items-start gap-2 text-[12px] text-white font-medium">
+              <MapPin size={14} className="footer-contact-icon text-[#fe7302] stroke-[#fe7302] flex-shrink-0 mt-0.5" />
               <span>Rua Marieta Pita, nº 09<br />Loteamento José Gerônimo<br />Pesqueira — PE, Brasil</span>
             </div>
           </div>
@@ -108,7 +108,7 @@ export default function Footer() {
             Contato
           </h4>
           <ul className="footer-list space-y-2 mb-5">
-            <li className="footer-info text-[13px] text-[#94a3b8] block">
+            <li className="footer-schedule text-[13px] text-white block">
               Atendimento: Todos os dias 24hs
             </li>
             <li>
@@ -116,7 +116,7 @@ export default function Footer() {
                 href="https://wa.me/558791425634"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="footer-link-wpp inline-flex items-center text-[13px] text-[#94a3b8] hover:text-[#25D366] transition-colors"
+                className="footer-link-wpp inline-flex items-center text-[13px] text-white hover:text-[#25D366] transition-colors"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#25D366" className="mr-1.5 shrink-0">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
@@ -166,11 +166,11 @@ export default function Footer() {
       </div>
 
       {/* BLOCO INFERIOR: COPYRIGHT */}
-      <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-2">
-        <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em] text-center md:text-left">
+      <div className="footer-bottom max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-2 text-white opacity-90">
+        <p className="footer-copyright text-[10px] font-bold uppercase tracking-[0.2em] text-center md:text-left text-white">
           © {currentYear} CAMISA VETOR. {t('allRightsReserved')}.
         </p>
-        <p className="text-[10px] text-gray-700 text-center">
+        <p className="footer-bottom-notice text-[10px] text-center text-white">
           Produtos digitais — Entrega imediata após pagamento
         </p>
       </div>
