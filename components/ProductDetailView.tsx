@@ -147,7 +147,6 @@ export default function ProductDetailView({ product }: { product: any }) {
   const [dbCategories, setDbCategories] = useState<string[]>([]);
   const [zoomPos, setZoomPos] = useState('center');
   const [isZoomed, setIsZoomed] = useState(false);
-  const [isFading, setIsFading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [averageRating, setAverageRating] = useState<number>(0);
@@ -233,14 +232,10 @@ export default function ProductDetailView({ product }: { product: any }) {
     new Set([product.urls?.destaque, ...(product.urls?.galeria || [])].filter(Boolean))
   );
 
+  // Troca direta e instantânea no clique (0ms de delay)
   const handleThumbnailClick = (url: string) => {
-    if (url === selectedImage) return;
-    setIsFading(true);
+    setSelectedImage(url);
     setIsZoomed(false);
-    setTimeout(() => {
-      setSelectedImage(url);
-      setIsFading(false);
-    }, 150);
   };
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
@@ -276,11 +271,9 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* ── COL 1: GALERIA ─────────────────────────────────── */}
           <div className="w-full lg:w-[42%] xl:w-[45%]">
-            {/* Imagem Principal com Zoom e Transição Suave (0ms delay + 150ms fade) */}
+            {/* Imagem Principal com Zoom (Troca Instantânea Direta) */}
             <div
-              className={`relative aspect-square w-full bg-[#f8f9fa] rounded-[2.5rem] overflow-hidden border border-[#dadce0] shadow-sm select-none transition-opacity duration-200 ${
-                isFading ? 'opacity-30' : 'opacity-100'
-              } ${
+              className={`relative aspect-square w-full bg-[#f8f9fa] rounded-[2.5rem] overflow-hidden border border-[#dadce0] shadow-sm select-none ${
                 isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
               }`}
               onClick={() => setIsZoomed(!isZoomed)}
