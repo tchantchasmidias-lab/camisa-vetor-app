@@ -81,18 +81,19 @@ function FaqAccordion() {
               onClick={() => setOpenIndex(isOpen ? null : i)}
               className="w-full flex items-center justify-between gap-3 px-5 py-4 text-left hover:bg-[#f8f9fa] transition-colors"
               aria-expanded={isOpen}
+              aria-label={`${isOpen ? 'Recolher' : 'Expandir'} pergunta: ${item.question}`}
             >
-              <span className="text-[13px] font-bold text-[#202124] leading-snug pr-2">
+              <span className="text-[13px] font-bold text-[#0f172a] leading-snug pr-2">
                 {item.question}
               </span>
               {isOpen ? (
                 <ChevronUp size={16} className="text-[#fe7302] flex-shrink-0" />
               ) : (
-                <ChevronDown size={16} className="text-[#5f6368] flex-shrink-0" />
+                <ChevronDown size={16} className="text-[#475569] flex-shrink-0" />
               )}
             </button>
             {isOpen && (
-              <div className="px-5 pb-5 text-[13px] text-[#5f6368] leading-relaxed border-t border-[#f1f3f4]">
+              <div className="px-5 pb-5 text-[13.5px] text-[#334155] leading-relaxed border-t border-[#f1f3f4]">
                 <p className="mt-3">{item.answer}</p>
               </div>
             )}
@@ -106,8 +107,8 @@ function FaqAccordion() {
 // ─── Breadcrumbs Component ────────────────────────────────────────────────────
 function Breadcrumbs({ name, category }: { name: string; category?: string }) {
   return (
-    <nav aria-label="Breadcrumb" className="mb-6">
-      <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#5f6368] font-medium uppercase tracking-wider">
+    <nav aria-label="Navegação em árvore de páginas (Breadcrumb)" className="mb-6">
+      <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#475569] font-medium uppercase tracking-wider">
         <li>
           <Link href="/" className="hover:text-[#fe7302] transition-colors py-1 min-h-[40px] flex items-center">
             Início
@@ -115,7 +116,7 @@ function Breadcrumbs({ name, category }: { name: string; category?: string }) {
         </li>
         {category && (
           <>
-            <li className="text-[#dadce0]">/</li>
+            <li className="text-[#94a3b8]" aria-hidden="true">/</li>
             <li>
               <Link
                 href={`/?category=${encodeURIComponent(category)}`}
@@ -126,8 +127,8 @@ function Breadcrumbs({ name, category }: { name: string; category?: string }) {
             </li>
           </>
         )}
-        <li className="text-[#dadce0]">/</li>
-        <li className="text-[#202124] truncate max-w-[180px] md:max-w-[300px]" aria-current="page">
+        <li className="text-[#94a3b8]" aria-hidden="true">/</li>
+        <li className="text-[#0f172a] truncate max-w-[180px] md:max-w-[300px]" aria-current="page">
           {name}
         </li>
       </ol>
@@ -310,7 +311,7 @@ export default function ProductDetailView({ product }: { product: any }) {
               {selectedImage && (
                 <Image
                   src={selectedImage}
-                  alt={`Arte em vetor para camiseta ${productName} - CDR, PDF, SVG, PNG`}
+                  alt={`Vetor Estampa ${productName} - Mockup Editável em CDR, PDF, SVG e PNG`}
                   fill
                   quality={90}
                   unoptimized
@@ -322,9 +323,13 @@ export default function ProductDetailView({ product }: { product: any }) {
                   priority
                 />
               )}
-              <div className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-md text-gray-700 group-hover:bg-[#fe7302] group-hover:text-white transition-all flex items-center justify-center">
+              <button
+                type="button"
+                aria-label="Ampliar imagem do produto em tela cheia"
+                className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-md text-gray-700 group-hover:bg-[#fe7302] group-hover:text-white transition-all flex items-center justify-center cursor-pointer"
+              >
                 <Maximize2 size={16} />
-              </div>
+              </button>
             </div>
 
             {/* Thumbnails — lazy load */}
@@ -334,6 +339,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <button
                     key={index}
                     onClick={() => handleThumbnailClick(url)}
+                    aria-label={`Ver miniatura ${index + 1} da estampa ${productName}`}
                     className={`aspect-square min-h-[40px] relative rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       selectedImage === url
                         ? 'border-[#fe7302] shadow-md shadow-orange-100'
@@ -342,7 +348,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   >
                     <Image
                       src={url}
-                      alt={`${productName} — preview ${index + 1}`}
+                      alt={`Miniatura ${index + 1} - Arte em vetor ${productName}`}
                       fill
                       sizes="128px"
                       quality={70}
@@ -362,7 +368,7 @@ export default function ProductDetailView({ product }: { product: any }) {
               <p className="disclaimer-text text-[13px] leading-[1.5] text-[#475569] mb-1.5">
                 Você receberá o <strong className="font-semibold text-[#1e293b]">arquivo digital aberto e 100% editável</strong> (frente, costas e mangas separadas), pronto para personalizar e produzir.
               </p>
-              <p className="disclaimer-subtitle text-[12px] text-[#64748b] italic m-0">
+              <p className="disclaimer-subtitle text-[12px] text-[#475569] italic m-0">
                 Essa imagem serve apenas para demonstrar o resultado final da estampa.
               </p>
             </div>
@@ -433,7 +439,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
             {/* 7. Badges de Formatos Disponíveis */}
             <div className="text-center md:text-left">
-              <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-[0.05em] mb-3">
+              <h3 className="text-[12px] font-bold text-[#475569] uppercase tracking-[0.05em] mb-3">
                 {t('availableFormats')}:
               </h3>
               <div className="flex flex-wrap justify-center md:justify-start gap-2">
@@ -459,6 +465,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Olha essa arte em vetor para camisetas: ${product.name} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Compartilhar estampa no WhatsApp"
                 className="btn-share-wpp inline-flex items-center border border-[#e2e8f0] bg-white px-4 py-2 min-h-[40px] rounded-full text-[13px] font-semibold text-[#334155] no-underline hover:bg-[#f8fafc] hover:border-[#25D366] hover:text-[#16a34a] transition-all shadow-xs"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#25D366" style={{ verticalAlign: 'middle', marginRight: '6px' }} className="shrink-0">
@@ -471,7 +478,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* ── COL 3: SIDEBAR — CATEGORIAS ────────────────────── */}
           <aside className="hidden xl:block w-[220px] flex-shrink-0 pt-2">
-            <h4 className="text-[12px] font-bold text-[#999] uppercase tracking-[0.2em] mb-4 px-3">
+            <h4 className="text-[12px] font-bold text-[#475569] uppercase tracking-[0.2em] mb-4 px-3">
               Categorias
             </h4>
             <nav className="space-y-0.5">
@@ -486,12 +493,12 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <Shirt
                     size={14}
                     className={`flex-shrink-0 ${
-                      cat === productCategory ? 'text-[#fe7302]' : 'text-[#dadce0] group-hover:text-[#fe7302]'
+                      cat === productCategory ? 'text-[#fe7302]' : 'text-[#94a3b8] group-hover:text-[#fe7302]'
                     }`}
                   />
                   <span
                     className={`text-[13px] font-bold uppercase tracking-wider truncate ${
-                      cat === productCategory ? 'text-[#fe7302]' : 'text-[#5f6368] group-hover:text-[#202124]'
+                      cat === productCategory ? 'text-[#fe7302]' : 'text-[#475569] group-hover:text-[#0f172a]'
                     }`}
                   >
                     {tp(cat)}
@@ -514,7 +521,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* Coluna Esquerda — Especificações Técnicas */}
           <div>
-            <h3 className="text-[12px] font-bold text-[#999] uppercase tracking-[0.2em] mb-5">
+            <h3 className="text-[12px] font-bold text-[#475569] uppercase tracking-[0.2em] mb-5">
               Especificações Técnicas do Arquivo
             </h3>
             <div className="product-specs-box bg-transparent border-0 shadow-none px-0 py-0">
@@ -523,7 +530,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <li key={i} className="flex items-start gap-3 px-0 py-1">
                     {spec.icon}
                     <div>
-                      <span className="text-[12px] font-bold text-[#5f6368] uppercase tracking-[0.05em] block mb-0.5">
+                      <span className="text-[12px] font-bold text-[#475569] uppercase tracking-[0.05em] block mb-0.5">
                         {spec.label}
                       </span>
                       <span className="text-[14px] text-[#334155] font-normal leading-[1.5]">
@@ -538,7 +545,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* Coluna Direita — FAQ Accordion */}
           <div>
-            <h3 className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em] mb-5">
+            <h3 className="text-[12px] font-bold text-[#475569] uppercase tracking-[0.2em] mb-5">
               Dúvidas Frequentes
             </h3>
             <FaqAccordion />
@@ -624,11 +631,12 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(url)}
+                    aria-label={`Ver miniatura ${index + 1} da estampa no zoom`}
                     className={`w-12 h-12 relative rounded-lg overflow-hidden border-2 transition-all ${
                       selectedImage === url ? 'border-[#fe7302] scale-105 shadow-md shadow-orange-500/30' : 'border-transparent opacity-40 hover:opacity-100'
                     }`}
                   >
-                    <Image src={url} alt={`Thumb ${index}`} fill className="object-cover rounded-lg" />
+                    <Image src={url} alt={`Miniatura ${index + 1} da estampa no zoom em tela cheia`} fill className="object-cover rounded-lg" />
                   </button>
                 ))}
               </div>
