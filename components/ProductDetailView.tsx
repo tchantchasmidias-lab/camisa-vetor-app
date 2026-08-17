@@ -22,11 +22,6 @@ import RelatedProducts from '@/components/RelatedProducts';
 // ─── Especificações Técnicas ──────────────────────────────────────────────────
 const TECH_SPECS = [
   {
-    icon: <Package size={15} className="text-[#fe7302] flex-shrink-0 mt-0.5" />,
-    label: 'Formatos inclusos',
-    value: '.CDR (CorelDRAW) · .PDF (Vetor) · .SVG (Corte/Edição) · .PNG (Alta Resolução c/ Fundo Transparente)',
-  },
-  {
     icon: <FileText size={15} className="text-[#fe7302] flex-shrink-0 mt-0.5" />,
     label: 'Compatibilidade',
     value: 'CorelDRAW (versões recentes e legadas) · Illustrator · Inkscape · Softwares de corte e impressão',
