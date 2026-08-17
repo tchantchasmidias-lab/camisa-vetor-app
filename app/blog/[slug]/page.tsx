@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import CategoryCarousel from '@/components/CategoryCarousel';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Sparkles, ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,20 +17,51 @@ export async function generateMetadata({ params }: { params: { slug: string } })
     .get();
 
   if (postsSnapshot.empty) {
-    return { title: 'Post não encontrado' };
+    return { title: 'Post não encontrado | Camisa Vetor' };
   }
 
   const post = postsSnapshot.docs[0].data() as BlogPost;
 
+  const rawTitle = post.seoMetadata?.title || post.title || '';
+  const title = `${rawTitle} | Blog Camisa Vetor`;
+  const cleanExcerpt = post.content ? post.content.replace(/<[^>]*>/g, '').slice(0, 160) : '';
+  const description = post.seoMetadata?.description || (post as any).excerpt || cleanExcerpt || '';
+  const url = `https://camisavetor.com.br/blog/${params.slug}`;
+  const coverImageUrl = post.coverImage || 'https://camisavetor.com.br/icon.png';
+
+  const imageType = coverImageUrl.endsWith('.png') ? 'image/png' : 'image/jpeg';
+
   return {
-    title: post.seoMetadata?.title || post.title,
-    description: post.seoMetadata?.description,
+    title,
+    description,
     keywords: post.seoMetadata?.keywords?.join(', '),
+    alternates: {
+      canonical: url,
+    },
     openGraph: {
-      title: post.seoMetadata?.title || post.title,
-      description: post.seoMetadata?.description,
-      images: post.coverImage ? [post.coverImage] : [],
-    }
+      type: 'article',
+      locale: 'pt_BR',
+      url,
+      title: rawTitle,
+      description,
+      siteName: 'Camisa Vetor',
+      images: [
+        {
+          url: coverImageUrl,
+          secureUrl: coverImageUrl,
+          width: 1200,
+          height: 630,
+          type: imageType,
+          alt: rawTitle,
+        },
+      ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: rawTitle,
+      description,
+      images: [coverImageUrl],
+    },
   };
 }
 
@@ -92,8 +123,51 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     return isNaN(d.getTime()) ? 'Data não definida' : d.toLocaleDateString('pt-BR');
   };
 
+  const postTitle = post.seoMetadata?.title || post.title || '';
+  const cleanExcerpt = post.content ? post.content.replace(/<[^>]*>/g, '').slice(0, 160) : '';
+  const postDescription = post.seoMetadata?.description || (post as any).excerpt || cleanExcerpt || '';
+  const postUrl = `https://camisavetor.com.br/blog/${params.slug}`;
+  const postCoverImage = post.coverImage || 'https://camisavetor.com.br/icon.png';
+
+  const rawCreatedAt: any = post.createdAt;
+  const createdAtDate = typeof rawCreatedAt === 'number'
+    ? new Date(rawCreatedAt)
+    : rawCreatedAt?.seconds
+    ? new Date(rawCreatedAt.seconds * 1000)
+    : new Date();
+
+  const blogPostJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: postTitle,
+    description: postDescription,
+    image: [postCoverImage],
+    datePublished: isNaN(createdAtDate.getTime()) ? new Date().toISOString() : createdAtDate.toISOString(),
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': postUrl,
+    },
+    author: {
+      '@type': 'Organization',
+      name: 'Camisa Vetor',
+      url: 'https://camisavetor.com.br',
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Camisa Vetor',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://camisavetor.com.br/logo.svg',
+      },
+    },
+  };
+
   return (
     <div className="min-h-screen bg-white text-gray-900 flex flex-col font-sans">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(blogPostJsonLd) }}
+      />
       <div className="pt-4 md:pt-4 pb-[28px] md:pb-10">
         <div className="w-full px-3 md:px-5">
           <CategoryCarousel />
@@ -216,4 +290,3 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     </div>
   );
 }
-
