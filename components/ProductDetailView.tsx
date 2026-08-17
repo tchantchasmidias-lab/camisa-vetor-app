@@ -333,7 +333,7 @@ export default function ProductDetailView({ product }: { product: any }) {
               <span>🔥 + Mais de {product.salesCount || product.downloadsCount || 100} downloads realizados</span>
             </div>
 
-            {/* 3. BLOCO DE AÇÃO DE COMPRA */}
+            {/* 3, 4, 5. BLOCO DE AÇÃO DE COMPRA (Preço, Botão Adicionar ao Carrinho, Selos de Confiança) */}
             <div className="space-y-4">
               {/* Preço em Destaque */}
               <div className="text-center md:text-left">
@@ -374,26 +374,9 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <span>Suporte</span>
                 </span>
               </div>
-
-              {/* Botão WhatsApp */}
-              <button
-                onClick={() => {
-                  const text = `Olha essa estampa incrível na Camisa Vetor: ${product.name}`;
-                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text + '\n' + window.location.href)}`, '_blank');
-                }}
-                className="w-full max-w-md mx-auto md:mx-0 font-bold py-3.5 rounded-2xl flex items-center justify-center gap-2 transition-all border border-[#25D366]/30 text-[#25D366] hover:bg-[#25D366]/10 uppercase tracking-widest text-[10px]"
-              >
-                <MessageCircle size={16} />
-                Compartilhar no WhatsApp
-              </button>
             </div>
 
-            {/* 4. Descrição curta */}
-            <p className="text-[#5f6368] text-[15px] leading-relaxed font-medium mx-auto md:mx-0 text-center md:text-left max-w-xl">
-              {tp(product.description)}
-            </p>
-
-            {/* 5. Badge Produto Digital */}
+            {/* 6. Card "PRODUTO DIGITAL" */}
             <div className="p-4 bg-[#e6f4ea]/60 border border-[#ceead6] rounded-[1.25rem] flex items-start gap-3 shadow-sm">
               <Info size={18} className="text-[#1e8e3e] flex-shrink-0 mt-0.5" />
               <div>
@@ -406,7 +389,7 @@ export default function ProductDetailView({ product }: { product: any }) {
               </div>
             </div>
 
-            {/* 6. Badges de Formato */}
+            {/* 7. Badges de Formatos Disponíveis */}
             <div className="text-center md:text-left">
               <h3 className="text-[10px] font-bold text-[#999] uppercase tracking-[0.2em] mb-3">
                 {t('availableFormats')}:
@@ -421,6 +404,26 @@ export default function ProductDetailView({ product }: { product: any }) {
                   </span>
                 ))}
               </div>
+            </div>
+
+            {/* 8. Descrição curta do produto */}
+            <p className="text-[#5f6368] text-[15px] leading-relaxed font-medium mx-auto md:mx-0 text-center md:text-left max-w-xl">
+              {tp(product.description)}
+            </p>
+
+            {/* 9. Botão / Ação: Compartilhar no WhatsApp (Logo após a Descrição) */}
+            <div className="product-share-whatsapp pt-1 flex items-center justify-center md:justify-start">
+              <a
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Olha essa arte em vetor para camisetas: ${product.name} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-share-wpp inline-flex items-center border border-[#e2e8f0] bg-white px-3.5 py-2 rounded-full text-[13px] font-semibold text-[#334155] no-underline hover:bg-[#f8fafc] hover:border-[#25D366] hover:text-[#16a34a] transition-all shadow-xs"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#25D366" style={{ verticalAlign: 'middle', marginRight: '6px' }} className="shrink-0">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
+                </svg>
+                <span>Compartilhar no WhatsApp</span>
+              </a>
             </div>
           </div>
 
