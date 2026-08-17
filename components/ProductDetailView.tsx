@@ -147,6 +147,7 @@ export default function ProductDetailView({ product }: { product: any }) {
   const [dbCategories, setDbCategories] = useState<string[]>([]);
   const [zoomPos, setZoomPos] = useState('center');
   const [isZoomed, setIsZoomed] = useState(false);
+  const [isFading, setIsFading] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userRating, setUserRating] = useState<number | null>(null);
   const [averageRating, setAverageRating] = useState<number>(0);
@@ -156,6 +157,20 @@ export default function ProductDetailView({ product }: { product: any }) {
 
   const { t, tp, formatPrice } = useGeo();
   const router = useRouter();
+
+  // ── 1. PRÉ-CARREGAMENTO EM SEGUNDO PLANO (0ms DELAY NA TROCA) ──
+  useEffect(() => {
+    if (typeof window === 'undefined' || !product) return;
+    const imgsToPreload = Array.from(
+      new Set([product.urls?.destaque, ...(product.urls?.galeria || [])].filter(Boolean))
+    );
+    imgsToPreload.forEach((imgUrl: any) => {
+      if (imgUrl) {
+        const img = new window.Image();
+        img.src = imgUrl;
+      }
+    });
+  }, [product]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
@@ -218,6 +233,16 @@ export default function ProductDetailView({ product }: { product: any }) {
     new Set([product.urls?.destaque, ...(product.urls?.galeria || [])].filter(Boolean))
   );
 
+  const handleThumbnailClick = (url: string) => {
+    if (url === selectedImage) return;
+    setIsFading(true);
+    setIsZoomed(false);
+    setTimeout(() => {
+      setSelectedImage(url);
+      setIsFading(false);
+    }, 150);
+  };
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!isZoomed) return;
     const { left, top, width, height } = e.currentTarget.getBoundingClientRect();
@@ -251,9 +276,11 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* ── COL 1: GALERIA ─────────────────────────────────── */}
           <div className="w-full lg:w-[42%] xl:w-[45%]">
-            {/* Imagem Principal com Zoom */}
+            {/* Imagem Principal com Zoom e Transição Suave (0ms delay + 150ms fade) */}
             <div
-              className={`relative aspect-square w-full bg-[#f8f9fa] rounded-[2.5rem] overflow-hidden border border-[#dadce0] shadow-sm select-none ${
+              className={`relative aspect-square w-full bg-[#f8f9fa] rounded-[2.5rem] overflow-hidden border border-[#dadce0] shadow-sm select-none transition-opacity duration-200 ${
+                isFading ? 'opacity-30' : 'opacity-100'
+              } ${
                 isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
               }`}
               onClick={() => setIsZoomed(!isZoomed)}
@@ -288,7 +315,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 {galleryImages.map((url: string, index: number) => (
                   <button
                     key={index}
-                    onClick={() => { setSelectedImage(url); setIsZoomed(false); }}
+                    onClick={() => handleThumbnailClick(url)}
                     className={`aspect-square relative rounded-2xl overflow-hidden border-2 transition-all duration-300 ${
                       selectedImage === url
                         ? 'border-[#fe7302] shadow-md shadow-orange-100'
