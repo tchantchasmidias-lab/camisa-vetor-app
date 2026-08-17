@@ -517,10 +517,10 @@ export default function ProductDetailView({ product }: { product: any }) {
             <h3 className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em] mb-5">
               Especificações Técnicas do Arquivo
             </h3>
-            <div className="border border-[#dadce0] rounded-[1.5rem] overflow-hidden py-2">
-              <ul>
+            <div className="product-specs-box bg-transparent border-0 shadow-none px-0 py-0">
+              <ul className="space-y-4">
                 {TECH_SPECS.map((spec, i) => (
-                  <li key={i} className="flex items-start gap-3 px-5 py-3.5">
+                  <li key={i} className="flex items-start gap-3 px-0 py-1">
                     {spec.icon}
                     <div>
                       <span className="text-[10px] font-bold text-[#5f6368] uppercase tracking-wider block mb-0.5">
