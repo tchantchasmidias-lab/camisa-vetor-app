@@ -73,7 +73,7 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
               aria-label={`Ver ${tp(product.name)}`}
             >
               {/* Card imagem — lazy load */}
-              <div className="aspect-[4/5] relative rounded-[1.5rem] overflow-hidden bg-[#f8f9fa] group-hover:bg-black transition-all duration-300 group-hover:shadow-xl group-hover:shadow-black/20 mb-3 border border-[#f1f3f4] group-hover:border-transparent">
+              <div className="aspect-square relative rounded-[1.5rem] overflow-hidden bg-[#f8f9fa] group-hover:bg-black transition-all duration-300 group-hover:shadow-xl group-hover:shadow-black/20 mb-3 border border-[#f1f3f4] group-hover:border-transparent">
                 {imgSrc ? (
                   <Image
                     src={imgSrc}

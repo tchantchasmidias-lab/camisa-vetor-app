@@ -40,7 +40,7 @@ export default function ProductCard({ product, priority = false }: { product: an
       </button>
 
       <Link href={`/product/${product.slug || product.id}`} className="block">
-        <div className="aspect-[4/5] relative overflow-hidden rounded-[1.5rem] bg-[#f8f8f8] group-hover:bg-black mb-4 group-hover:shadow-xl group-hover:shadow-black/30 transition-all duration-500">
+        <div className="aspect-square relative overflow-hidden rounded-[1.5rem] bg-[#f8f8f8] group-hover:bg-black mb-4 group-hover:shadow-xl group-hover:shadow-black/30 transition-all duration-500">
 
           {capaSrc ? (
             <>
