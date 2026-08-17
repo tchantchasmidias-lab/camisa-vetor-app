@@ -141,44 +141,51 @@ export default async function Page({ params }: Props) {
     const name = serializedProduct.name || 'Vetor Profissional';
     const category = serializedProduct.category || '';
 
-    // ── IMAGENS LIMPAS PARA O JSON-LD ──────────────────────────
-    const productImages = [
-      serializedProduct.urls?.destaque
-        ? buildCleanImageUrl(serializedProduct.urls.destaque, slug, 'destaque')
-        : null,
+    // ── IMAGENS ABSOLUTAS E LIMPAS PARA O JSON-LD ─────────────
+    const rawProductImages = [
       serializedProduct.urls?.capa
         ? buildCleanImageUrl(serializedProduct.urls.capa, slug, 'capa')
+        : null,
+      serializedProduct.urls?.destaque
+        ? buildCleanImageUrl(serializedProduct.urls.destaque, slug, 'destaque')
         : null,
       ...(serializedProduct.urls?.galeria || []).map((imgUrl: string, i: number) =>
         imgUrl ? buildCleanImageUrl(imgUrl, slug, `galeria-${i + 1}`) : null
       ),
-    ].filter(Boolean);
+    ].filter(Boolean) as string[];
 
-    // ── PRODUCT JSON-LD (Rich Snippet) ─────────────────────────
+    const productImages = Array.from(new Set(rawProductImages)).map(img =>
+      img.startsWith('http') ? img : `https://camisavetor.com.br${img.startsWith('/') ? '' : '/'}${img}`
+    );
+
+    if (productImages.length === 0) {
+      productImages.push('https://camisavetor.com.br/icon.png');
+    }
+
+    const priceNum = Number(serializedProduct.price || 0);
+    const formattedPrice = isNaN(priceNum) ? '0.00' : priceNum.toFixed(2);
+
+    // ── PRODUCT JSON-LD (Rich Snippet Google) ─────────────────
     const productJsonLd = {
       '@context': 'https://schema.org/',
       '@type': 'Product',
       name,
-      image: productImages.length === 1 ? productImages[0] : productImages,
+      image: productImages,
       description:
         serializedProduct.description ||
         `Arte em vetor editável ${name}. Inclui CDR, PDF, SVG e PNG em alta resolução.`,
-      sku: serializedProduct.id,
-      identifier: {
-        '@type': 'PropertyValue',
-        name: 'sku',
-        value: serializedProduct.id,
-      },
+      sku: serializedProduct.id || slug,
       brand: {
         '@type': 'Brand',
         name: 'Camisa Vetor',
       },
-      color: serializedProduct.color || 'Multicolor',
       offers: {
         '@type': 'Offer',
         url: `https://camisavetor.com.br/product/${slug}`,
         priceCurrency: 'BRL',
-        price: String(serializedProduct.price || '0'),
+        price: formattedPrice,
+        priceValidUntil: '2027-12-31',
+        itemCondition: 'https://schema.org/NewCondition',
         availability: 'https://schema.org/InStock',
         seller: {
           '@type': 'Organization',
