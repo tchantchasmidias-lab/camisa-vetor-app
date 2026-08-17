@@ -359,7 +359,7 @@ export default function ProductDetailView({ product }: { product: any }) {
               <p className="disclaimer-title text-[13px] font-bold text-[#1e293b] mb-1">
                 Imagem meramente ilustrativa
               </p>
-              <p className="disclaimer-text text-[12.5px] leading-[1.5] text-[#475569] mb-1.5">
+              <p className="disclaimer-text text-[13px] leading-[1.5] text-[#475569] mb-1.5">
                 Você receberá o <strong className="font-semibold text-[#1e293b]">arquivo digital aberto e 100% editável</strong> (frente, costas e mangas separadas), pronto para personalizar e produzir.
               </p>
               <p className="disclaimer-subtitle text-[12px] text-[#64748b] italic m-0">
@@ -372,7 +372,7 @@ export default function ProductDetailView({ product }: { product: any }) {
           <div className="flex-1 w-full min-w-0 space-y-6">
 
             {/* 1. H1 — Nome */}
-            <h1 className="text-2xl md:text-3xl font-black text-[#202124] uppercase tracking-tight leading-[1.1] text-center md:text-left">
+            <h1 className="text-[22px] md:text-[26px] font-bold text-[#0f172a] uppercase tracking-tight leading-[1.3] text-center md:text-left">
               {productName}
             </h1>
 
@@ -385,7 +385,7 @@ export default function ProductDetailView({ product }: { product: any }) {
             <div className="space-y-4">
               {/* Preço em Destaque */}
               <div className="text-center md:text-left">
-                <span className="text-3xl md:text-4xl font-black text-[#202124] tracking-tighter">
+                <span className="text-[28px] font-extrabold text-[#0f172a] tracking-tighter">
                   {formatPrice(product.price || 0)}
                 </span>
               </div>
@@ -425,7 +425,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 <span className="text-[13px] font-bold text-[#1e8e3e] uppercase tracking-wider block mb-0.5">
                   {t('digitalProduct')}
                 </span>
-                <span className="text-[13.5px] text-[#185a2d] font-medium leading-[1.5]">
+                <span className="text-[13.5px] text-[#166534] font-medium leading-[1.5]">
                   {t('digitalProductDesc')}
                 </span>
               </div>
@@ -440,7 +440,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 {(product.formats || ['CDR', 'PDF', 'SVG', 'PNG']).map((fmt: string) => (
                   <span
                     key={fmt}
-                    className="border border-[#dadce0] bg-white rounded-xl py-1 px-[10px] min-h-[40px] inline-flex items-center justify-center text-[12.5px] font-semibold text-[#202124] shadow-sm"
+                    className="border border-[#dadce0] bg-white rounded-xl py-1 px-[10px] min-h-[40px] inline-flex items-center justify-center text-[13px] font-semibold text-[#202124] shadow-sm"
                   >
                     .{fmt}
                   </span>
@@ -449,7 +449,7 @@ export default function ProductDetailView({ product }: { product: any }) {
             </div>
 
             {/* 8. Descrição curta do produto */}
-            <p className="text-[#334155] text-[16px] md:text-[15px] leading-[1.6] font-normal mx-auto md:mx-0 text-center md:text-left max-w-xl">
+            <p className="text-[#334155] text-[16px] md:text-[15.5px] leading-[1.65] font-normal mx-auto md:mx-0 text-center md:text-left max-w-xl">
               {tp(product.description)}
             </p>
 
@@ -526,7 +526,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                       <span className="text-[12px] font-bold text-[#5f6368] uppercase tracking-[0.05em] block mb-0.5">
                         {spec.label}
                       </span>
-                      <span className="text-[13.5px] text-[#334155] font-normal leading-[1.5]">
+                      <span className="text-[14px] text-[#334155] font-normal leading-[1.5]">
                         {spec.value}
                       </span>
                     </div>
