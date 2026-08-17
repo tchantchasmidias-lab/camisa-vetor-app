@@ -107,9 +107,9 @@ function FaqAccordion() {
 function Breadcrumbs({ name, category }: { name: string; category?: string }) {
   return (
     <nav aria-label="Breadcrumb" className="mb-6">
-      <ol className="flex flex-wrap items-center gap-1.5 text-[11px] text-[#5f6368] font-medium uppercase tracking-wider">
+      <ol className="flex flex-wrap items-center gap-1.5 text-[13px] text-[#5f6368] font-medium uppercase tracking-wider">
         <li>
-          <Link href="/" className="hover:text-[#fe7302] transition-colors">
+          <Link href="/" className="hover:text-[#fe7302] transition-colors py-1 min-h-[40px] flex items-center">
             Início
           </Link>
         </li>
@@ -119,7 +119,7 @@ function Breadcrumbs({ name, category }: { name: string; category?: string }) {
             <li>
               <Link
                 href={`/?category=${encodeURIComponent(category)}`}
-                className="hover:text-[#fe7302] transition-colors"
+                className="hover:text-[#fe7302] transition-colors py-1 min-h-[40px] flex items-center"
               >
                 {category}
               </Link>
@@ -334,7 +334,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <button
                     key={index}
                     onClick={() => handleThumbnailClick(url)}
-                    className={`aspect-square relative rounded-lg overflow-hidden border-2 transition-all duration-300 ${
+                    className={`aspect-square min-h-[40px] relative rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       selectedImage === url
                         ? 'border-[#fe7302] shadow-md shadow-orange-100'
                         : 'border-transparent opacity-50 hover:opacity-100'
@@ -359,10 +359,10 @@ export default function ProductDetailView({ product }: { product: any }) {
               <p className="disclaimer-title text-[13px] font-bold text-[#1e293b] mb-1">
                 Imagem meramente ilustrativa
               </p>
-              <p className="disclaimer-text text-[12.5px] leading-[1.45] text-[#475569] mb-1.5">
+              <p className="disclaimer-text text-[12.5px] leading-[1.5] text-[#475569] mb-1.5">
                 Você receberá o <strong className="font-semibold text-[#1e293b]">arquivo digital aberto e 100% editável</strong> (frente, costas e mangas separadas), pronto para personalizar e produzir.
               </p>
-              <p className="disclaimer-subtitle text-[11.5px] text-[#64748b] italic m-0">
+              <p className="disclaimer-subtitle text-[12px] text-[#64748b] italic m-0">
                 Essa imagem serve apenas para demonstrar o resultado final da estampa.
               </p>
             </div>
@@ -394,7 +394,7 @@ export default function ProductDetailView({ product }: { product: any }) {
               <button
                 onClick={handleBuyNow}
                 disabled={isAdding}
-                className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
+                className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 min-h-[48px] rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
                   isAdding ? 'bg-[#202124] text-white' : 'bg-[#fe7302] text-white hover:bg-[#202124]'
                 }`}
               >
@@ -422,10 +422,10 @@ export default function ProductDetailView({ product }: { product: any }) {
             <div className="p-4 bg-[#e6f4ea]/60 border border-[#ceead6] rounded-[1.25rem] flex items-start gap-3 shadow-sm">
               <Info size={18} className="text-[#1e8e3e] flex-shrink-0 mt-0.5" />
               <div>
-                <span className="text-[11px] font-bold text-[#1e8e3e] uppercase tracking-wider block mb-0.5">
+                <span className="text-[13px] font-bold text-[#1e8e3e] uppercase tracking-wider block mb-0.5">
                   {t('digitalProduct')}
                 </span>
-                <span className="text-[11px] text-[#185a2d] font-medium leading-relaxed">
+                <span className="text-[13.5px] text-[#185a2d] font-medium leading-[1.5]">
                   {t('digitalProductDesc')}
                 </span>
               </div>
@@ -433,14 +433,14 @@ export default function ProductDetailView({ product }: { product: any }) {
 
             {/* 7. Badges de Formatos Disponíveis */}
             <div className="text-center md:text-left">
-              <h3 className="text-[10px] font-bold text-[#999] uppercase tracking-[0.2em] mb-3">
+              <h3 className="text-[12px] font-bold text-[#64748b] uppercase tracking-[0.05em] mb-3">
                 {t('availableFormats')}:
               </h3>
               <div className="flex flex-wrap justify-center md:justify-start gap-2">
                 {(product.formats || ['CDR', 'PDF', 'SVG', 'PNG']).map((fmt: string) => (
                   <span
                     key={fmt}
-                    className="border border-[#dadce0] bg-white rounded-xl py-1.5 px-4 text-[11px] font-bold text-[#202124] shadow-sm"
+                    className="border border-[#dadce0] bg-white rounded-xl py-1 px-[10px] min-h-[40px] inline-flex items-center justify-center text-[12.5px] font-semibold text-[#202124] shadow-sm"
                   >
                     .{fmt}
                   </span>
@@ -449,7 +449,7 @@ export default function ProductDetailView({ product }: { product: any }) {
             </div>
 
             {/* 8. Descrição curta do produto */}
-            <p className="text-[#5f6368] text-[15px] leading-relaxed font-medium mx-auto md:mx-0 text-center md:text-left max-w-xl">
+            <p className="text-[#334155] text-[16px] md:text-[15px] leading-[1.6] font-normal mx-auto md:mx-0 text-center md:text-left max-w-xl">
               {tp(product.description)}
             </p>
 
@@ -459,7 +459,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Olha essa arte em vetor para camisetas: ${product.name} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn-share-wpp inline-flex items-center border border-[#e2e8f0] bg-white px-3.5 py-2 rounded-full text-[13px] font-semibold text-[#334155] no-underline hover:bg-[#f8fafc] hover:border-[#25D366] hover:text-[#16a34a] transition-all shadow-xs"
+                className="btn-share-wpp inline-flex items-center border border-[#e2e8f0] bg-white px-4 py-2 min-h-[40px] rounded-full text-[13px] font-semibold text-[#334155] no-underline hover:bg-[#f8fafc] hover:border-[#25D366] hover:text-[#16a34a] transition-all shadow-xs"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="#25D366" style={{ verticalAlign: 'middle', marginRight: '6px' }} className="shrink-0">
                   <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/>
@@ -471,7 +471,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* ── COL 3: SIDEBAR — CATEGORIAS ────────────────────── */}
           <aside className="hidden xl:block w-[220px] flex-shrink-0 pt-2">
-            <h4 className="text-[10px] font-bold text-[#999] uppercase tracking-[0.2em] mb-4 px-3">
+            <h4 className="text-[12px] font-bold text-[#999] uppercase tracking-[0.2em] mb-4 px-3">
               Categorias
             </h4>
             <nav className="space-y-0.5">
@@ -479,7 +479,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 <Link
                   key={cat}
                   href={`/?category=${encodeURIComponent(cat)}`}
-                  className={`flex items-center gap-2.5 py-2 px-3 rounded-xl hover:bg-[#f8f9fa] transition-all group ${
+                  className={`flex items-center gap-2.5 py-2.5 px-3 min-h-[40px] rounded-xl hover:bg-[#f8f9fa] transition-all group ${
                     cat === productCategory ? 'bg-[#fff4ec]' : ''
                   }`}
                 >
@@ -490,7 +490,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                     }`}
                   />
                   <span
-                    className={`text-[11px] font-bold uppercase tracking-wider truncate ${
+                    className={`text-[13px] font-bold uppercase tracking-wider truncate ${
                       cat === productCategory ? 'text-[#fe7302]' : 'text-[#5f6368] group-hover:text-[#202124]'
                     }`}
                   >
@@ -514,7 +514,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* Coluna Esquerda — Especificações Técnicas */}
           <div>
-            <h3 className="text-[11px] font-bold text-[#999] uppercase tracking-[0.2em] mb-5">
+            <h3 className="text-[12px] font-bold text-[#999] uppercase tracking-[0.2em] mb-5">
               Especificações Técnicas do Arquivo
             </h3>
             <div className="product-specs-box bg-transparent border-0 shadow-none px-0 py-0">
@@ -523,10 +523,10 @@ export default function ProductDetailView({ product }: { product: any }) {
                   <li key={i} className="flex items-start gap-3 px-0 py-1">
                     {spec.icon}
                     <div>
-                      <span className="text-[10px] font-bold text-[#5f6368] uppercase tracking-wider block mb-0.5">
+                      <span className="text-[12px] font-bold text-[#5f6368] uppercase tracking-[0.05em] block mb-0.5">
                         {spec.label}
                       </span>
-                      <span className="text-[12px] text-[#202124] font-medium leading-snug">
+                      <span className="text-[13.5px] text-[#334155] font-normal leading-[1.5]">
                         {spec.value}
                       </span>
                     </div>
