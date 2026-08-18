@@ -587,11 +587,12 @@ export default function AdminPage() {
     setRemoveExistingVetor(false);
     setFileVetor(null);
     setSelectedFormats(p.formats || []);
-    setIsProductFree(p.isFree || false);
+    const isFreeProduct = Boolean(p.isFree) || Number(p.price) === 0;
+    setIsProductFree(isFreeProduct);
     setPreviews({ capa: p.urls?.capa || '', destaque: p.urls?.destaque || '', galeria: p.urls?.galeria || [] });
     if (formRef.current) {
         (formRef.current.elements.namedItem('productName') as HTMLInputElement).value = p.name || '';
-        (formRef.current.elements.namedItem('price') as HTMLInputElement).value = p.isFree ? '0' : (p.price || '');
+        (formRef.current.elements.namedItem('price') as HTMLInputElement).value = isFreeProduct ? '0' : (p.price || '');
         (formRef.current.elements.namedItem('description') as HTMLTextAreaElement).value = p.description || '';
         const catSelect = formRef.current.elements.namedItem('category') as HTMLSelectElement;
         if (catSelect) catSelect.value = p.category || '';
@@ -662,11 +663,15 @@ export default function AdminPage() {
       }
       const productName = formData.get('productName')?.toString().toUpperCase() || '';
       const productSlug = createSlug(formData.get('productName')?.toString() || '');
+      const rawPrice = formData.get('price');
+      const numericPrice = isProductFree ? 0 : (rawPrice !== null && rawPrice !== '' ? Number(rawPrice) : 0);
+      const isFree = isProductFree || numericPrice === 0;
+
       const data = {
         name: productName,
         slug: productSlug,
-        price: isProductFree ? 0 : Number(formData.get('price')),
-        isFree: isProductFree,
+        price: isFree ? 0 : numericPrice,
+        isFree: isFree,
         category: category || 'Geral',
         formats: selectedFormats,
         description: formData.get('description'),
@@ -1037,7 +1042,7 @@ export default function AdminPage() {
                               : 'bg-white/5 text-gray-400 border-white/10 hover:border-green-500/50 hover:text-green-400'
                           }`}
                         >
-                          {isProductFree ? '🆓 GRÁTIS' : 'GRÁTIS?'}
+                          {isProductFree ? '✓ GRÁTIS' : 'GRÁTIS?'}
                         </button>
                       </div>
                     </div>
@@ -1171,8 +1176,8 @@ export default function AdminPage() {
                           <div>
                             <h3 className="text-[14px] font-black text-white uppercase tracking-tight mb-2">{p.name}</h3>
                             <div className="flex items-center gap-3">
-                              {p.isFree ? (
-                                <span className="text-[12px] text-green-400 font-black bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">🆓 GRÁTIS</span>
+                              {Boolean(p.isFree) || Number(p.price) === 0 ? (
+                                <span className="text-[12px] text-green-400 font-black bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">GRÁTIS</span>
                               ) : (
                                 <span className="text-[12px] text-[#fe7302] font-black">R$ {p.price?.toFixed(2)}</span>
                               )}

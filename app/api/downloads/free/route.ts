@@ -1,4 +1,4 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
 import { v4 as uuidv4 } from "uuid";
 
@@ -28,7 +28,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Produto nao encontrado." }, { status: 404 });
     }
     const product = productSnap.data()!;
-    if (!product.isFree) {
+    const isFree = Boolean(product.isFree) || Number(product.price) === 0;
+    if (!isFree) {
       return NextResponse.json({ error: "Este produto nao e gratuito." }, { status: 403 });
     }
 

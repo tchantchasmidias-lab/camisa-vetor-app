@@ -11,6 +11,7 @@ interface RelatedProduct {
   id: string;
   name: string;
   price: number;
+  isFree?: boolean;
   slug?: string;
   urls: { capa?: string; destaque?: string };
 }
@@ -97,9 +98,14 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
               </h3>
 
               {/* Preço */}
-              <p className="text-[14px] font-semibold text-[#333333] tracking-tight text-center">
-                {formatPrice(product.price || 0)}
-              </p>
+              {(() => {
+                const isFree = Boolean(product?.isFree) || Number(product?.price) === 0;
+                return (
+                  <p className={`text-[14px] font-semibold tracking-tight text-center ${isFree ? 'text-[#16a34a]' : 'text-[#333333]'}`}>
+                    {isFree ? 'GRÁTIS' : formatPrice(product.price || 0)}
+                  </p>
+                );
+              })()}
             </Link>
           );
         })}

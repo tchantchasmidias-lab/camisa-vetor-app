@@ -84,9 +84,14 @@ export default function ProductCard({ product, priority = false }: { product: an
           <h3 className="product-card-title text-[13.5px] md:text-[13px] font-medium text-[#1e293b] leading-[1.35] line-clamp-2 min-h-[2.7em] mb-1">
             {tp(product.name)}
           </h3>
-          <span className={`product-card-price text-[15px] font-bold tracking-tight block mt-[4px] ${product.isFree ? 'text-green-600' : 'text-[#0f172a]'}`}>
-            {product.isFree ? '🆓 GRÁTIS' : formatPrice(product.price)}
-          </span>
+          {(() => {
+            const isFree = Boolean(product?.isFree) || Number(product?.price) === 0;
+            return (
+              <span className={`product-card-price text-[15px] font-bold tracking-tight block mt-[4px] ${isFree ? 'text-[#16a34a]' : 'text-[#0f172a]'}`}>
+                {isFree ? 'GRÁTIS' : formatPrice(product.price)}
+              </span>
+            );
+          })()}
         </div>
       </Link>
     </div>

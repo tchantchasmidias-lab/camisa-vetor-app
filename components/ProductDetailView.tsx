@@ -423,51 +423,58 @@ export default function ProductDetailView({ product }: { product: any }) {
 
             {/* 3, 4, 5. BLOCO DE AÇÃO DE COMPRA (Preço, Botão, Selos de Confiança) */}
             <div className="space-y-4">
-              {/* Preço em Destaque */}
-              <div className="text-center md:text-left">
-                {product.isFree ? (
-                  <span className="text-[28px] font-extrabold text-green-600 tracking-tighter">
-                    🆓 GRÁTIS
-                  </span>
-                ) : (
-                  <span className="text-[28px] font-extrabold text-[#0f172a] tracking-tighter">
-                    {formatPrice(product.price || 0)}
-                  </span>
-                )}
-              </div>
+              {(() => {
+                const isFree = Boolean(product?.isFree) || Number(product?.price) === 0;
+                return (
+                  <>
+                    {/* Preço em Destaque */}
+                    <div className="text-center md:text-left">
+                      {isFree ? (
+                        <span className="text-[28px] font-extrabold text-[#16a34a] tracking-tighter">
+                          GRÁTIS
+                        </span>
+                      ) : (
+                        <span className="text-[28px] font-extrabold text-[#0f172a] tracking-tighter">
+                          {formatPrice(product.price || 0)}
+                        </span>
+                      )}
+                    </div>
 
-              {/* Botão de Ação */}
-              {product.isFree ? (
-                <button
-                  onClick={handleFreeDownload}
-                  disabled={isFreeDownloading}
-                  className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 min-h-[48px] rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
-                    isFreeDownloading
-                      ? 'bg-green-700 text-white cursor-wait'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
-                >
-                  {isFreeDownloading ? (
-                    <><Loader2 size={18} className="animate-spin mr-3" />Processando...</>
-                  ) : !user ? (
-                    <><Download size={18} className="mr-3" />Criar conta e baixar grátis</>
-                  ) : (
-                    <><Download size={18} className="mr-3" />Download Gratuito</>
-                  )}
-                </button>
-              ) : (
-                <button
-                  onClick={handleBuyNow}
-                  disabled={isAdding}
-                  className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 min-h-[48px] rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
-                    isAdding ? 'bg-[#202124] text-white' : 'bg-[#fe7302] text-white hover:bg-[#202124]'
-                  }`}
-                >
-                  {isAdding ? (
-                    <><Loader2 size={18} className="animate-spin mr-3" />{t('processing')}...</>
-                  ) : t('addToCart')}
-                </button>
-              )}
+                    {/* Botão de Ação */}
+                    {isFree ? (
+                      <button
+                        onClick={handleFreeDownload}
+                        disabled={isFreeDownloading}
+                        className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 min-h-[48px] rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
+                          isFreeDownloading
+                            ? 'bg-green-700 text-white cursor-wait'
+                            : 'bg-[#16a34a] text-white hover:bg-[#15803d]'
+                        }`}
+                      >
+                        {isFreeDownloading ? (
+                          <><Loader2 size={18} className="animate-spin mr-3" />Processando...</>
+                        ) : !user ? (
+                          <><Download size={18} className="mr-3" />Criar conta e baixar grátis</>
+                        ) : (
+                          <><Download size={18} className="mr-3" />Download Gratuito</>
+                        )}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleBuyNow}
+                        disabled={isAdding}
+                        className={`w-full max-w-md mx-auto md:mx-0 font-bold py-5 min-h-[48px] rounded-2xl flex items-center justify-center transition-all shadow-xl uppercase tracking-[0.2em] text-[12px] ${
+                          isAdding ? 'bg-[#202124] text-white' : 'bg-[#fe7302] text-white hover:bg-[#202124]'
+                        }`}
+                      >
+                        {isAdding ? (
+                          <><Loader2 size={18} className="animate-spin mr-3" />{t('processing')}...</>
+                        ) : t('addToCart')}
+                      </button>
+                    )}
+                  </>
+                );
+              })()}
 
               {/* Linha de Badges de Confiança */}
               <div className="product-trust-badges w-full max-w-md mx-auto md:mx-0 pt-1 flex items-center justify-center gap-2.5 md:gap-3 text-[13px] md:text-[14px] font-normal text-[#1a202c]">
