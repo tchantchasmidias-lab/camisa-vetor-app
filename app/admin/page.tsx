@@ -78,6 +78,8 @@ export default function AdminPage() {
   const [filesGaleria, setFilesGaleria] = useState<File[]>([]);
   const [fileVetor, setFileVetor] = useState<File | null>(null);
   const [removeExistingVetor, setRemoveExistingVetor] = useState(false);
+  const [isProductFree, setIsProductFree] = useState(false);
+
 
   const formatosDisponiveis = ['CDR', 'PDF', 'SVG', 'PNG', 'AI'];
 
@@ -585,10 +587,11 @@ export default function AdminPage() {
     setRemoveExistingVetor(false);
     setFileVetor(null);
     setSelectedFormats(p.formats || []);
+    setIsProductFree(p.isFree || false);
     setPreviews({ capa: p.urls?.capa || '', destaque: p.urls?.destaque || '', galeria: p.urls?.galeria || [] });
     if (formRef.current) {
         (formRef.current.elements.namedItem('productName') as HTMLInputElement).value = p.name || '';
-        (formRef.current.elements.namedItem('price') as HTMLInputElement).value = p.price || '';
+        (formRef.current.elements.namedItem('price') as HTMLInputElement).value = p.isFree ? '0' : (p.price || '');
         (formRef.current.elements.namedItem('description') as HTMLTextAreaElement).value = p.description || '';
         const catSelect = formRef.current.elements.namedItem('category') as HTMLSelectElement;
         if (catSelect) catSelect.value = p.category || '';
@@ -596,6 +599,7 @@ export default function AdminPage() {
         (formRef.current.elements.namedItem('keywords') as HTMLInputElement).value = p.keywords || '';
     }
   };
+
 
   const createSlug = (text: string) => text.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/[^\w-]+/g, '').replace(/--+/g, '-').trim();
 
@@ -661,7 +665,8 @@ export default function AdminPage() {
       const data = {
         name: productName,
         slug: productSlug,
-        price: Number(formData.get('price')),
+        price: isProductFree ? 0 : Number(formData.get('price')),
+        isFree: isProductFree,
         category: category || 'Geral',
         formats: selectedFormats,
         description: formData.get('description'),
@@ -670,6 +675,7 @@ export default function AdminPage() {
         urls: { capa: urlCapa || "", destaque: urlDestaque || "", galeria: galeriaUrls, download: urlVetor || "" },
         updatedAt: serverTimestamp(),
       };
+
       editingId ? await updateDoc(doc(db, "products", editingId), data) : await addDoc(collection(db, 'products'), { ...data, salesCount: 0, createdAt: serverTimestamp() });
       
       // Se é um produto novo, mostra opção de notificar usuários
@@ -1002,11 +1008,40 @@ export default function AdminPage() {
                     </div>
                     <div className="space-y-4">
                       <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Preço de Venda</label>
-                      <div className="relative">
-                        <span className="absolute left-6 top-1/2 -translate-y-1/2 text-[#fe7302] font-black text-[12px]">R$</span>
-                        <input name="price" required type="number" step="0.01" placeholder="0,00" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 pl-14 text-[16px] font-black text-white outline-none focus:border-[#fe7302]/50 transition-all"/>
+                      <div className="flex gap-3 items-center">
+                        <div className="relative flex-1">
+                          <span className={`absolute left-6 top-1/2 -translate-y-1/2 font-black text-[12px] ${isProductFree ? 'text-green-400' : 'text-[#fe7302]'}`}>
+                            {isProductFree ? '✓' : 'R$'}
+                          </span>
+                          <input
+                            name="price"
+                            required={!isProductFree}
+                            type="number"
+                            step="0.01"
+                            placeholder={isProductFree ? 'GRÁTIS' : '0,00'}
+                            disabled={isProductFree}
+                            value={isProductFree ? '0' : undefined}
+                            className={`w-full border rounded-[2rem] p-6 pl-14 text-[16px] font-black outline-none transition-all ${
+                              isProductFree
+                                ? 'bg-green-900/20 border-green-500/30 text-green-400 cursor-not-allowed'
+                                : 'bg-white/5 border-white/10 text-white focus:border-[#fe7302]/50'
+                            }`}
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIsProductFree(prev => !prev)}
+                          className={`flex-shrink-0 px-5 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-widest transition-all border ${
+                            isProductFree
+                              ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/30'
+                              : 'bg-white/5 text-gray-400 border-white/10 hover:border-green-500/50 hover:text-green-400'
+                          }`}
+                        >
+                          {isProductFree ? '🆓 GRÁTIS' : 'GRÁTIS?'}
+                        </button>
                       </div>
                     </div>
+
                   </div>
 
                   <div className="space-y-4">
@@ -1136,7 +1171,11 @@ export default function AdminPage() {
                           <div>
                             <h3 className="text-[14px] font-black text-white uppercase tracking-tight mb-2">{p.name}</h3>
                             <div className="flex items-center gap-3">
-                              <span className="text-[12px] text-[#fe7302] font-black">R$ {p.price?.toFixed(2)}</span>
+                              {p.isFree ? (
+                                <span className="text-[12px] text-green-400 font-black bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">🆓 GRÁTIS</span>
+                              ) : (
+                                <span className="text-[12px] text-[#fe7302] font-black">R$ {p.price?.toFixed(2)}</span>
+                              )}
                               <span className="text-gray-800">•</span>
                               <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">{p.category}</span>
                             </div>
