@@ -81,10 +81,10 @@ export default function ProductCard({ product, priority = false }: { product: an
         </div>
 
         <div className="text-center px-2">
-          <h3 className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em] mb-1.5 truncate">
+          <h3 className="product-card-title text-[13.5px] md:text-[13px] font-medium text-[#1e293b] leading-[1.35] line-clamp-2 min-h-[2.7em] mb-1">
             {tp(product.name)}
           </h3>
-          <span className="text-[15px] font-semibold text-[#333333] tracking-tight">
+          <span className="product-card-price text-[15px] font-bold text-[#0f172a] tracking-tight block mt-[4px]">
             {formatPrice(product.price)}
           </span>
         </div>

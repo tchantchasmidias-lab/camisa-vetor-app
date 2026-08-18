@@ -137,7 +137,7 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
                                     onClick={() => navigate('category', cat)}
                                     className={`w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-all group border-b border-gray-50 text-left ${searchParams.get('category') === cat ? 'bg-orange-50/40' : ''}`}
                                 >
-                                    <span className={`text-[12px] font-semibold uppercase tracking-wide transition-colors ${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-[#5f6368] group-hover:text-[#202124]'}`}>{tp(cat)}</span>
+                                    <span className={`sidebar-nav-link sidebar-link text-[13px] font-medium transition-colors ${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-[#334155] group-hover:text-[#0f172a]'}`}>{tp(cat)}</span>
                                     <ChevronRight size={13} className={`${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-gray-300'} group-hover:translate-x-1 transition-transform`} />
                                 </button>
                             ))

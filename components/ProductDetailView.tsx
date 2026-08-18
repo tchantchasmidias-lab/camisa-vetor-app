@@ -497,8 +497,8 @@ export default function ProductDetailView({ product }: { product: any }) {
                     }`}
                   />
                   <span
-                    className={`text-[13px] font-bold uppercase tracking-wider truncate ${
-                      cat === productCategory ? 'text-[#fe7302]' : 'text-[#475569] group-hover:text-[#0f172a]'
+                    className={`sidebar-nav-link sidebar-link text-[13px] font-medium tracking-wide truncate ${
+                      cat === productCategory ? 'text-[#fe7302] font-bold' : 'text-[#334155] group-hover:text-[#0f172a]'
                     }`}
                   >
                     {tp(cat)}

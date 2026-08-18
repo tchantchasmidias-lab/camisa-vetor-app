@@ -69,7 +69,7 @@ function CategoryCard({ name, imageUrl, isActive, onClick, priority }: { name: s
 
       {/* Category name */}
       <div className="absolute inset-0 flex items-center justify-center px-3">
-        <span className="text-white font-black text-[12px] md:text-[13px] uppercase tracking-wider text-center leading-tight drop-shadow-lg">
+        <span className="category-pill-label category-badge text-white font-bold text-[12.5px] tracking-[0.03em] uppercase text-center leading-tight drop-shadow-lg">
           {tp(name)}
         </span>
       </div>
