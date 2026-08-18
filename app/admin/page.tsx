@@ -203,29 +203,57 @@ export default function AdminPage() {
 
   const handleUpdateOrderStatus = async (orderId: string, newStatus: 'pago' | 'pendente' | 'cancelado') => {
     try {
-      // Busca o pedido para obter o userId antes de atualizar
+      // Busca o pedido para obter userId, email e items antes de atualizar
       const pedido = pedidos.find(p => p.id === orderId);
       
       await updateDoc(doc(db, "pedidos", orderId), { status: newStatus });
       setPedidos(prev => prev.map(p => p.id === orderId ? { ...p, status: newStatus } : p));
       alert(`Status do pedido atualizado para '${newStatus}' com sucesso!`);
 
-      // Envia notificação push se o status mudou para 'pago'
-      if (newStatus === 'pago' && pedido?.userId) {
+      // Se aprovado manualmente, dispara o fulfillment completo (e-mail + liberar no perfil)
+      if (newStatus === 'pago' && pedido) {
+        const token = await auth.currentUser?.getIdToken();
+
+        // 1. Fulfillment: envia e-mail com links de download e marca como verificado
         try {
-          const token = await auth.currentUser?.getIdToken();
-          await fetch('/api/notifications/order-approved', {
+          const fulfillRes = await fetch('/api/admin/fulfillment-manual', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
               'Authorization': `Bearer ${token}`,
             },
-            body: JSON.stringify({ userId: pedido.userId, orderId }),
+            body: JSON.stringify({
+              orderId,
+              userId: pedido.userId,
+              email: pedido.email,
+              items: pedido.items,
+            }),
           });
-          console.log('[Admin] Notificação de pedido aprovado enviada.');
-        } catch (notifErr) {
-          // Falha na notificação não bloqueia a atualização do status
-          console.error('[Admin] Erro ao enviar notificação:', notifErr);
+          const fulfillData = await fulfillRes.json();
+          if (fulfillData.success) {
+            console.log('[Admin] E-mail de entrega enviado com sucesso.');
+          } else {
+            console.error('[Admin] Falha no fulfillment manual:', fulfillData.error);
+          }
+        } catch (fulfillErr) {
+          console.error('[Admin] Erro ao chamar fulfillment manual:', fulfillErr);
+        }
+
+        // 2. Notificação push FCM (não bloqueia)
+        if (pedido.userId) {
+          try {
+            await fetch('/api/notifications/order-approved', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+              },
+              body: JSON.stringify({ userId: pedido.userId, orderId }),
+            });
+            console.log('[Admin] Notificação de pedido aprovado enviada.');
+          } catch (notifErr) {
+            console.error('[Admin] Erro ao enviar notificação:', notifErr);
+          }
         }
       }
     } catch (error: any) {
@@ -233,6 +261,7 @@ export default function AdminPage() {
       alert("Erro ao atualizar status: " + error.message);
     }
   };
+
 
   const handleSaveEmails = async () => {
     setIsSavingEmails(true);
