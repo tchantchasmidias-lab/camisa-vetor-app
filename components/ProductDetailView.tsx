@@ -453,8 +453,6 @@ export default function ProductDetailView({ product }: { product: any }) {
                       >
                         {isFreeDownloading ? (
                           <><Loader2 size={18} className="animate-spin mr-3" />Processando...</>
-                        ) : !user ? (
-                          <><Download size={18} className="mr-3" />Criar conta e baixar grátis</>
                         ) : (
                           <><Download size={18} className="mr-3" />Download Gratuito</>
                         )}
