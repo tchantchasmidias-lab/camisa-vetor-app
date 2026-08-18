@@ -135,10 +135,10 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
                                 <button
                                     key={cat}
                                     onClick={() => navigate('category', cat)}
-                                    className={`sidebar-item w-full flex items-center justify-between px-[12px] py-[10px] gap-3 hover:bg-gray-50 transition-all group border-b border-gray-50 text-left ${searchParams.get('category') === cat ? 'bg-orange-50/40' : ''}`}
+                                    className={`w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-all group border-b border-gray-50 text-left ${searchParams.get('category') === cat ? 'bg-orange-50/40' : ''}`}
                                 >
-                                    <span className={`sidebar-nav-link sidebar-link-text text-[14.5px] font-semibold tracking-[0.01em] transition-colors ${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-[#334155] group-hover:text-[#0f172a]'}`}>{tp(cat)}</span>
-                                    <ChevronRight size={20} className={`w-[20px] h-[20px] ${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-gray-300'} group-hover:translate-x-1 transition-transform`} />
+                                    <span className={`sidebar-nav-link sidebar-link text-[13px] font-medium transition-colors ${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-[#334155] group-hover:text-[#0f172a]'}`}>{tp(cat)}</span>
+                                    <ChevronRight size={13} className={`${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-gray-300'} group-hover:translate-x-1 transition-transform`} />
                                 </button>
                             ))
                         )}
@@ -265,16 +265,16 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
                     <div className="mx-3 h-px bg-white/8 my-1" />
 
                     {/* Nav items */}
-                    <nav className="flex flex-col gap-1 py-1">
+                    <nav className="flex flex-col gap-0.5 py-1">
                         {[
-                            { href: '/', icon: <Home size={20} className="w-[20px] h-[20px]" />, label: t('navHome') },
-                            { href: '/carrinho', icon: <ShoppingCart size={20} className="w-[20px] h-[20px]" />, label: t('navCart'), badge: true },
-                            { icon: <Shirt size={20} className="w-[20px] h-[20px]" />, label: t('navCategories'), action: () => setDrawerOpen(true) },
-                            { href: '/perfil', icon: <User size={20} className="w-[20px] h-[20px]" />, label: t('navProfile') },
-                            { href: whatsappUrl, icon: <MessageCircle size={20} className="w-[20px] h-[20px]" />, label: t('navSupport'), external: true },
+                            { href: '/', icon: <Home size={19} />, label: t('navHome') },
+                            { href: '/carrinho', icon: <ShoppingCart size={19} />, label: t('navCart'), badge: true },
+                            { icon: <Shirt size={19} />, label: t('navCategories'), action: () => setDrawerOpen(true) },
+                            { href: '/perfil', icon: <User size={19} />, label: t('navProfile') },
+                            { href: whatsappUrl, icon: <MessageCircle size={19} />, label: t('navSupport'), external: true },
                         ].map((item, i) => {
                             const inner = (
-                                <div className="sidebar-nav-link flex items-center py-[10px] px-[12px] gap-3 group/navitem">
+                                <div className="flex items-center h-9 group/navitem">
                                     {/* Ícone: sempre no slot de 52px, centrado */}
                                     <div className="w-[52px] flex-shrink-0 flex items-center justify-center relative text-white/50 group-hover/navitem:text-[#fe7302] transition-colors">
                                         {item.icon}
@@ -285,12 +285,12 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
                                         )}
                                     </div>
                                     {/* Label: expande no hover */}
-                                    <span className="sidebar-link-text overflow-hidden max-w-0 group-hover/pill:max-w-[178px] opacity-0 group-hover/pill:opacity-100 transition-all duration-200 whitespace-nowrap text-[14.5px] font-semibold tracking-[0.01em] text-white/70 group-hover/navitem:text-white pr-5">
+                                    <span className="overflow-hidden max-w-0 group-hover/pill:max-w-[178px] opacity-0 group-hover/pill:opacity-100 transition-all duration-200 whitespace-nowrap text-[12px] font-medium text-white/55 group-hover/navitem:text-white pr-5">
                                         {tp(item.label)}
                                     </span>
                                 </div>
                             );
-                            const cls = 'sidebar-item rounded-2xl hover:bg-white/8 transition-all block';
+                            const cls = 'rounded-2xl hover:bg-white/8 transition-all block';
                             if (item.action) return <button key={i} onClick={item.action} className={cls}>{inner}</button>;
                             if (item.external) return <a key={i} href={item.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>;
                             return <Link key={i} href={item.href!} className={cls}>{inner}</Link>;

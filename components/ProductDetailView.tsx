@@ -486,19 +486,19 @@ export default function ProductDetailView({ product }: { product: any }) {
                 <Link
                   key={cat}
                   href={`/?category=${encodeURIComponent(cat)}`}
-                  className={`sidebar-item flex items-center gap-3 py-[10px] px-[12px] min-h-[40px] rounded-xl hover:bg-[#f8f9fa] transition-all group ${
+                  className={`flex items-center gap-2.5 py-2.5 px-3 min-h-[40px] rounded-xl hover:bg-[#f8f9fa] transition-all group ${
                     cat === productCategory ? 'bg-[#fff4ec]' : ''
                   }`}
                 >
                   <Shirt
-                    size={20}
-                    className={`flex-shrink-0 w-[20px] h-[20px] ${
+                    size={14}
+                    className={`flex-shrink-0 ${
                       cat === productCategory ? 'text-[#fe7302]' : 'text-[#94a3b8] group-hover:text-[#fe7302]'
                     }`}
                   />
                   <span
-                    className={`sidebar-nav-link sidebar-link-text text-[14.5px] font-semibold tracking-[0.01em] truncate ${
-                      cat === productCategory ? 'text-[#fe7302]' : 'text-[#334155] group-hover:text-[#0f172a]'
+                    className={`sidebar-nav-link sidebar-link text-[13px] font-medium tracking-wide truncate ${
+                      cat === productCategory ? 'text-[#fe7302] font-bold' : 'text-[#334155] group-hover:text-[#0f172a]'
                     }`}
                   >
                     {tp(cat)}
