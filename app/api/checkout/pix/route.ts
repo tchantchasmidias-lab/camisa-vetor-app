@@ -176,6 +176,11 @@ export async function POST(req: Request) {
 
   } catch (error: any) {
     console.error('Erro ao gerar Pix:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error?.cause) {
+      console.error('Mercado Pago error cause:', JSON.stringify(error.cause, null, 2));
+    }
+    const errorMessage = error?.cause?.[0]?.description || error?.message || 'Erro ao processar pagamento via Pix';
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }
+
