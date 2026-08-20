@@ -564,7 +564,7 @@ export default function AdminPage() {
       if (data.error) throw new Error(data.error);
 
       // Atualiza os campos do formulário
-      if (nameInput) nameInput.value = data.improvedTitle;
+      if (nameInput) nameInput.value = data.improvedTitle || data.title || '';
       const descInput = formRef.current?.elements.namedItem('description') as HTMLTextAreaElement;
       if (descInput) descInput.value = data.description;
       const seoDescInput = formRef.current?.elements.namedItem('seoDescription') as HTMLTextAreaElement;
@@ -674,7 +674,7 @@ export default function AdminPage() {
         const novos = await Promise.all(filesGaleria.map(img => uploadFile(img, 'galeria')));
         galeriaUrls = [...galeriaUrls, ...novos];
       }
-      const productName = formData.get('productName')?.toString().toUpperCase() || '';
+      const productName = formData.get('productName')?.toString().trim() || '';
       const productSlug = createSlug(formData.get('productName')?.toString() || '');
       const rawPrice = formData.get('price');
       const numericPrice = isProductFree ? 0 : (rawPrice !== null && rawPrice !== '' ? Number(rawPrice) : 0);
@@ -1022,7 +1022,7 @@ export default function AdminPage() {
                           {isGenerating ? 'GERANDO SEO...' : 'GERAR SEO IA'}
                         </button>
                       </div>
-                      <input name="productName" required placeholder="EX: CAMISA NONO ANO FOGUETE" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 text-[14px] font-black text-white uppercase outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all"/>
+                      <input name="productName" required placeholder="Ex: Vetor Camisa Nono Ano Foguete | Arte Editável CorelDRAW" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 text-[14px] font-bold text-white outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all"/>
                     </div>
                     <div className="space-y-4">
                       <div className="flex justify-between items-center px-4">
