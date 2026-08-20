@@ -564,13 +564,13 @@ export default function AdminPage() {
       if (data.error) throw new Error(data.error);
 
       // Atualiza os campos do formulário
-      if (nameInput) nameInput.value = data.improvedTitle || data.title || '';
+      if (nameInput) nameInput.value = data.title || data.improvedTitle || '';
       const descInput = formRef.current?.elements.namedItem('description') as HTMLTextAreaElement;
-      if (descInput) descInput.value = data.description;
+      if (descInput) descInput.value = data.description_body || data.description || '';
       const seoDescInput = formRef.current?.elements.namedItem('seoDescription') as HTMLTextAreaElement;
-      if (seoDescInput) seoDescInput.value = data.seoDescription;
+      if (seoDescInput) seoDescInput.value = data.meta_description || data.seoDescription || '';
       const keywordsInput = formRef.current?.elements.namedItem('keywords') as HTMLInputElement;
-      if (keywordsInput) keywordsInput.value = data.keywords;
+      if (keywordsInput) keywordsInput.value = data.keywords || '';
 
     } catch (err: any) {
       console.error(err);
