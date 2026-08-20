@@ -197,6 +197,10 @@ function CheckoutContent() {
     if (paymentMethod === 'pix') {
       setIsGeneratingPix(true);
       try {
+        const nameParts = (userData.nome || '').trim().split(' ');
+        const firstName = nameParts[0] || 'Cliente';
+        const lastName = nameParts.slice(1).join(' ') || 'Consumidor';
+
         const res = await fetch('/api/checkout/pix', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -204,7 +208,9 @@ function CheckoutContent() {
             items: cartItems,
             userId: user?.uid,
             email: userData.email,
-            firstName: userData.nome.split(' ')[0],
+            firstName,
+            lastName,
+            phone: userData.phone,
             cpf: userData.cpf,
             // Passa o código do cupom para validação no servidor
             couponCode: couponData ? couponData.code : undefined,

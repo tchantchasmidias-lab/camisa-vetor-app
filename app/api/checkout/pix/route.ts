@@ -9,13 +9,13 @@ export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY || 're_stub');
   try {
     const body = await req.json();
-    const { items, email, firstName, cpf, userId, couponCode } = body;
+    const { items, email, firstName, lastName, phone, cpf, userId, couponCode } = body;
     
     if (!process.env.MERCADOPAGO_ACCESS_TOKEN) {
       throw new Error("MERCADOPAGO_ACCESS_TOKEN is not configured");
     }
 
-    const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN, options: { timeout: 5000 } });
+    const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN, options: { timeout: 10000 } });
     const payment = new Payment(client);
 
     // Validação de Preços no Servidor
@@ -73,20 +73,53 @@ export async function POST(req: Request) {
     const expirationDate = new Date();
     expirationDate.setHours(expirationDate.getHours() + 1);
 
+    const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
+    const phoneArea = cleanPhone.length >= 10 ? cleanPhone.substring(0, 2) : '';
+    const phoneNumber = cleanPhone.length >= 10 ? cleanPhone.substring(2) : cleanPhone;
+
     const request = {
       body: {
         transaction_amount: totalAmount,
-        description: `Compra Camisa Vetor - ${items.length} itens`,
+        description: `Compra Camisa Vetor - ${verifiedItems.map(i => i.name).join(', ').substring(0, 200)}`,
         payment_method_id: 'pix',
         date_of_expiration: expirationDate.toISOString(),
         payer: {
           email,
-          first_name: firstName,
+          first_name: firstName || 'Cliente',
+          last_name: lastName || undefined,
           identification: {
             type: 'CPF',
             number: cpf ? cpf.replace(/\D/g, '') : '00000000000'
+          },
+          ...(phoneArea && phoneNumber ? {
+            phone: {
+              area_code: phoneArea,
+              number: phoneNumber
+            }
+          } : {})
+        },
+        additional_info: {
+          items: verifiedItems.map(item => ({
+            id: String(item.id),
+            title: String(item.name || 'Vetor Camisa'),
+            description: String(item.name || 'Vetor Camisa').substring(0, 250),
+            picture_url: item.image || item.urls?.capa || item.urls?.destaque || 'https://camisavetor.com.br/logo.png',
+            category_id: 'others',
+            quantity: Number(item.quantity || 1),
+            unit_price: Number(item.price || 0)
+          })),
+          payer: {
+            first_name: firstName || 'Cliente',
+            last_name: lastName || undefined,
+            ...(phoneArea && phoneNumber ? {
+              phone: {
+                area_code: phoneArea,
+                number: phoneNumber
+              }
+            } : {})
           }
         },
+        notification_url: 'https://camisavetor.com.br/api/checkout/pix/webhook',
         external_reference: transactionId,
       },
       requestOptions: { idempotencyKey: transactionId }
