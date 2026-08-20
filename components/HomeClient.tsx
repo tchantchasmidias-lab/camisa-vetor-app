@@ -11,6 +11,7 @@ export interface Product {
   id: string;
   name: string;
   price: number;
+  isFree?: boolean;
   category: string;
   slug?: string;
   createdAt?: number;
@@ -25,7 +26,7 @@ interface HomeClientProps {
 }
 
 function HomeClientContent({ initialProducts }: HomeClientProps) {
-  const [products] = useState<Product[]>(initialProducts || []);
+  const products = initialProducts || [];
   const searchParams = useSearchParams();
   const { t, tp } = useGeo();
 

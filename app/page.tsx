@@ -1,7 +1,8 @@
 import { adminDb } from '@/lib/firebaseAdmin';
 import HomeClient, { Product } from '@/components/HomeClient';
 
-export const revalidate = 300; // Server-Side Rendering com Revalidação a cada 5 minutos
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Atualização imediata em tempo real ao publicar novos produtos
 
 async function getInitialProducts(): Promise<Product[]> {
   try {
@@ -9,13 +10,34 @@ async function getInitialProducts(): Promise<Product[]> {
 
     const productsData = productsSnap.docs.map(doc => {
       const data = doc.data();
+      const rawCreated = data.createdAt;
+      const rawUpdated = data.updatedAt;
+      
+      let createdTime = 0;
+      if (rawCreated?.toMillis) {
+        createdTime = rawCreated.toMillis();
+      } else if (rawCreated?.seconds) {
+        createdTime = rawCreated.seconds * 1000;
+      } else if (typeof rawCreated === 'string' || typeof rawCreated === 'number') {
+        createdTime = new Date(rawCreated).getTime() || 0;
+      } else if (rawUpdated?.toMillis) {
+        createdTime = rawUpdated.toMillis();
+      } else if (rawUpdated?.seconds) {
+        createdTime = rawUpdated.seconds * 1000;
+      } else if (typeof rawUpdated === 'string' || typeof rawUpdated === 'number') {
+        createdTime = new Date(rawUpdated).getTime() || 0;
+      } else {
+        createdTime = Date.now();
+      }
+
       return {
         id: doc.id,
         name: data.name || 'Sem nome',
         price: Number(data.price) || 0,
+        isFree: Boolean(data.isFree) || Number(data.price) === 0,
         category: data.category || 'Geral',
         slug: data.slug || doc.id,
-        createdAt: data.createdAt?.toMillis?.() ?? (data.createdAt?.seconds ? data.createdAt.seconds * 1000 : 0),
+        createdAt: createdTime,
         urls: {
           capa: data.urls?.capa || data.urls?.destaque || '',
           destaque: data.urls?.destaque || '',
