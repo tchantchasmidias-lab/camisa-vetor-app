@@ -582,6 +582,19 @@ export default function AdminPage() {
 
   // --- MANTÉM AS FUNÇÕES DE PRODUTO (handleSubmitProduct, startEdit, handleImageChange, etc) ---
   // (Omitidas aqui para brevidade, mas devem permanecer no seu arquivo)
+  const handleToggleFree = () => {
+    setIsProductFree(prev => {
+      const next = !prev;
+      if (formRef.current) {
+        const priceInput = formRef.current.elements.namedItem('price') as HTMLInputElement;
+        if (priceInput) {
+          priceInput.value = next ? '0' : '';
+        }
+      }
+      return next;
+    });
+  };
+
   const startEdit = (p: any) => {
     setEditingId(p.id);
     setRemoveExistingVetor(false);
@@ -1012,38 +1025,37 @@ export default function AdminPage() {
                       <input name="productName" required placeholder="EX: CAMISA NONO ANO FOGUETE" className="w-full bg-white/5 border border-white/10 rounded-[2rem] p-6 text-[14px] font-black text-white uppercase outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all"/>
                     </div>
                     <div className="space-y-4">
-                      <label className="text-[9px] font-black uppercase text-gray-500 ml-4 tracking-widest">Preço de Venda</label>
-                      <div className="flex gap-3 items-center">
-                        <div className="relative flex-1">
-                          <span className={`absolute left-6 top-1/2 -translate-y-1/2 font-black text-[12px] ${isProductFree ? 'text-green-400' : 'text-[#fe7302]'}`}>
-                            {isProductFree ? '✓' : 'R$'}
-                          </span>
-                          <input
-                            name="price"
-                            required={!isProductFree}
-                            type="number"
-                            step="0.01"
-                            placeholder={isProductFree ? 'GRÁTIS' : '0,00'}
-                            disabled={isProductFree}
-                            value={isProductFree ? '0' : undefined}
-                            className={`w-full border rounded-[2rem] p-6 pl-14 text-[16px] font-black outline-none transition-all ${
-                              isProductFree
-                                ? 'bg-green-900/20 border-green-500/30 text-green-400 cursor-not-allowed'
-                                : 'bg-white/5 border-white/10 text-white focus:border-[#fe7302]/50'
-                            }`}
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setIsProductFree(prev => !prev)}
-                          className={`flex-shrink-0 px-5 py-4 rounded-[2rem] text-[11px] font-black uppercase tracking-widest transition-all border ${
-                            isProductFree
-                              ? 'bg-green-500 text-white border-green-500 shadow-lg shadow-green-500/30'
+                      <div className="flex justify-between items-center px-4">
+                        <label className="text-[9px] font-black uppercase text-gray-500 tracking-widest">Preço de Venda</label>
+                        <button 
+                          type="button" 
+                          onClick={handleToggleFree}
+                          className={`text-[8px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest transition-all flex items-center gap-1.5 border ${
+                            isProductFree 
+                              ? 'bg-green-500 text-white border-green-500 shadow-md shadow-green-500/20' 
                               : 'bg-white/5 text-gray-400 border-white/10 hover:border-green-500/50 hover:text-green-400'
                           }`}
                         >
-                          {isProductFree ? '✓ GRÁTIS' : 'GRÁTIS?'}
+                          {isProductFree ? '✓ GRÁTIS ATIVADO' : 'TORNAR GRÁTIS?'}
                         </button>
+                      </div>
+                      <div className="relative">
+                        <span className={`absolute left-6 top-1/2 -translate-y-1/2 font-black text-[12px] ${isProductFree ? 'text-green-400' : 'text-[#fe7302]'}`}>
+                          {isProductFree ? '✓' : 'R$'}
+                        </span>
+                        <input
+                          name="price"
+                          required={!isProductFree}
+                          type="number"
+                          step="0.01"
+                          placeholder={isProductFree ? 'GRÁTIS' : '0,00'}
+                          disabled={isProductFree}
+                          className={`w-full border rounded-[2rem] p-6 pl-14 text-[16px] font-black outline-none transition-all ${
+                            isProductFree
+                              ? 'bg-green-900/20 border-green-500/30 text-green-400 cursor-not-allowed'
+                              : 'bg-white/5 border-white/10 text-white focus:border-[#fe7302]/50 focus:bg-white/[0.08]'
+                          }`}
+                        />
                       </div>
                     </div>
 
