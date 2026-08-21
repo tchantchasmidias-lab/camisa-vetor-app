@@ -77,9 +77,18 @@ export const metadata = {
     title: 'Camisa Vetor',
   },
   icons: {
-    icon: '/icon.png',
-    shortcut: '/icon.png',
-    apple: '/icon.png',
+    icon: [
+      { url: '/favicon.ico', sizes: '48x48' },
+      { url: '/icon-48.png', sizes: '48x48', type: 'image/png' },
+      { url: '/icon-96.png', sizes: '96x96', type: 'image/png' },
+      { url: '/icon-144.png', sizes: '144x144', type: 'image/png' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icon.png', sizes: '192x192', type: 'image/png' },
+    ],
+    shortcut: '/favicon.ico',
+    apple: [
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
   },
 };
 
@@ -88,8 +97,8 @@ const orgJsonLd = {
   '@type': 'OnlineStore',
   'name': 'Camisa Vetor',
   'url': 'https://camisavetor.com.br',
-  'logo': 'https://camisavetor.com.br/icon.png',
-  'image': 'https://camisavetor.com.br/icon.png',
+  'logo': 'https://camisavetor.com.br/icon-192.png',
+  'image': 'https://camisavetor.com.br/icon-192.png',
   'description': 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium.',
 };
 
@@ -101,6 +110,15 @@ export default function RootLayout({
   return (
     <html lang="pt-br" className={inter.className}>
       <head>
+        {/* Favicon & Google Search Icon (Múltiplos de 48px conforme diretrizes oficiais do Google Search) */}
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="icon" href="/favicon.ico" sizes="48x48" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/icon-48.png" />
+        <link rel="icon" type="image/png" sizes="96x96" href="/icon-96.png" />
+        <link rel="icon" type="image/png" sizes="144x144" href="/icon-144.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+        <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+
         {/* Otimização de Conexão (Preconnect & DNS Prefetch para Firebase Storage) */}
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
