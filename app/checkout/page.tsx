@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { 
-  QrCode, ChevronLeft, Download, CheckCircle2, 
+  ChevronLeft, Download, CheckCircle2, 
   AlertCircle, Loader2, FileText, Tag, X, User, Phone, Edit2, Check
 } from 'lucide-react';
 import Link from 'next/link';
@@ -356,7 +356,7 @@ function CheckoutContent() {
                 </div>
                 <div className="grid grid-cols-1 gap-4">
                   <div className="p-6 rounded-2xl border-2 border-[#fe7302] bg-orange-50/30 flex items-center gap-4 transition-all">
-                    <QrCode size={20} className="text-[#fe7302]" />
+                    <img src="/icon_pix_b.svg" alt="Pix" className="h-7 md:h-8 w-auto object-contain flex-shrink-0" />
                     <div className="text-left">
                       <p className="text-[11px] font-bold text-[#202124] uppercase">PIX</p>
                       <p className="text-[9px] font-medium text-[#5f6368] uppercase">{t('pixInstant')}</p>
