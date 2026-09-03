@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection, getDocs, query,
@@ -318,6 +318,127 @@ export default function ProductDetailView({ product }: { product: any }) {
     const currentIndex = galleryImages.indexOf(selectedImage);
     const nextIndex = (currentIndex + 1) % galleryImages.length;
     setSelectedImage(galleryImages[nextIndex]);
+  };
+
+  // ── Lightbox Zoom & Gestos Mobile (Pinch-to-zoom, Pan, Double-tap) ──
+  const [lightboxScale, setLightboxScale] = useState(1);
+  const [lightboxPos, setLightboxPos] = useState({ x: 0, y: 0 });
+  const [isLightboxDragging, setIsLightboxDragging] = useState(false);
+  const touchStateRef = useRef<{
+    startDistance: number;
+    startScale: number;
+    startX: number;
+    startY: number;
+    startPosX: number;
+    startPosY: number;
+    lastTapTime: number;
+  }>({
+    startDistance: 0,
+    startScale: 1,
+    startX: 0,
+    startY: 0,
+    startPosX: 0,
+    startPosY: 0,
+    lastTapTime: 0,
+  });
+
+  // Reseta o zoom ao trocar de imagem ou fechar o modal
+  useEffect(() => {
+    setLightboxScale(1);
+    setLightboxPos({ x: 0, y: 0 });
+  }, [selectedImage, isLightboxOpen]);
+
+  const handleLightboxTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Gesto de pinça com 2 dedos
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchStateRef.current.startDistance = dist;
+      touchStateRef.current.startScale = lightboxScale;
+      setIsLightboxDragging(true);
+    } else if (e.touches.length === 1) {
+      const now = Date.now();
+      const timeSinceLastTap = now - touchStateRef.current.lastTapTime;
+
+      // Toque duplo detectado (< 300ms)
+      if (timeSinceLastTap < 300) {
+        if (lightboxScale > 1) {
+          setLightboxScale(1);
+          setLightboxPos({ x: 0, y: 0 });
+        } else {
+          setLightboxScale(2.5);
+          const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+          const offsetX = (rect.width / 2 - (e.touches[0].clientX - rect.left)) * 0.7;
+          const offsetY = (rect.height / 2 - (e.touches[0].clientY - rect.top)) * 0.7;
+          setLightboxPos({ x: offsetX, y: offsetY });
+        }
+        touchStateRef.current.lastTapTime = 0;
+        return;
+      }
+      touchStateRef.current.lastTapTime = now;
+
+      // Pan com 1 dedo quando já ampliado
+      touchStateRef.current.startX = e.touches[0].clientX;
+      touchStateRef.current.startY = e.touches[0].clientY;
+      touchStateRef.current.startPosX = lightboxPos.x;
+      touchStateRef.current.startPosY = lightboxPos.y;
+      if (lightboxScale > 1) {
+        setIsLightboxDragging(true);
+      }
+    }
+  };
+
+  const handleLightboxTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && touchStateRef.current.startDistance > 0) {
+      // Zoom com pinça proporcional
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const factor = dist / touchStateRef.current.startDistance;
+      const newScale = Math.min(Math.max(touchStateRef.current.startScale * factor, 1), 5);
+      setLightboxScale(newScale);
+      if (newScale <= 1.05) {
+        setLightboxPos({ x: 0, y: 0 });
+      }
+    } else if (e.touches.length === 1 && lightboxScale > 1) {
+      // Arraste / Pan livre na imagem ampliada
+      const dx = e.touches[0].clientX - touchStateRef.current.startX;
+      const dy = e.touches[0].clientY - touchStateRef.current.startY;
+
+      const maxOffset = (lightboxScale - 1) * 250;
+      const newX = Math.min(Math.max(touchStateRef.current.startPosX + dx, -maxOffset), maxOffset);
+      const newY = Math.min(Math.max(touchStateRef.current.startPosY + dy, -maxOffset), maxOffset);
+
+      setLightboxPos({ x: newX, y: newY });
+    }
+  };
+
+  const handleLightboxTouchEnd = (e: React.TouchEvent) => {
+    if (e.touches.length === 0) {
+      setIsLightboxDragging(false);
+      touchStateRef.current.startDistance = 0;
+      if (lightboxScale <= 1.05) {
+        setLightboxScale(1);
+        setLightboxPos({ x: 0, y: 0 });
+      }
+    } else if (e.touches.length === 1) {
+      touchStateRef.current.startX = e.touches[0].clientX;
+      touchStateRef.current.startY = e.touches[0].clientY;
+      touchStateRef.current.startPosX = lightboxPos.x;
+      touchStateRef.current.startPosY = lightboxPos.y;
+    }
+  };
+
+  const handleLightboxDoubleClick = () => {
+    if (lightboxScale > 1) {
+      setLightboxScale(1);
+      setLightboxPos({ x: 0, y: 0 });
+    } else {
+      setLightboxScale(2.5);
+    }
   };
 
   useEffect(() => {
@@ -714,35 +835,48 @@ export default function ProductDetailView({ product }: { product: any }) {
               </button>
             </div>
 
-            {/* Container da Imagem em Tela Cheia */}
+            {/* Container da Imagem em Tela Cheia com Pinch-to-Zoom e Pan */}
             <div
-              className="relative flex-1 w-full max-w-6xl mx-auto my-3 flex items-center justify-center overflow-hidden select-none"
+              className="relative flex-1 w-full max-w-6xl mx-auto my-3 flex items-center justify-center overflow-hidden select-none touch-none"
               onClick={(e) => e.stopPropagation()}
+              onTouchStart={handleLightboxTouchStart}
+              onTouchMove={handleLightboxTouchMove}
+              onTouchEnd={handleLightboxTouchEnd}
+              onDoubleClick={handleLightboxDoubleClick}
             >
               {selectedImage && (
-                <Image
-                  src={selectedImage}
-                  alt={productName}
-                  fill
-                  quality={100}
-                  unoptimized
-                  className="object-contain max-h-[82vh] rounded-lg"
-                />
+                <div
+                  className="relative w-full h-full max-h-[82vh] flex items-center justify-center will-change-transform"
+                  style={{
+                    transform: `translate3d(${lightboxPos.x}px, ${lightboxPos.y}px, 0px) scale(${lightboxScale})`,
+                    transition: isLightboxDragging ? 'none' : 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
+                  }}
+                >
+                  <Image
+                    src={selectedImage}
+                    alt={productName}
+                    fill
+                    quality={100}
+                    unoptimized
+                    draggable={false}
+                    className="object-contain max-h-[82vh] rounded-lg pointer-events-none"
+                  />
+                </div>
               )}
 
-              {/* Botões de Navegação Anterior / Próxima */}
+              {/* Botões de Navegação Anterior / Próxima (Ocultos no mobile: hidden md:flex) */}
               {galleryImages.length > 1 && (
                 <>
                   <button
                     onClick={(e) => { e.stopPropagation(); handlePrevLightbox(); }}
-                    className="absolute left-1 md:left-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/60 hover:bg-[#fe7302] rounded-full transition-all border border-white/10 shadow-xl active:scale-90"
+                    className="hidden md:flex absolute left-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/60 hover:bg-[#fe7302] rounded-full transition-all border border-white/10 shadow-xl active:scale-90 z-20"
                     aria-label="Imagem anterior"
                   >
                     <ChevronLeft size={28} />
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); handleNextLightbox(); }}
-                    className="absolute right-1 md:right-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/60 hover:bg-[#fe7302] rounded-full transition-all border border-white/10 shadow-xl active:scale-90"
+                    className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 p-3 text-white bg-black/60 hover:bg-[#fe7302] rounded-full transition-all border border-white/10 shadow-xl active:scale-90 z-20"
                     aria-label="Próxima imagem"
                   >
                     <ChevronRight size={28} />
