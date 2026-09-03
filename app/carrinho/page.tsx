@@ -8,6 +8,8 @@ import { Trash2, ShoppingCart, ArrowRight, ChevronLeft, Tag, CheckCircle2, Alert
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { formatTitleCase } from '@/lib/stringUtils';
+import { safeLocalStorage, safeSessionStorage } from '@/lib/safeStorage';
 
 interface CartItem {
   id: string;
@@ -39,11 +41,15 @@ function CarrinhoContent() {
   const { t, tp, formatPrice, isLoading: loadingGeo } = useGeo();
 
   useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem('camisavetor_cart') || '[]');
-    setCartItems(savedCart);
+    const rawCart = safeLocalStorage.getItem('camisavetor_cart');
+    try {
+      setCartItems(rawCart ? JSON.parse(rawCart) : []);
+    } catch {
+      setCartItems([]);
+    }
 
     // Restaurar cupom salvo (se voltou do checkout)
-    const savedCoupon = sessionStorage.getItem('camisavetor_coupon');
+    const savedCoupon = safeSessionStorage.getItem('camisavetor_coupon');
     if (savedCoupon) {
       try { setCouponData(JSON.parse(savedCoupon)); } catch {}
     }
@@ -57,7 +63,7 @@ function CarrinhoContent() {
 
   const updateCart = (newCart: CartItem[]) => {
     setCartItems(newCart);
-    localStorage.setItem('camisavetor_cart', JSON.stringify(newCart));
+    safeLocalStorage.setItem('camisavetor_cart', JSON.stringify(newCart));
     window.dispatchEvent(new Event('cart-updated'));
   };
 
@@ -67,7 +73,7 @@ function CarrinhoContent() {
     // Se removeu item e total mudou, limpa o cupom para revalidar
     setCouponData(null);
     setCouponError('');
-    sessionStorage.removeItem('camisavetor_coupon');
+    safeSessionStorage.removeItem('camisavetor_coupon');
   };
 
   const subtotal = cartItems.reduce((acc, item) => acc + (item.price * item.quantity), 0);
@@ -96,7 +102,7 @@ function CarrinhoContent() {
           finalTotal: data.finalTotal,
         };
         setCouponData(coupon);
-        sessionStorage.setItem('camisavetor_coupon', JSON.stringify(coupon));
+        safeSessionStorage.setItem('camisavetor_coupon', JSON.stringify(coupon));
       } else {
         setCouponError(data.error || 'Cupom inválido.');
       }
@@ -111,7 +117,7 @@ function CarrinhoContent() {
     setCouponData(null);
     setCouponInput('');
     setCouponError('');
-    sessionStorage.removeItem('camisavetor_coupon');
+    safeSessionStorage.removeItem('camisavetor_coupon');
   };
 
   return (
@@ -155,8 +161,8 @@ function CarrinhoContent() {
 
                     <div className="flex-1 flex flex-col justify-center h-full py-1">
                       <div>
-                        <h3 className="text-[12px] font-bold text-[#202124] uppercase tracking-wide group-hover:text-[#fe7302] transition-colors line-clamp-1">
-                          {tp(item.name)}
+                        <h3 className="text-[13px] font-semibold text-[#202124] product-title tracking-normal group-hover:text-[#fe7302] transition-colors line-clamp-1">
+                          {formatTitleCase(tp(item.name))}
                         </h3>
                         <p className="text-[10px] text-[#5f6368] font-medium uppercase tracking-widest">{t('vectorPremium')}</p>
                       </div>

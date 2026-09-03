@@ -1,37 +1,57 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-/**
- * Middleware de proteção do Studio.
- * Intercepta todas as rotas /studio/* e verifica o cookie de sessão Firebase.
- * Se não houver sessão, redireciona para /studio/login.
- */
+const PRIMARY_HOST = 'camisavetor.com.br';
+const CANONICAL_ORIGIN = `https://${PRIMARY_HOST}`;
+
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
+  const host = (request.headers.get('host') || '').toLowerCase().split(':')[0];
+  const proto = request.headers.get('x-forwarded-proto') || 'https';
 
-  // ── Bypass de desenvolvimento ──────────────────────────────────────────────
-  // Em ambiente local (npm run dev) a autenticação é ignorada.
-  // Em produção, process.env.NODE_ENV === 'production', então esse bloco é pulado.
-  if (process.env.NODE_ENV === 'development') {
-    return NextResponse.next();
+  // ── 1. REDIRECIONAMENTOS CANÔNICOS DE SEO (301 PERMANENT) ───────────────────
+  // Apenas em produção ou quando um host externo for utilizado
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isWwwOrAlternativeDomain =
+    host === 'www.camisavetor.com.br' ||
+    host === 'camisavetor.com' ||
+    host === 'www.camisavetor.com';
+
+  const isHttp = isProduction && proto === 'http';
+  const hasTrailingSlash = pathname !== '/' && pathname.endsWith('/');
+
+  if (isWwwOrAlternativeDomain || isHttp || hasTrailingSlash) {
+    const cleanPathname = hasTrailingSlash ? pathname.replace(/\/+$/, '') : pathname;
+    const targetUrl = `${CANONICAL_ORIGIN}${cleanPathname}${search}`;
+    return NextResponse.redirect(targetUrl, 301);
   }
 
-  // Permite acesso público apenas à rota de login do studio
-  if (pathname === '/studio/login' || pathname.startsWith('/studio/login/')) {
-    return NextResponse.next();
-  }
+  // ── 2. PROTEÇÃO DO STUDIO (/studio/*) ───────────────────────────────────────
+  if (pathname.startsWith('/studio')) {
+    // Bypass em ambiente local de desenvolvimento
+    if (!isProduction) {
+      return NextResponse.next();
+    }
 
-  // Verifica o cookie de sessão Firebase (__session é o padrão do Firebase Admin SDK)
-  const session = request.cookies.get('__session')?.value;
-  if (!session) {
-    const loginUrl = new URL('/studio/login', request.url);
-    loginUrl.searchParams.set('callbackUrl', pathname);
-    return NextResponse.redirect(loginUrl);
+    // Permite rota de login do Studio
+    if (pathname === '/studio/login' || pathname.startsWith('/studio/login/')) {
+      return NextResponse.next();
+    }
+
+    // Verifica cookie de sessão
+    const session = request.cookies.get('__session')?.value;
+    if (!session) {
+      const loginUrl = new URL('/studio/login', request.url);
+      loginUrl.searchParams.set('callbackUrl', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  // Aplica SOMENTE às rotas do studio — nenhuma rota do e-commerce é afetada
-  matcher: ['/studio/:path*'],
+  // Executa o middleware nas rotas de páginas, ignorando arquivos estáticos e assets
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|icon.*|apple-touch-icon.*|manifest.json|robots.txt|sitemap.xml|api/).*)',
+  ],
 };

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { adminDb } from '@/lib/firebaseAdmin';
+
+export const dynamic = 'force-dynamic';
 
 export async function DELETE(req: NextRequest) {
   try {
@@ -11,6 +14,12 @@ export async function DELETE(req: NextRequest) {
     }
 
     await adminDb.collection('blog_posts').doc(id).delete();
+
+    try {
+      revalidatePath('/blog');
+      revalidatePath('/admin');
+    } catch {}
+
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error('Error deleting blog post:', error);

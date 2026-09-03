@@ -14,6 +14,7 @@ function safeIsoDate(val: any): string {
 }
 
 function escapeXml(unsafe: string): string {
+  if (!unsafe) return '';
   return unsafe
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -26,10 +27,11 @@ export async function GET() {
   const baseUrl = 'https://camisavetor.com.br';
 
   const staticPages = [
-    { url: baseUrl,                      lastmod: new Date().toISOString(), changefreq: 'daily',   priority: '1.0' },
-    { url: `${baseUrl}/blog`,            lastmod: new Date().toISOString(), changefreq: 'weekly',  priority: '0.7' },
-    { url: `${baseUrl}/privacidade`,     lastmod: new Date().toISOString(), changefreq: 'yearly',  priority: '0.2' },
-    { url: `${baseUrl}/termos`,          lastmod: new Date().toISOString(), changefreq: 'yearly',  priority: '0.2' },
+    { url: baseUrl,                  lastmod: new Date().toISOString(), changefreq: 'daily',   priority: '1.0' },
+    { url: `${baseUrl}/blog`,        lastmod: new Date().toISOString(), changefreq: 'weekly',  priority: '0.7' },
+    { url: `${baseUrl}/sobre`,       lastmod: new Date().toISOString(), changefreq: 'monthly', priority: '0.5' },
+    { url: `${baseUrl}/privacidade`, lastmod: new Date().toISOString(), changefreq: 'yearly',  priority: '0.2' },
+    { url: `${baseUrl}/termos`,      lastmod: new Date().toISOString(), changefreq: 'yearly',  priority: '0.2' },
   ];
 
   let productXml = '';
@@ -39,48 +41,72 @@ export async function GET() {
     for (const doc of productsSnap.docs) {
       const data = doc.data();
       const slug = data.slug || doc.id;
-      const name = data.name || 'Vetor';
+      const name = data.name || 'Vetor para Camiseta';
       const lastmod = safeIsoDate(data.updatedAt || data.createdAt);
+      const productPageUrl = `${baseUrl}/product/${slug}`;
 
-      const productImages: { url: string; title: string }[] = [];
+      // ── Mapeamento Priorizado de Imagens para o Google Imagens ──
+      const productImages: { url: string; title: string; caption?: string }[] = [];
 
-      if (data.urls?.destaque) {
-        productImages.push({
-          url: buildCleanImageUrl(data.urls.destaque, slug, 'destaque'),
-          title: name,
-        });
-      }
-      if (data.urls?.capa && data.urls.capa !== data.urls?.destaque) {
+      // 1. Capa / Mockup Principal (Primeira posição para o Googlebot-Image)
+      if (data.urls?.capa) {
         productImages.push({
           url: buildCleanImageUrl(data.urls.capa, slug, 'capa'),
-          title: `${name} — Capa`,
+          title: `${name} | Arte em Vetor Editável`,
+          caption: `Vetor ${name} para sublimação, DTF e silk-screen - Camisa Vetor`,
         });
       }
+
+      // 2. Imagem de Destaque / Detalhe
+      if (data.urls?.destaque && data.urls.destaque !== data.urls?.capa) {
+        productImages.push({
+          url: buildCleanImageUrl(data.urls.destaque, slug, 'destaque'),
+          title: `${name} — Detalhes do Vetor`,
+          caption: `Detalhe da estampa vetorizada ${name} - CDR, PDF, SVG, PNG`,
+        });
+      }
+
+      // 3. Galeria adicional
       if (Array.isArray(data.urls?.galeria)) {
         data.urls.galeria.forEach((imgUrl: string, i: number) => {
-          if (imgUrl) {
+          if (imgUrl && imgUrl !== data.urls?.capa && imgUrl !== data.urls?.destaque) {
             productImages.push({
               url: buildCleanImageUrl(imgUrl, slug, `galeria-${i + 1}`),
               title: `${name} — Foto ${i + 1}`,
+              caption: `Mockup ${i + 1} da estampa ${name}`,
             });
           }
+        });
+      }
+
+      // Se nenhuma imagem foi adicionada mas existe destaque/capa única
+      if (productImages.length === 0 && data.urls?.destaque) {
+        productImages.push({
+          url: buildCleanImageUrl(data.urls.destaque, slug, 'destaque'),
+          title: `${name} | Arte em Vetor Editável`,
+          caption: `Vetor ${name} para sublimação e serigrafia`,
         });
       }
 
       let imageTagsXml = '';
       for (const img of productImages) {
         if (img.url) {
+          const absoluteImgUrl = img.url.startsWith('http')
+            ? img.url
+            : `${baseUrl}${img.url.startsWith('/') ? '' : '/'}${img.url}`;
+
           imageTagsXml += `
     <image:image>
-      <image:loc>${escapeXml(img.url)}</image:loc>
-      <image:title>${escapeXml(img.title)}</image:title>
+      <image:loc>${escapeXml(absoluteImgUrl)}</image:loc>
+      <image:title>${escapeXml(img.title)}</image:title>${img.caption ? `
+      <image:caption>${escapeXml(img.caption)}</image:caption>` : ''}
     </image:image>`;
         }
       }
 
       productXml += `
   <url>
-    <loc>${escapeXml(`${baseUrl}/product/${slug}`)}</loc>
+    <loc>${escapeXml(productPageUrl)}</loc>
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>${imageTagsXml}

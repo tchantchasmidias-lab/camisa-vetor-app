@@ -4,10 +4,11 @@ import { useState, useRef, useEffect, Suspense } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { Home, Shirt, MessageCircle, User, ShoppingCart, Search, X, ChevronRight, Loader2, PenTool } from 'lucide-react';
+import { Home, Shirt, MessageCircle, User, ShoppingCart, Search, X, ChevronRight, Loader2 } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { safeLocalStorage } from '@/lib/safeStorage';
 
 function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,13 +28,35 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
 
     // Studio é uma aplicação separada — o Header do e-commerce não deve aparecer
     if (pathname.startsWith('/studio')) return null;
-    
+
     const { t, tp } = useGeo();
 
     useEffect(() => {
         setIsMounted(true);
 
+        const updateCart = () => {
+            try {
+                const raw = safeLocalStorage.getItem('camisavetor_cart');
+                const cart = raw ? JSON.parse(raw) : [];
+                setCartCount(cart.reduce((acc: number, item: any) => acc + item.quantity, 0));
+            } catch { setCartCount(0); }
+        };
+
+        updateCart();
+        window.addEventListener('cart-updated', updateCart);
+        window.addEventListener('storage', updateCart);
+        return () => {
+            window.removeEventListener('cart-updated', updateCart);
+            window.removeEventListener('storage', updateCart);
+        };
+    }, []);
+
+    // Busca categorias sob demanda somente ao abrir o menu lateral
+    useEffect(() => {
+        if (!isDrawerOpen || dbCategories.length > 0) return;
+
         const fetchCategories = async () => {
+            setLoadingCats(true);
             try {
                 const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
                 const snap = await getDocs(q);
@@ -48,24 +71,10 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
             }
         };
 
-        const updateCart = () => {
-            try {
-                const cart = JSON.parse(localStorage.getItem('camisavetor_cart') || '[]');
-                setCartCount(cart.reduce((acc: number, item: any) => acc + item.quantity, 0));
-            } catch { setCartCount(0); }
-        };
-
         fetchCategories();
-        updateCart();
-        window.addEventListener('cart-updated', updateCart);
-        window.addEventListener('storage', updateCart);
-        return () => {
-            window.removeEventListener('cart-updated', updateCart);
-            window.removeEventListener('storage', updateCart);
-        };
-    }, []);
+    }, [isDrawerOpen, dbCategories.length, t]);
 
-    // Bloquear rolagem do body quando o drawer estiver aberto (evita scroll do background)
+    // Bloquear rolagem do body quando o drawer estiver aberto
     useEffect(() => {
         if (isDrawerOpen) {
             document.body.style.overflow = 'hidden';
@@ -83,9 +92,39 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
     const navigate = (type: 'search' | 'category', value: string) => {
         setDrawerOpen(false);
         setMobileSearchOpen(false);
+        setSearchTerm('');
         const term = value.trim();
         if (!term || (type === 'category' && term === t('allCategories'))) { router.push('/'); return; }
         router.push(`/?${type === 'category' ? 'category' : 'search'}=${encodeURIComponent(term)}`);
+    };
+
+    const handleGoHome = (e: React.MouseEvent) => {
+        setDrawerOpen(false);
+        setMobileSearchOpen(false);
+        setSearchTerm('');
+
+        // Se já estiver na página inicial (/), previne navegação desnecessária e força o scroll ao topo
+        if (pathname === '/') {
+            const hasQuery = searchParams && (
+                (searchParams.get ? searchParams.get('search') : null) || 
+                (searchParams.get ? searchParams.get('category') : null)
+            );
+            if (hasQuery) {
+                router.push('/');
+            }
+            e.preventDefault();
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth',
+            });
+        } else {
+            // Se estiver em outra página (produto, blog, perfil), navega para a Home e rola ao topo
+            router.push('/');
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth',
+            });
+        }
     };
 
     const openMobileSearch = () => {
@@ -131,16 +170,20 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
                         {loadingCats ? (
                             <div className="flex justify-center py-10"><Loader2 className="animate-spin text-gray-300" /></div>
                         ) : (
-                            dbCategories.map(cat => (
-                                <button
-                                    key={cat}
-                                    onClick={() => navigate('category', cat)}
-                                    className={`w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-all group border-b border-gray-50 text-left ${searchParams.get('category') === cat ? 'bg-orange-50/40' : ''}`}
-                                >
-                                    <span className={`sidebar-nav-link sidebar-link text-[13px] font-medium transition-colors ${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-[#334155] group-hover:text-[#0f172a]'}`}>{tp(cat)}</span>
-                                    <ChevronRight size={13} className={`${searchParams.get('category') === cat ? 'text-[#fe7302]' : 'text-gray-300'} group-hover:translate-x-1 transition-transform`} />
-                                </button>
-                            ))
+                            dbCategories.map(cat => {
+                                const currentCat = searchParams?.get ? searchParams.get('category') : null;
+                                const isSelected = currentCat === cat;
+                                return (
+                                    <button
+                                        key={cat}
+                                        onClick={() => navigate('category', cat)}
+                                        className={`category-drawer-item category-drawer-link w-full flex items-center justify-between px-6 py-3.5 hover:bg-gray-50 transition-all group border-b border-gray-50 text-left ${isSelected ? 'bg-orange-50/40' : ''}`}
+                                    >
+                                        <span className={`sidebar-nav-link sidebar-link uppercase text-xs font-semibold text-slate-700 tracking-[0.025em] transition-colors ${isSelected ? '!text-[#fe7302] !font-bold' : 'group-hover:text-[#0f172a]'}`}>{tp(cat)}</span>
+                                        <ChevronRight size={13} className={`${isSelected ? 'text-[#fe7302]' : 'text-gray-300'} group-hover:translate-x-1 transition-transform`} />
+                                    </button>
+                                );
+                            })
                         )}
                     </nav>
                     <div className="p-6 border-t border-gray-50 bg-gray-50/30 text-center">
@@ -157,51 +200,58 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
             <CategoriesDrawer />
 
             {/* ═══════════════════════════════════════
-                MOBILE LAYOUT
+                MOBILE LAYOUT — 100% inalterado
             ═══════════════════════════════════════ */}
 
-            {/* ═══ MOBILE: Pill horizontal no topo (ajustado para w-[90%] igual ao menu) ═══ */}
-            <div className="md:hidden fixed top-3 left-1/2 -translate-x-1/2 w-[90%] z-50 flex items-center justify-center bg-[#1c1c1e]/95 backdrop-blur-xl rounded-full h-12 px-4 shadow-xl border border-white/5 relative">
-                {/* Esquerda: logo icon (absoluto) */}
-                <Link href="/" className="absolute left-4">
+            {/* MOBILE: Pill horizontal no topo */}
+            <div className="lg:hidden fixed top-3 left-1/2 -translate-x-1/2 w-[90%] z-50 flex items-center justify-center bg-[#1c1c1e]/95 backdrop-blur-xl rounded-full h-12 px-4 shadow-xl border border-white/5 relative">
+                {/* Esquerda: logo icon */}
+                <Link href="/" onClick={handleGoHome} className="absolute left-4">
                     <img src="/logo-icon.png" alt="Camisa Vetor" className="w-7 h-7 object-contain" />
                 </Link>
 
                 {/* Centro: logo nome */}
-                <Link href="/" className="flex items-center">
+                <Link href="/" onClick={handleGoHome} className="flex items-center">
                     <Image priority src="/logo.svg" alt="Camisa Vetor" width={100} height={18} className="h-[15px] w-auto" />
                 </Link>
 
-                {/* Direita: WHATSAPP (absoluto) */}
+                {/* Direita: WHATSAPP */}
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" className={`absolute right-4 text-white/60 hover:text-[#25D366] transition-colors`}>
                     <MessageCircle size={20} />
                 </a>
             </div>
 
-            {/* Mobile Search bar — expande sobre o pill */}
+            {/* Mobile Search bar — expande sobre o pill com fundo branco sólido */}
             <div
-                className={`md:hidden fixed top-3 left-1/2 -translate-x-1/2 w-[90%] z-[55] flex items-center rounded-full bg-[#1c1c1e]/98 backdrop-blur-xl border border-white/10 shadow-2xl overflow-hidden transition-all duration-300 ease-out ${isMobileSearchOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+                className={`lg:hidden fixed top-3 left-1/2 -translate-x-1/2 w-[90%] z-[55] flex items-center rounded-full bg-white border border-slate-200 shadow-2xl overflow-hidden transition-all duration-300 ease-out ${isMobileSearchOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
                 style={{ height: 48 }}
             >
-                <Search size={16} className="text-[#fe7302] ml-4 flex-shrink-0" />
+                <Search size={18} className="text-[#fe7302] ml-4 flex-shrink-0 pointer-events-none" />
                 <input
                     ref={mobileSearchRef}
                     type="text"
-                    placeholder={t('searchPlaceholder')}
+                    placeholder={t('searchPlaceholder') || 'Pesquisar vetor...'}
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && navigate('search', searchTerm)}
-                    className="flex-1 bg-transparent text-white placeholder-white/30 text-[13px] outline-none px-3 font-medium"
+                    className="flex-1 bg-white text-slate-900 placeholder-slate-400 text-sm font-medium outline-none px-3 h-full"
                 />
-                <button onClick={() => { setMobileSearchOpen(false); setSearchTerm(''); }} className="p-2 mr-2 text-white/40 hover:text-white transition-colors">
-                    <X size={17} />
+                <button
+                    onClick={() => {
+                        setMobileSearchOpen(false);
+                        setSearchTerm('');
+                    }}
+                    className="p-2 mr-2 text-slate-400 hover:text-slate-700 transition-colors"
+                    aria-label="Fechar busca"
+                >
+                    <X size={18} />
                 </button>
             </div>
 
             {/* Bottom tab bar (mobile) */}
-            <nav className="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] z-50">
+            <nav className="lg:hidden fixed bottom-4 left-1/2 -translate-x-1/2 w-[90%] z-50">
                 <div className="flex items-center justify-around rounded-full bg-[#1a1a1a]/95 backdrop-blur-xl h-14 shadow-lg border border-white/5 px-2">
-                    <Link href="/" className="p-2 text-white/70"><Home size={23} className={laranjaHover} /></Link>
+                    <Link href="/" onClick={handleGoHome} className="p-2 text-white/70"><Home size={23} className={laranjaHover} /></Link>
                     <button onClick={() => setDrawerOpen(true)} className="p-2 text-white/70"><Shirt size={23} className={laranjaHover} /></button>
                     <button onClick={openMobileSearch} className="p-2 text-white/70">
                         <Search size={23} className={laranjaHover} />
@@ -215,89 +265,110 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
             </nav>
 
             {/* ═══════════════════════════════════════
-                DESKTOP — Pill vertical flutuante (top-left)
+                DESKTOP — Navbar Horizontal Fixa no Topo (>= 1024px)
             ═══════════════════════════════════════ */}
-            <aside className="hidden md:block fixed left-4 top-4 z-50 group/pill">
-                {/*
-                  Estratégia de centralização:
-                  - Pill fecha em w-[52px]
-                  - Cada item tem um "slot" de ícone de 52px com justify-center
-                  - Labels expandem além do slot quando hover (max-w-0 → max-w-[140px])
-                  - Assim os ícones ficam sempre perfeitamente centrados no estado fechado
-                */}
-                <div className="flex flex-col bg-[#1c1c1e] rounded-3xl py-3 shadow-2xl transition-[width] duration-300 ease-out overflow-hidden w-[52px] group-hover/pill:w-[230px]">
+            <header className="hidden lg:flex items-center justify-between sticky top-0 z-50 w-full px-8 xl:px-12 h-20 bg-[#000000] border-b border-[#1e293b] shadow-[0_4px_24px_rgba(0,0,0,0.5)]">
 
-                    {/* Logo row */}
-                    <div className="flex items-center h-11">
-                        <div className="w-[52px] flex-shrink-0 flex items-center justify-center">
-                            <img src="/logo-icon.png" alt="Camisa Vetor" className="w-7 h-7 object-contain" />
-                        </div>
-                        <div className="overflow-hidden max-w-0 group-hover/pill:max-w-[178px] opacity-0 group-hover/pill:opacity-100 transition-all duration-250 pr-5">
-                            <Image priority src="/logo.svg" alt="Camisa Vetor" width={108} height={20} className="h-[18px] w-auto" />
-                        </div>
-                    </div>
+                {/* ── ESQUERDA: Logo ── */}
+                <Link href="/" onClick={handleGoHome} className="flex-shrink-0 flex items-center gap-3.5 group">
+                    <img src="/logo-icon.png" alt="Camisa Vetor" className="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-200" />
+                    <Image
+                        priority
+                        src="/logo.svg"
+                        alt="Camisa Vetor"
+                        width={145}
+                        height={26}
+                        className="h-[22px] w-auto group-hover:opacity-95 transition-opacity"
+                    />
+                </Link>
 
-                    {/* Divider */}
-                    <div className="mx-3 h-px bg-white/8 mb-1" />
-
-                    {/* Search row */}
-                    <div className="flex items-center h-10">
+                {/* ── CENTRO: Barra de busca ── */}
+                <div className="flex-1 max-w-[560px] mx-8 xl:mx-12 relative">
+                    <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#fe7302] pointer-events-none" />
+                    <input
+                        ref={desktopSearchRef}
+                        type="text"
+                        placeholder={t('searchPlaceholderDesktop') || 'Pesquisar vetor...'}
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        onKeyDown={e => {
+                            if (e.key === 'Enter') navigate('search', searchTerm);
+                            if (e.key === 'Escape') setSearchTerm('');
+                        }}
+                        className="w-full h-12 pl-12 pr-11 rounded-full bg-white border border-[#e2e8f0] text-[#0f172a] text-sm font-medium outline-none placeholder-[#64748b] focus:border-[#fe7302] focus:shadow-[0_0_0_3px_rgba(254,115,2,0.2)] transition-all duration-200"
+                    />
+                    {searchTerm && (
                         <button
-                            onClick={() => setTimeout(() => desktopSearchRef.current?.focus(), 80)}
-                            className={`w-[52px] flex-shrink-0 flex items-center justify-center text-white/50 ${laranjaHover}`}
+                            onClick={() => setSearchTerm('')}
+                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#94a3b8] hover:text-[#475569] transition-colors p-1 cursor-pointer"
                         >
-                            <Search size={19} />
+                            <X size={16} />
                         </button>
-                        <div className="overflow-hidden max-w-0 group-hover/pill:max-w-[178px] opacity-0 group-hover/pill:opacity-100 transition-all duration-250 pr-5">
-                            <input
-                                ref={desktopSearchRef}
-                                type="text"
-                                placeholder={t('searchPlaceholderDesktop')}
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                                onKeyDown={e => e.key === 'Enter' && navigate('search', searchTerm)}
-                                className="w-[160px] bg-white/10 text-white placeholder-white/25 text-[12px] rounded-xl px-3 py-1.5 outline-none border border-white/10 focus:border-[#fe7302]/50 transition-colors"
-                            />
-                        </div>
-                    </div>
-
-                    {/* Divider */}
-                    <div className="mx-3 h-px bg-white/8 my-1" />
-
-                    {/* Nav items */}
-                    <nav className="flex flex-col gap-0.5 py-1">
-                        {[
-                            { href: '/', icon: <Home size={19} />, label: t('navHome') },
-                            { href: '/carrinho', icon: <ShoppingCart size={19} />, label: t('navCart'), badge: true },
-                            { icon: <Shirt size={19} />, label: t('navCategories'), action: () => setDrawerOpen(true) },
-                            { href: '/perfil', icon: <User size={19} />, label: t('navProfile') },
-                            { href: whatsappUrl, icon: <MessageCircle size={19} />, label: t('navSupport'), external: true },
-                        ].map((item, i) => {
-                            const inner = (
-                                <div className="flex items-center h-9 group/navitem">
-                                    {/* Ícone: sempre no slot de 52px, centrado */}
-                                    <div className="w-[52px] flex-shrink-0 flex items-center justify-center relative text-white/50 group-hover/navitem:text-[#fe7302] transition-colors">
-                                        {item.icon}
-                                        {item.badge && isMounted && cartCount > 0 && (
-                                            <span className="absolute top-1 right-2 bg-[#fe7302] text-white font-bold flex items-center justify-center rounded-full border border-[#1c1c1e]" style={{ fontSize: 8, minWidth: 13, height: 13 }}>
-                                                {cartCount}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {/* Label: expande no hover */}
-                                    <span className="overflow-hidden max-w-0 group-hover/pill:max-w-[178px] opacity-0 group-hover/pill:opacity-100 transition-all duration-200 whitespace-nowrap text-[12px] font-medium text-white/55 group-hover/navitem:text-white pr-5">
-                                        {tp(item.label)}
-                                    </span>
-                                </div>
-                            );
-                            const cls = 'rounded-2xl hover:bg-white/8 transition-all block';
-                            if (item.action) return <button key={i} onClick={item.action} className={cls}>{inner}</button>;
-                            if (item.external) return <a key={i} href={item.href} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>;
-                            return <Link key={i} href={item.href!} className={cls}>{inner}</Link>;
-                        })}
-                    </nav>
+                    )}
                 </div>
-            </aside>
+
+                {/* ── DIREITA: Links e Ações ── */}
+                <nav className="flex items-center gap-1.5 xl:gap-2">
+                    {/* Início */}
+                    <Link
+                        href="/"
+                        onClick={handleGoHome}
+                        className="flex items-center gap-2.5 px-3.5 xl:px-4 py-2.5 rounded-xl text-slate-200 text-[15px] font-semibold hover:text-white hover:bg-white/[0.08] transition-all duration-200"
+                    >
+                        <Home size={20} className="text-slate-300" />
+                        <span>{tp(t('navHome'))}</span>
+                    </Link>
+
+                    {/* Categorias */}
+                    <button
+                        onClick={() => setDrawerOpen(true)}
+                        className="flex items-center gap-2.5 px-3.5 xl:px-4 py-2.5 rounded-xl text-slate-200 text-[15px] font-semibold hover:text-white hover:bg-white/[0.08] transition-all duration-200 cursor-pointer"
+                    >
+                        <Shirt size={20} className="text-slate-300" />
+                        <span>{tp(t('navCategories'))}</span>
+                    </button>
+
+                    {/* Perfil */}
+                    <Link
+                        href="/perfil"
+                        className="flex items-center gap-2.5 px-3.5 xl:px-4 py-2.5 rounded-xl text-slate-200 text-[15px] font-semibold hover:text-white hover:bg-white/[0.08] transition-all duration-200"
+                    >
+                        <User size={20} className="text-slate-300" />
+                        <span>{tp(t('navProfile'))}</span>
+                    </Link>
+
+                    {/* Suporte WhatsApp */}
+                    <a
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-2.5 px-3.5 xl:px-4 py-2.5 rounded-xl text-slate-200 text-[15px] font-semibold hover:text-white hover:bg-white/[0.08] transition-all duration-200"
+                    >
+                        <MessageCircle size={20} className="text-slate-300" />
+                        <span>{tp(t('navSupport'))}</span>
+                    </a>
+
+                    {/* Separador visual */}
+                    <div className="w-px h-7 bg-white/10 mx-2" />
+
+                    {/* Carrinho — botão destacado com badge */}
+                    <Link
+                        href="/carrinho"
+                        className="relative flex items-center gap-2.5 px-5 py-2.5 h-11 rounded-xl bg-[#fe7302] text-white text-sm font-bold hover:bg-[#ff8520] transition-all duration-200 shadow-lg shadow-orange-600/20 active:scale-95"
+                    >
+                        <ShoppingCart size={19} />
+                        <span>{tp(t('navCart'))}</span>
+                        {isMounted && cartCount > 0 && (
+                            <span
+                                className="bg-white text-[#fe7302] font-black flex items-center justify-center rounded-full ml-0.5"
+                                style={{ fontSize: 10.5, minWidth: 20, height: 20, paddingInline: 5 }}
+                            >
+                                {cartCount}
+                            </span>
+                        )}
+                    </Link>
+                </nav>
+            </header>
         </>
     );
 }

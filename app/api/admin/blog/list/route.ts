@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { adminDb } from '@/lib/firebaseAdmin';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+export const fetchCache = 'force-no-store';
+
 function parseTimestamp(val: any): number {
   if (!val) return Date.now();
   if (typeof val === 'number') return val;
@@ -41,7 +45,13 @@ export async function GET() {
     // Garante ordenação do mais recente para o mais antigo em memória
     posts.sort((a, b) => b.createdAt - a.createdAt);
 
-    return NextResponse.json(posts);
+    return NextResponse.json(posts, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error: any) {
     console.error('Error fetching blog posts:', error);
     return NextResponse.json({ error: error.message || 'Error fetching posts' }, { status: 500 });

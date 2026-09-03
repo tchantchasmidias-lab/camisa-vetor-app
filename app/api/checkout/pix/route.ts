@@ -3,19 +3,37 @@ import { MercadoPagoConfig, Payment } from 'mercadopago';
 import { v4 as uuidv4 } from 'uuid';
 import { Resend } from 'resend';
 import { adminDb } from '@/lib/firebaseAdmin';
-
+import { sendCriticalErrorAlert } from '@/lib/errorNotifier';
+import { cleanCPF, cleanPhone, isValidCPF } from '@/lib/validationUtils';
 
 export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY || 're_stub');
+  let body: any = null;
   try {
-    const body = await req.json();
+    body = await req.json();
     const { items, email, firstName, lastName, phone, cpf, userId, couponCode } = body;
     
     if (!process.env.MERCADOPAGO_ACCESS_TOKEN) {
       throw new Error("MERCADOPAGO_ACCESS_TOKEN is not configured");
     }
 
-    const client = new MercadoPagoConfig({ accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN, options: { timeout: 10000 } });
+    // Sanitização de CPF e Telefone (apenas números)
+    const sanitizedCpf = cleanCPF(cpf);
+    const sanitizedPhone = cleanPhone(phone);
+
+    // Validação estrita de CPF no servidor
+    if (sanitizedCpf && !isValidCPF(sanitizedCpf)) {
+      return NextResponse.json({
+        error: 'CPF inválido. Por favor, verifique os dígitos digitados.',
+        code: 'INVALID_CPF',
+        success: false,
+      }, { status: 400 });
+    }
+
+    const client = new MercadoPagoConfig({ 
+      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN, 
+      options: { timeout: 10000 } 
+    });
     const payment = new Payment(client);
 
     // Validação de Preços no Servidor
@@ -73,10 +91,10 @@ export async function POST(req: Request) {
     const expirationDate = new Date();
     expirationDate.setHours(expirationDate.getHours() + 1);
 
-    const cleanPhone = phone ? String(phone).replace(/\D/g, '') : '';
-    const phoneArea = cleanPhone.length >= 10 ? cleanPhone.substring(0, 2) : '';
-    const phoneNumber = cleanPhone.length >= 10 ? cleanPhone.substring(2) : cleanPhone;
+    const phoneArea = sanitizedPhone.length >= 10 ? sanitizedPhone.substring(0, 2) : '';
+    const phoneNumber = sanitizedPhone.length >= 10 ? sanitizedPhone.substring(2) : sanitizedPhone;
 
+    // Estrutura rigorosamente sanitizada para o Mercado Pago
     const request = {
       body: {
         transaction_amount: totalAmount,
@@ -84,13 +102,13 @@ export async function POST(req: Request) {
         payment_method_id: 'pix',
         date_of_expiration: expirationDate.toISOString(),
         payer: {
-          email,
-          first_name: firstName || 'Cliente',
-          last_name: lastName || undefined,
-          identification: {
+          email: (email || '').trim(),
+          first_name: (firstName || 'Cliente').trim(),
+          last_name: lastName ? lastName.trim() : undefined,
+          identification: sanitizedCpf ? {
             type: 'CPF',
-            number: cpf ? cpf.replace(/\D/g, '') : '00000000000'
-          },
+            number: sanitizedCpf
+          } : undefined,
           ...(phoneArea && phoneNumber ? {
             phone: {
               area_code: phoneArea,
@@ -109,8 +127,8 @@ export async function POST(req: Request) {
             unit_price: Number(item.price || 0)
           })),
           payer: {
-            first_name: firstName || 'Cliente',
-            last_name: lastName || undefined,
+            first_name: (firstName || 'Cliente').trim(),
+            last_name: lastName ? lastName.trim() : undefined,
             ...(phoneArea && phoneNumber ? {
               phone: {
                 area_code: phoneArea,
@@ -156,14 +174,18 @@ export async function POST(req: Request) {
         let body = 'Identificamos o seu pedido. Faça o pagamento para liberar seus arquivos imediatamente.';
         
         if (configDoc.exists) {
-          const data = configDoc.data();
-          if (data?.pixSubject) subject = data.pixSubject;
-          if (data?.pixBody) body = data.pixBody;
+          const tpl = configDoc.data()?.pixWaiting;
+          if (tpl) {
+            if (tpl.subject) subject = tpl.subject;
+            if (tpl.body) body = tpl.body;
+          }
         }
 
-        const finalSubject = subject.replace(/{{nome}}/g, String(firstName || '')).replace(/{{codigo_pix}}/g, String(qr_code || ''));
-        const finalBody = body.replace(/{{nome}}/g, String(firstName || '')).replace(/{{codigo_pix}}/g, String(qr_code || ''));
-        const htmlBody = finalBody.replace(/\n/g, '<br>');
+        const customerName = firstName || 'Cliente';
+        const finalSubject = subject.replace(/{{nome}}/g, customerName);
+        const htmlBody = body
+          .replace(/{{nome}}/g, customerName)
+          .replace(/\n/g, '<br>');
 
         const emailHtml = `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; background-color: #111; color: #fff; padding: 40px; border-radius: 16px; border: 1px solid #222;">
@@ -172,14 +194,21 @@ export async function POST(req: Request) {
                 <img src="https://camisavetor.com/logo-email.png" alt="Camisa Vetor" width="180" style="display: block; margin: 0 auto; border: none;" />
               </a>
             </div>
-
+            
             <div style="font-size: 16px; line-height: 1.6; color: #ccc;">
               ${htmlBody}
             </div>
-            <div style="margin-top: 40px; background-color: #222; padding: 20px; border-radius: 8px; border: 1px dashed #fe7302; text-align: center;">
-              <p style="margin-top: 0; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 2px;">Código Pix Copia e Cola:</p>
-              <p style="word-break: break-all; font-family: monospace; color: #fff; font-size: 14px;">${qr_code}</p>
+
+            <div style="background-color: #1c1c1e; border: 1px solid #333; padding: 25px; border-radius: 12px; margin: 30px 0; text-align: center;">
+              <p style="color: #fe7302; font-weight: bold; margin-top: 0; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Pague via Pix Copia e Cola:</p>
+              
+              <div style="background-color: #000; padding: 15px; border-radius: 8px; font-family: monospace; font-size: 11px; word-break: break-all; color: #fff; margin-bottom: 20px; border: 1px dashed #444;">
+                ${qr_code}
+              </div>
+
+              <p style="font-size: 12px; color: #888; margin-bottom: 0;">Após a confirmação do pagamento pelo seu banco, os links de download serão liberados imediatamente e enviados também por e-mail.</p>
             </div>
+
             <hr style="border: 0; border-top: 1px solid #222; margin: 30px 0;" />
             <p style="font-size: 12px; color: #555; text-align: center;">
               &copy; ${new Date().getFullYear()} Camisa Vetor
@@ -187,7 +216,6 @@ export async function POST(req: Request) {
           </div>
         `;
 
-        // Executar de forma assíncrona para não travar a resposta do checkout
         resend.emails.send({
           from: 'Camisa Vetor <contato@camisavetor.com>',
           to: [email],
@@ -212,8 +240,51 @@ export async function POST(req: Request) {
     if (error?.cause) {
       console.error('Mercado Pago error cause:', JSON.stringify(error.cause, null, 2));
     }
+    
+    // Tratamento de erros de validação específicos do Mercado Pago
+    const causeArray = Array.isArray(error?.cause) ? error.cause : [];
+    const isCpfError = causeArray.some((c: any) => 
+      c?.code === 2067 || 
+      c?.code === 3014 || 
+      String(c?.description || '').toLowerCase().includes('identification') ||
+      String(c?.description || '').toLowerCase().includes('cpf')
+    ) || String(error?.message || '').toLowerCase().includes('identification');
+
+    if (isCpfError) {
+      return NextResponse.json({
+        error: 'CPF inválido. Por favor, verifique os dígitos digitados.',
+        code: 'INVALID_CPF',
+        success: false,
+      }, { status: 400 });
+    }
+
     const errorMessage = error?.cause?.[0]?.description || error?.message || 'Erro ao processar pagamento via Pix';
-    return NextResponse.json({ error: errorMessage }, { status: 500 });
+
+    // 🚨 Dispara alerta imediato por e-mail para o administrador
+    sendCriticalErrorAlert({
+      subject: `🚨 [ALERTA] Falha na Geração de Pix - Cliente: ${body?.email || 'Desconhecido'}`,
+      context: 'Checkout / Geração de Pix Mercado Pago',
+      errorMessage: `${errorMessage}${error?.cause ? ` | Detalhes: ${JSON.stringify(error.cause)}` : ''}`,
+      stack: error?.stack,
+      error,
+      req,
+      requestData: body,
+      orderData: {
+        total: body?.total,
+        email: body?.email,
+        name: `${body?.firstName || ''} ${body?.lastName || ''}`.trim(),
+        items: body?.items,
+        couponCode: body?.couponCode,
+      },
+      userEmail: body?.email,
+      userId: body?.userId,
+      level: 'CRÍTICO',
+    }).catch(err => console.error('[PixRoute] Erro ao disparar alerta de falha:', err));
+
+    return NextResponse.json({
+      error: errorMessage,
+      success: false,
+      message: 'Não foi possível gerar a chave Pix no momento. Tente novamente em instantes.',
+    }, { status: 500 });
   }
 }
-

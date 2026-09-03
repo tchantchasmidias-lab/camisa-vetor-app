@@ -22,14 +22,15 @@ export interface Asset {
   addedAt:  number;
 }
 
+import { safeLocalStorage } from '@/lib/safeStorage';
+
 // ─── Helpers de storage ───────────────────────────────────────────────────────
 
 const STORAGE_KEY = 'cv-studio-assets-v1';
 
 function readStorage(): Asset[] {
-  if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(STORAGE_KEY);
     return raw ? (JSON.parse(raw) as Asset[]) : [];
   } catch {
     return [];
@@ -38,7 +39,7 @@ function readStorage(): Asset[] {
 
 function writeStorage(assets: Asset[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(assets));
+    safeLocalStorage.setItem(STORAGE_KEY, JSON.stringify(assets));
   } catch (err) {
     console.warn(
       '[AssetLibrary] ⚠️  Não foi possível salvar no localStorage ' +

@@ -6,6 +6,8 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { normalizeSearchTerm } from '@/lib/stringUtils';
+import { safeSessionStorage } from '@/lib/safeStorage';
 import Image from 'next/image';
 
 interface Category {
@@ -14,9 +16,21 @@ interface Category {
   imageUrl: string;
 }
 
-function CategoryCard({ name, imageUrl, isActive, onClick, priority }: { name: string; imageUrl: string; isActive: boolean; onClick: () => void; priority: boolean }) {
+function CategoryCard({
+  name,
+  imageUrl,
+  isActive,
+  priority = false,
+  onClick,
+}: {
+  name: string;
+  imageUrl: string;
+  isActive: boolean;
+  priority?: boolean;
+  onClick: () => void;
+}) {
   const { tp } = useGeo();
-  const hasImage = imageUrl && imageUrl.trim() !== '';
+  const hasImage = Boolean(imageUrl && imageUrl.trim() !== '');
 
   return (
     <button
@@ -35,11 +49,11 @@ function CategoryCard({ name, imageUrl, isActive, onClick, priority }: { name: s
         {hasImage && (
           <Image
             src={imageUrl}
-            alt={name}
+            alt={`Categoria ${name}`}
             fill
-            sizes="(max-width: 768px) 145px, 185px"
-            quality={100}
             priority={priority}
+            quality={75}
+            sizes="(max-width: 768px) 150px, 200px"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         )}
@@ -84,10 +98,22 @@ function CategoryCarouselContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   
-  const { t, tp } = useGeo();
-  const activeCategory = searchParams.get('category') || t('allCategories');
+  const { t } = useGeo();
+  const activeCategory = (searchParams?.get ? searchParams.get('category') : null) || t('allCategories');
 
   useEffect(() => {
+    // 1. Leitura rápida do cache da sessão para renderização instantânea (0ms)
+    const cached = safeSessionStorage.getItem('cv_categories_cache');
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCategories(parsed);
+          setIsLoading(false);
+        }
+      } catch {}
+    }
+
     const fetchCategories = async () => {
       try {
         const q = query(collection(db, 'categories'), orderBy('name', 'asc'));
@@ -99,6 +125,7 @@ function CategoryCarouselContent() {
         }));
         list.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
         setCategories(list);
+        safeSessionStorage.setItem('cv_categories_cache', JSON.stringify(list));
       } catch (err) {
         console.error('Erro ao carregar categorias:', err);
       } finally {
@@ -164,8 +191,8 @@ function CategoryCarouselContent() {
               key={cat.id}
               name={cat.name}
               imageUrl={cat.imageUrl}
-              isActive={activeCategory === cat.name}
-              priority={index < 5}
+              priority={index < 6}
+              isActive={normalizeSearchTerm(activeCategory) === normalizeSearchTerm(cat.name)}
               onClick={() =>
                 cat.name === t('allCategories')
                   ? router.push('/')

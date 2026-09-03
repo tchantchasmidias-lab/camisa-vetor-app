@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Mail, Lock, Loader2, ArrowRight, AlertCircle, UserPlus, User, FileText, Phone, Eye, EyeOff } from 'lucide-react';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { formatCPFMask, formatPhoneMask, isValidCPF, cleanPhone } from '@/lib/validationUtils';
 
 function LoginPageContent() {
   const [email, setEmail] = useState('');
@@ -25,7 +26,7 @@ function LoginPageContent() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/perfil';
+  const redirectUrl = (searchParams?.get ? searchParams.get('redirect') : null) || '/perfil';
 
   const { t, isInternational } = useGeo();
   
@@ -38,23 +39,6 @@ function LoginPageContent() {
     };
   }, []);
 
-  const maskCPF = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-      .replace(/(-\d{2})\d+?$/, '$1');
-  };
-
-  const maskPhone = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{5})(\d)/, '$1-$2')
-      .replace(/(-\d{4})\d+?$/, '$1');
-  };
-
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -65,21 +49,21 @@ function LoginPageContent() {
         if (password !== confirmPassword) {
           throw new Error(t('passwordMismatch'));
         }
-        if (!isInternational && cpf.length < 14) {
-          throw new Error(t('incompleteCpf'));
+        if (!isInternational && !isValidCPF(cpf)) {
+          throw new Error('CPF inválido. Por favor, verifique os dígitos digitados.');
         }
-        if (!isInternational && phone.length < 15) {
+        if (!isInternational && cleanPhone(phone).length < 10) {
           throw new Error(t('incompleteWhatsapp'));
         }
-        if (nome.length < 3) {
+        if (nome.trim().length < 3) {
           throw new Error(t('fullNameRequired'));
         }
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         await setDoc(doc(db, 'users', userCredential.user.uid), {
-          nome,
-          cpf,
-          phone,
-          email,
+          nome: nome.trim(),
+          cpf: formatCPFMask(cpf),
+          phone: formatPhoneMask(phone),
+          email: email.trim(),
           createdAt: new Date().toISOString()
         });
         
@@ -96,7 +80,7 @@ function LoginPageContent() {
       router.push(redirectUrl);
     } catch (err: any) {
       console.error(err);
-      if ([t('incompleteCpf'), t('incompleteWhatsapp'), t('fullNameRequired'), t('passwordMismatch')].includes(err.message)) {
+      if (err.message === 'CPF inválido. Por favor, verifique os dígitos digitados.' || [t('incompleteCpf'), t('incompleteWhatsapp'), t('fullNameRequired'), t('passwordMismatch')].includes(err.message)) {
         setError(err.message);
       } else if (err.code === 'auth/email-already-in-use') {
         setError(t('emailInUse'));
@@ -218,7 +202,7 @@ function LoginPageContent() {
                         <FileText className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
                         <input 
                           type="text" required placeholder="000.000.000-00"
-                          value={cpf} onChange={(e) => setCpf(maskCPF(e.target.value))}
+                          value={cpf} onChange={(e) => setCpf(formatCPFMask(e.target.value))}
                           className="w-full bg-white border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>
@@ -230,7 +214,7 @@ function LoginPageContent() {
                         <Phone className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-[#fe7302] transition-colors" size={16} />
                         <input 
                           type="text" required placeholder="(00) 00000-0000"
-                          value={phone} onChange={(e) => setPhone(maskPhone(e.target.value))}
+                          value={phone} onChange={(e) => setPhone(formatPhoneMask(e.target.value))}
                           className="w-full bg-white border border-white/10 rounded-2xl p-3.5 pl-12 text-[11px] text-gray-900 font-semibold outline-none focus:border-[#fe7302]/50 focus:ring-1 focus:ring-[#fe7302]/20 transition-all placeholder:text-gray-400"
                         />
                       </div>

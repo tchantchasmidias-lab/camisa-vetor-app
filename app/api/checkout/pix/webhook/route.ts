@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebaseAdmin";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { Resend } from "resend";
+import { sendCriticalErrorAlert } from "@/lib/errorNotifier";
 
 export async function POST(req: NextRequest) {
   try {
@@ -149,6 +150,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, emailSent: true });
   } catch (error: any) {
     console.error("[Webhook MP] Erro ao processar webhook:", error);
+
+    // 🚨 Alerta o administrador sobre falha no webhook de entrega
+    sendCriticalErrorAlert({
+      subject: `🚨 [ALERTA] Falha no Webhook Mercado Pago`,
+      context: 'Webhook Mercado Pago / Entrega Automática Pix',
+      errorMessage: error?.message || 'Erro no processamento de webhook',
+      stack: error?.stack,
+      error,
+      req,
+      level: 'CRÍTICO',
+    }).catch(err => console.error('[WebhookMP] Erro ao disparar alerta:', err));
+
     // Retorna 200 para o MP nao retentar indefinidamente em erros de negocio
     return NextResponse.json({ error: error.message }, { status: 200 });
   }

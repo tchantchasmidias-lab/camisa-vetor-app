@@ -6,6 +6,7 @@ import { collection, getDocs, query, where, limit } from 'firebase/firestore';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { formatTitleCase } from '@/lib/stringUtils';
 
 interface RelatedProduct {
   id: string;
@@ -93,8 +94,8 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
               </div>
 
               {/* Título */}
-              <h3 className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.12em] mb-1 truncate text-center px-1">
-                {tp(product.name)}
+              <h3 className="text-[11px] font-medium text-gray-700 product-title tracking-normal mb-1 truncate text-center px-1">
+                {formatTitleCase(tp(product.name))}
               </h3>
 
               {/* Preço */}

@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
 import { v4 as uuidv4 } from "uuid";
+import { sendCriticalErrorAlert } from "@/lib/errorNotifier";
 
 export async function POST(req: NextRequest) {
+  let body: any = null;
   try {
     // 1. Verificar autenticacao do usuario
     const authHeader = req.headers.get("Authorization");
@@ -17,7 +19,8 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Token invalido." }, { status: 401 });
     }
 
-    const { productId } = await req.json();
+    body = await req.json();
+    const { productId } = body;
     if (!productId) {
       return NextResponse.json({ error: "productId obrigatorio." }, { status: 400 });
     }
@@ -36,7 +39,6 @@ export async function POST(req: NextRequest) {
     const downloadUrl = product.urls?.download || product.urls?.destaque || "#";
 
     // 3. Registrar download gratuito no Firestore (pedidos)
-    //    Verifica se o usuario ja baixou este produto para evitar registro duplicado
     const existingQuery = await adminDb
       .collection("pedidos")
       .where("userId", "==", decoded.uid)
@@ -75,6 +77,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, downloadUrl });
   } catch (error: any) {
     console.error("[FreeDownload] Erro:", error);
+
+    // 🚨 Alerta de falha no fluxo de download gratuito
+    sendCriticalErrorAlert({
+      subject: `🚨 [ALERTA] Falha no Download Gratuito`,
+      context: 'Downloads / Download Gratuito',
+      errorMessage: error?.message || 'Erro ao processar download gratuito',
+      stack: error?.stack,
+      error,
+      req,
+      requestData: body,
+      level: 'ALERTA',
+    }).catch(err => console.error('[FreeDownload] Erro ao disparar alerta:', err));
+
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

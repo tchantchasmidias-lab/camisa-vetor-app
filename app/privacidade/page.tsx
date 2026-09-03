@@ -3,6 +3,9 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Política de Privacidade | Camisa Vetor',
   description: 'Política de Privacidade e Proteção de Dados da plataforma Camisa Vetor.',
+  alternates: {
+    canonical: 'https://camisavetor.com.br/privacidade',
+  },
 };
 
 export default function PrivacidadePage() {

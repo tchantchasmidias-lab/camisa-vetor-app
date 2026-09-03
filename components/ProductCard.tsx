@@ -5,6 +5,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Heart } from 'lucide-react';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { formatTitleCase } from '@/lib/stringUtils';
+import { safeLocalStorage } from '@/lib/safeStorage';
 
 export default function ProductCard({ product, priority = false }: { product: any; priority?: boolean }) {
   const [isFavorite, setIsFavorite] = useState(false);
@@ -16,21 +18,31 @@ export default function ProductCard({ product, priority = false }: { product: an
   const hasHoverImage = destaqueSrc && destaqueSrc !== capaSrc;
 
   useEffect(() => {
-    const currentFavorites = JSON.parse(localStorage.getItem('camisavetor_favorites') || '[]');
-    setIsFavorite(currentFavorites.some((item: any) => item.id === product.id));
-  }, [product.id]);
+    try {
+      const raw = safeLocalStorage.getItem('camisavetor_favorites');
+      const currentFavorites = raw ? JSON.parse(raw) : [];
+      setIsFavorite(currentFavorites.some((item: any) => item?.id === product?.id));
+    } catch {
+      setIsFavorite(false);
+    }
+  }, [product?.id]);
 
   const toggleFavorite = (e: any) => {
     e.preventDefault();
     e.stopPropagation();
-    const currentFavorites = JSON.parse(localStorage.getItem('camisavetor_favorites') || '[]');
-    const isAlreadyFav = currentFavorites.some((item: any) => item.id === product.id);
-    const newFavorites = isAlreadyFav
-      ? currentFavorites.filter((item: any) => item.id !== product.id)
-      : [...currentFavorites, product];
-    localStorage.setItem('camisavetor_favorites', JSON.stringify(newFavorites));
-    setIsFavorite(!isAlreadyFav);
-    window.dispatchEvent(new Event('favorites-updated'));
+    try {
+      const raw = safeLocalStorage.getItem('camisavetor_favorites');
+      const currentFavorites = raw ? JSON.parse(raw) : [];
+      const isAlreadyFav = currentFavorites.some((item: any) => item?.id === product?.id);
+      const newFavorites = isAlreadyFav
+        ? currentFavorites.filter((item: any) => item?.id !== product?.id)
+        : [...currentFavorites, product];
+      safeLocalStorage.setItem('camisavetor_favorites', JSON.stringify(newFavorites));
+      setIsFavorite(!isAlreadyFav);
+      window.dispatchEvent(new Event('favorites-updated'));
+    } catch {
+      // Ignora erro de storage
+    }
   };
 
   return (
@@ -39,7 +51,7 @@ export default function ProductCard({ product, priority = false }: { product: an
         <Heart size={20} className={isFavorite ? 'fill-[#fe7302] text-[#fe7302]' : 'text-gray-300'} />
       </button>
 
-      <Link href={`/product/${product.slug || product.id}`} className="block">
+      <Link href={`/product/${product.slug || product.id}`} className="block" title={formatTitleCase(product.name)}>
         <div className="aspect-square relative overflow-hidden rounded-xl bg-[#f8f8f8] border border-transparent group-hover:border-[#0f172a] group-hover:bg-black mb-4 group-hover:shadow-xl group-hover:shadow-black/30 transition-all duration-300">
 
           {capaSrc ? (
@@ -47,7 +59,7 @@ export default function ProductCard({ product, priority = false }: { product: an
               {/* Imagem CAPA — prioridade de carregamento para LCP nos primeiros cards */}
               <Image
                 src={capaSrc}
-                alt={product.name}
+                alt={`Arte em vetor ${formatTitleCase(product.name || 'para camiseta')} editável`}
                 fill
                 priority={priority}
                 // Breakpoints corretos: mobile é 1 coluna (100vw), md=3 colunas, lg=5 colunas
@@ -64,7 +76,7 @@ export default function ProductCard({ product, priority = false }: { product: an
               {hasHoverImage && (
                 <Image
                   src={destaqueSrc}
-                  alt={`${product.name} — destaque`}
+                  alt={`Detalhes da estampa ${formatTitleCase(product.name || 'em vetor')}`}
                   fill
                   sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
                   quality={85}
@@ -82,7 +94,7 @@ export default function ProductCard({ product, priority = false }: { product: an
 
         <div className="text-center px-2">
           <h3 className="product-card-title text-[13.5px] md:text-[13px] font-medium text-[#1e293b] leading-[1.35] line-clamp-2 min-h-[2.7em] mb-1">
-            {tp(product.name)}
+            {formatTitleCase(tp(product.name))}
           </h3>
           {(() => {
             const isFree = Boolean(product?.isFree) || Number(product?.price) === 0;

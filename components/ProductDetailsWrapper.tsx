@@ -9,7 +9,9 @@ export default function ProductDetailsWrapper({ product }: { product: any }) {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       <main className="flex-grow pt-[28px] md:pt-4">
-        <ProductDetailView product={product} />
+        <Suspense fallback={null}>
+          <ProductDetailView product={product} />
+        </Suspense>
       </main>
     </div>
   );

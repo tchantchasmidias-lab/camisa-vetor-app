@@ -3,6 +3,8 @@ import { notFound, permanentRedirect } from 'next/navigation';
 import ProductDetailsWrapper from '@/components/ProductDetailsWrapper';
 import { Metadata, ResolvingMetadata } from 'next';
 import { buildCleanImageUrl } from '@/lib/mediaUtils';
+import { formatTitleCase } from '@/lib/stringUtils';
+import { getYouTubeId } from '@/lib/youtubeUtils';
 
 interface Props {
   params: { id: string };
@@ -21,16 +23,16 @@ export async function generateMetadata(
   const docRef = adminDb.collection('products').doc(id);
   const docSnap = await docRef.get();
 
-  if (docSnap.exists) {
-    product = { id: docSnap.id, ...docSnap.data() };
-    if (product.slug && product.slug !== id) {
+  if (docSnap && docSnap.exists) {
+    product = { id: docSnap.id, ...(typeof docSnap.data === 'function' ? docSnap.data() : {}) };
+    if (product?.slug && product.slug !== id) {
       permanentRedirect(`/product/${product.slug}`);
     }
   } else {
     const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
-    if (!slugQuery.empty) {
+    if (slugQuery && !slugQuery.empty && slugQuery.docs?.[0]) {
       const doc = slugQuery.docs[0];
-      product = { id: doc.id, ...doc.data() };
+      product = { id: doc.id, ...(typeof doc.data === 'function' ? doc.data() : {}) };
     }
   }
 
@@ -39,7 +41,7 @@ export async function generateMetadata(
   }
 
   const slug = product.slug || product.id;
-  const name = product.name || 'Vetor Profissional';
+  const name = formatTitleCase(product.name || 'Vetor Profissional');
   const category = product.category || '';
 
   // Descrição rica para SEO (inclui formatos e técnicas)
@@ -51,17 +53,19 @@ export async function generateMetadata(
   // Padrão de título com palavras-chave de cauda longa
   const title = `${name} | Vetor Editável (CDR, PDF, SVG, PNG) - Camisa Vetor`;
 
-  // URLs limpas de mídia (SEO-friendly, sem tokens Firebase)
+  // URLs limpas de mídia (SEO-friendly, sem tokens Firebase) — Capa sempre como imagem principal
   const rawOgImages = [
-    product.urls?.destaque ? buildCleanImageUrl(product.urls.destaque, slug, 'destaque') : null,
     product.urls?.capa ? buildCleanImageUrl(product.urls.capa, slug, 'capa') : null,
+    product.urls?.destaque ? buildCleanImageUrl(product.urls.destaque, slug, 'destaque') : null,
     ...(product.urls?.galeria || []).map((imgUrl: string, i: number) =>
       imgUrl ? buildCleanImageUrl(imgUrl, slug, `galeria-${i + 1}`) : null
     ),
   ].filter(Boolean) as string[];
 
   const ogImages = rawOgImages.length > 0 ? rawOgImages : ['https://camisavetor.com.br/icon.png'];
-  const primaryImage = ogImages[0];
+  const primaryImage = ogImages[0].startsWith('http')
+    ? ogImages[0]
+    : `https://camisavetor.com.br${ogImages[0].startsWith('/') ? '' : '/'}${ogImages[0]}`;
 
   // alt dinâmico da imagem principal
   const imageAlt = `Arte em vetor para camiseta ${name} - CDR, PDF, SVG, PNG`;
@@ -75,12 +79,17 @@ export async function generateMetadata(
       url: `https://camisavetor.com.br/product/${slug}`,
       siteName: 'Camisa Vetor',
       type: 'website',
-      images: ogImages.map((url, i) => ({
-        url,
-        width: 1200,
-        height: 1200,
-        alt: i === 0 ? imageAlt : `${name} — imagem ${i + 1}`,
-      })),
+      images: ogImages.map((url, i) => {
+        const absUrl = url.startsWith('http') ? url : `https://camisavetor.com.br${url.startsWith('/') ? '' : '/'}${url}`;
+        return {
+          url: absUrl,
+          secureUrl: absUrl,
+          width: 1200,
+          height: 1200,
+          alt: i === 0 ? imageAlt : `${name} — imagem ${i + 1}`,
+          type: 'image/webp',
+        };
+      }),
     },
     twitter: {
       card: 'summary_large_image',
@@ -114,16 +123,16 @@ export default async function Page({ params }: Props) {
     const docRef = adminDb.collection('products').doc(id);
     const docSnap = await docRef.get();
 
-    if (docSnap.exists) {
-      product = { id: docSnap.id, ...docSnap.data() };
-      if (product.slug && product.slug !== id) {
+    if (docSnap && docSnap.exists) {
+      product = { id: docSnap.id, ...(typeof docSnap.data === 'function' ? docSnap.data() : {}) };
+      if (product?.slug && product.slug !== id) {
         permanentRedirect(`/product/${product.slug}`);
       }
     } else {
       const slugQuery = await adminDb.collection('products').where('slug', '==', id).limit(1).get();
-      if (!slugQuery.empty) {
+      if (slugQuery && !slugQuery.empty && slugQuery.docs?.[0]) {
         const doc = slugQuery.docs[0];
-        product = { id: doc.id, ...doc.data() };
+        product = { id: doc.id, ...(typeof doc.data === 'function' ? doc.data() : {}) };
       }
     }
 
@@ -138,7 +147,8 @@ export default async function Page({ params }: Props) {
     delete serializedProduct.fileUrl;
 
     const slug = serializedProduct.slug || serializedProduct.id;
-    const name = serializedProduct.name || 'Vetor Profissional';
+    const name = formatTitleCase(serializedProduct.name || 'Vetor Profissional');
+    serializedProduct.name = name;
     const category = serializedProduct.category || '';
 
     // ── IMAGENS ABSOLUTAS E LIMPAS PARA O JSON-LD ─────────────
@@ -170,7 +180,10 @@ export default async function Page({ params }: Props) {
       '@context': 'https://schema.org/',
       '@type': 'Product',
       name,
+      url: `https://camisavetor.com.br/product/${slug}`,
+      mainEntityOfPage: `https://camisavetor.com.br/product/${slug}`,
       image: productImages,
+      category: category || 'Vetores e Estampas',
       description:
         serializedProduct.description ||
         `Arte em vetor editável ${name}. Inclui CDR, PDF, SVG e PNG em alta resolução.`,
@@ -192,6 +205,18 @@ export default async function Page({ params }: Props) {
           name: 'Camisa Vetor',
         },
       },
+      ...(getYouTubeId(serializedProduct.videoUrl)
+        ? {
+            video: {
+              '@type': 'VideoObject',
+              name: `Demonstração da Arte em Vetor ${name}`,
+              description: `Vídeo demonstrativo e speed art do vetor ${name}`,
+              thumbnailUrl: `https://img.youtube.com/vi/${getYouTubeId(serializedProduct.videoUrl)}/maxresdefault.jpg`,
+              embedUrl: `https://www.youtube.com/embed/${getYouTubeId(serializedProduct.videoUrl)}`,
+              uploadDate: '2026-01-01',
+            },
+          }
+        : {}),
     };
 
     // ── BREADCRUMBLIST JSON-LD ──────────────────────────────────

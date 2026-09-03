@@ -3,16 +3,18 @@
 import { useState, useEffect, Suspense } from 'react';
 import { 
   CreditCard, QrCode, ChevronLeft, Download, CheckCircle2, 
-  AlertCircle, Loader2, FileText, Tag, X
+  AlertCircle, Loader2, FileText, Tag, X, User, Phone, Edit2, Check
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { formatCPFMask, formatPhoneMask, isValidCPF, cleanCPF, cleanPhone } from '@/lib/validationUtils';
+import { safeLocalStorage, safeSessionStorage } from '@/lib/safeStorage';
 
 interface CouponData {
   code: string;
@@ -28,12 +30,20 @@ function CheckoutContent() {
   const [userData, setUserData] = useState<{nome: string, cpf: string, phone: string, email: string} | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
   
+  const [isEditingData, setIsEditingData] = useState(false);
+  const [editNome, setEditNome] = useState('');
+  const [editCpf, setEditCpf] = useState('');
+  const [editPhone, setEditPhone] = useState('');
+  const [editError, setEditError] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const [isPaid, setIsPaid] = useState(false);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const router = useRouter();
 
   const [pixData, setPixData] = useState<{ qr_code_base64: string, qr_code: string, transactionId: string, id: number } | null>(null);
   const [isGeneratingPix, setIsGeneratingPix] = useState(false);
+  const [pixError, setPixError] = useState('');
   const [isFulfilling, setIsFulfilling] = useState(false);
 
   // Estados do cupom
@@ -45,11 +55,15 @@ function CheckoutContent() {
   const { t, tp, formatPrice, isInternational, currencyCode, isLoading: loadingGeo } = useGeo();
 
   useEffect(() => {
-    const savedCart = JSON.parse(localStorage.getItem('camisavetor_cart') || '[]');
-    setCartItems(savedCart);
+    const rawCart = safeLocalStorage.getItem('camisavetor_cart');
+    try {
+      setCartItems(rawCart ? JSON.parse(rawCart) : []);
+    } catch {
+      setCartItems([]);
+    }
 
     // Recuperar cupom aplicado no carrinho
-    const savedCoupon = sessionStorage.getItem('camisavetor_coupon');
+    const savedCoupon = safeSessionStorage.getItem('camisavetor_coupon');
     if (savedCoupon) {
       try { setCouponData(JSON.parse(savedCoupon)); } catch {}
     }
@@ -62,24 +76,32 @@ function CheckoutContent() {
           const snap = await getDoc(userRef);
           
           if (isInternational) {
-            setUserData({
+            const data = {
               nome: snap.data()?.nome || currentUser.displayName || 'Customer',
               cpf: snap.data()?.cpf || '',
               phone: snap.data()?.phone || '',
               email: snap.data()?.email || currentUser.email || ''
-            });
+            };
+            setUserData(data);
+            setEditNome(data.nome);
+            setEditCpf(formatCPFMask(data.cpf));
+            setEditPhone(formatPhoneMask(data.phone));
             setLoadingUser(false);
             setPaymentMethod('paypal');
             return;
           }
 
           if (snap.exists() && snap.data().cpf && snap.data().phone) {
-            setUserData({
+            const data = {
               nome: snap.data().nome || currentUser.displayName || 'Cliente',
-              cpf: snap.data().cpf,
-              phone: snap.data().phone,
+              cpf: formatCPFMask(snap.data().cpf),
+              phone: formatPhoneMask(snap.data().phone),
               email: snap.data().email || currentUser.email || ''
-            });
+            };
+            setUserData(data);
+            setEditNome(data.nome);
+            setEditCpf(data.cpf);
+            setEditPhone(data.phone);
             setLoadingUser(false);
           } else {
             router.push('/completar-perfil?redirect=/checkout');
@@ -104,6 +126,48 @@ function CheckoutContent() {
   const discount = couponData?.discount ?? 0;
   const total = couponData ? couponData.finalTotal : subtotal;
 
+  const handleSaveUserData = async () => {
+    setEditError('');
+    if (!editNome.trim()) {
+      setEditError('Por favor, informe seu nome completo.');
+      return;
+    }
+    if (!isInternational && !isValidCPF(editCpf)) {
+      setEditError('CPF inválido. Por favor, verifique os dígitos digitados.');
+      return;
+    }
+    if (!isInternational && cleanPhone(editPhone).length < 10) {
+      setEditError('Por favor, informe um WhatsApp válido com DDD.');
+      return;
+    }
+
+    setSavingEdit(true);
+    try {
+      if (user?.uid) {
+        await setDoc(doc(db, 'users', user.uid), {
+          nome: editNome.trim(),
+          cpf: formatCPFMask(editCpf),
+          phone: formatPhoneMask(editPhone),
+          updatedAt: new Date().toISOString()
+        }, { merge: true });
+      }
+
+      setUserData(prev => prev ? {
+        ...prev,
+        nome: editNome.trim(),
+        cpf: formatCPFMask(editCpf),
+        phone: formatPhoneMask(editPhone)
+      } : null);
+
+      setIsEditingData(false);
+      setPixError('');
+    } catch (err) {
+      setEditError('Erro ao atualizar dados. Tente novamente.');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   // Registra o uso do cupom após pagamento confirmado
   const registerCouponUse = async () => {
     if (!couponData) return;
@@ -113,7 +177,7 @@ function CheckoutContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: couponData.code }),
       });
-      sessionStorage.removeItem('camisavetor_coupon');
+      safeSessionStorage.removeItem('camisavetor_coupon');
     } catch (e) {
       console.error('Erro ao registrar uso do cupom:', e);
     }
@@ -136,7 +200,7 @@ function CheckoutContent() {
       });
       if (res.ok) {
         await registerCouponUse();
-        localStorage.removeItem('camisavetor_cart');
+        safeLocalStorage.removeItem('camisavetor_cart');
         window.dispatchEvent(new Event('cart-updated'));
         setIsPaid(true);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -173,7 +237,7 @@ function CheckoutContent() {
           finalTotal: data.finalTotal,
         };
         setCouponData(coupon);
-        sessionStorage.setItem('camisavetor_coupon', JSON.stringify(coupon));
+        safeSessionStorage.setItem('camisavetor_coupon', JSON.stringify(coupon));
       } else {
         setCouponError(data.error || 'Cupom inválido.');
       }
@@ -188,13 +252,21 @@ function CheckoutContent() {
     setCouponData(null);
     setCouponInput('');
     setCouponError('');
-    sessionStorage.removeItem('camisavetor_coupon');
+    safeSessionStorage.removeItem('camisavetor_coupon');
   };
 
   const handleFinalPayment = async () => {
     if (!userData) return;
+    setPixError('');
 
     if (paymentMethod === 'pix') {
+      // Validação de CPF antes de chamar a API
+      if (!isInternational && !isValidCPF(userData.cpf)) {
+        setPixError('CPF inválido. Por favor, verifique os dígitos digitados.');
+        setIsEditingData(true);
+        return;
+      }
+
       setIsGeneratingPix(true);
       try {
         const nameParts = (userData.nome || '').trim().split(' ');
@@ -210,21 +282,32 @@ function CheckoutContent() {
             email: userData.email,
             firstName,
             lastName,
-            phone: userData.phone,
-            cpf: userData.cpf,
-            // Passa o código do cupom para validação no servidor
+            phone: cleanPhone(userData.phone),
+            cpf: cleanCPF(userData.cpf),
             couponCode: couponData ? couponData.code : undefined,
           })
         });
+
         const data = await res.json();
-        if (data.qr_code_base64) {
+
+        if (res.ok && data.qr_code_base64) {
           setPixData(data);
         } else {
-          alert(t('errorGeneratingPix') + ": " + (data.error || t('unknownError')));
+          const isCpfErr = 
+            data.code === 'INVALID_CPF' || 
+            String(data.error || '').toLowerCase().includes('cpf') ||
+            String(data.error || '').toLowerCase().includes('identification');
+
+          if (isCpfErr) {
+            setPixError('CPF inválido. Por favor, verifique os dígitos digitados.');
+            setIsEditingData(true);
+          } else {
+            setPixError(data.error || t('errorGeneratingPix'));
+          }
         }
       } catch (err) {
         console.error(err);
-        alert(t('connectionErrorMP'));
+        setPixError('Erro de conexão ao gerar o Pix. Tente novamente em instantes.');
       } finally {
         setIsGeneratingPix(false);
       }
@@ -266,6 +349,7 @@ function CheckoutContent() {
             
             <div className={`lg:col-span-7 space-y-10 transition-all duration-700 ${isPaid ? 'opacity-10 grayscale pointer-events-none' : 'opacity-100'}`}>
               
+              {/* 1. FORMA DE PAGAMENTO */}
               <section className="bg-white p-8 rounded-[2rem] border border-[#dadce0]">
                 <div className="flex items-center gap-4 mb-8">
                   <span className="w-7 h-7 rounded-full bg-[#202124] text-white flex items-center justify-center text-[10px] font-bold">1</span>
@@ -273,22 +357,129 @@ function CheckoutContent() {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {!isInternational && (
-                    <button onClick={() => setPaymentMethod('pix')} className={`p-6 rounded-2xl border-2 flex items-center gap-4 transition-all ${paymentMethod === 'pix' ? 'border-[#fe7302] bg-orange-50/30' : 'border-[#f1f3f4] bg-[#f8f9fa]'}`}>
+                    <button onClick={() => { setPaymentMethod('pix'); setPixError(''); }} className={`p-6 rounded-2xl border-2 flex items-center gap-4 transition-all ${paymentMethod === 'pix' ? 'border-[#fe7302] bg-orange-50/30' : 'border-[#f1f3f4] bg-[#f8f9fa]'}`}>
                       <QrCode size={20} className={paymentMethod === 'pix' ? 'text-[#fe7302]' : 'text-[#dadce0]'} />
                       <div className="text-left"><p className="text-[11px] font-bold text-[#202124] uppercase">PIX</p><p className="text-[9px] font-medium text-[#5f6368] uppercase">{t('pixInstant')}</p></div>
                     </button>
                   )}
-                  <button onClick={() => setPaymentMethod('paypal')} className={`p-6 rounded-2xl border-2 flex items-center gap-4 transition-all ${paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-50/30' : 'border-[#f1f3f4] bg-[#f8f9fa]'} ${isInternational ? 'md:col-span-2' : ''}`}>
+                  <button onClick={() => { setPaymentMethod('paypal'); setPixError(''); }} className={`p-6 rounded-2xl border-2 flex items-center gap-4 transition-all ${paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-50/30' : 'border-[#f1f3f4] bg-[#f8f9fa]'} ${isInternational ? 'md:col-span-2' : ''}`}>
                     <CreditCard size={20} className={paymentMethod === 'paypal' ? 'text-blue-500' : 'text-[#dadce0]'} />
                     <div className="text-left"><p className="text-[11px] font-bold text-[#202124] uppercase">PAYPAL</p><p className="text-[9px] font-medium text-[#5f6368] uppercase">{t('creditCard')}</p></div>
                   </button>
                 </div>
               </section>
 
-              {/* CAMPO DE CUPOM NO CHECKOUT */}
+              {/* 2. DADOS DO PAGADOR (CONFIRMAÇÃO / EDIÇÃO) */}
+              <section className="bg-white p-8 rounded-[2rem] border border-[#dadce0]">
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-4">
+                    <span className="w-7 h-7 rounded-full bg-[#202124] text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                    <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#202124] flex items-center gap-2">
+                      <User size={14} className="text-[#fe7302]" /> Dados do Comprador
+                    </h2>
+                  </div>
+                  {!isEditingData ? (
+                    <button 
+                      onClick={() => setIsEditingData(true)} 
+                      className="text-[10px] font-bold uppercase tracking-wider text-[#fe7302] hover:text-black flex items-center gap-1.5 transition-colors"
+                    >
+                      <Edit2 size={12} /> Editar
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={() => {
+                        setIsEditingData(false);
+                        setEditNome(userData?.nome || '');
+                        setEditCpf(userData?.cpf || '');
+                        setEditPhone(userData?.phone || '');
+                        setEditError('');
+                      }} 
+                      className="text-[10px] font-bold uppercase tracking-wider text-gray-400 hover:text-gray-600 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+
+                {!isEditingData ? (
+                  <div className="bg-[#f8f9fa] rounded-2xl p-5 border border-[#f1f3f4] space-y-2 text-[12px]">
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-400 font-medium">Nome:</span>
+                      <span className="font-bold text-[#202124]">{userData?.nome}</span>
+                    </div>
+                    <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                      <span className="text-gray-400 font-medium">E-mail:</span>
+                      <span className="font-bold text-[#202124]">{userData?.email}</span>
+                    </div>
+                    {!isInternational && (
+                      <>
+                        <div className="flex justify-between items-center py-1 border-b border-gray-100">
+                          <span className="text-gray-400 font-medium">CPF (Pix):</span>
+                          <span className="font-bold text-[#202124] font-mono">{userData?.cpf || 'Não informado'}</span>
+                        </div>
+                        <div className="flex justify-between items-center py-1">
+                          <span className="text-gray-400 font-medium">WhatsApp:</span>
+                          <span className="font-bold text-[#202124]">{userData?.phone || 'Não informado'}</span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-4 animate-in fade-in duration-300">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">Nome Completo</label>
+                      <input 
+                        type="text"
+                        value={editNome}
+                        onChange={(e) => setEditNome(e.target.value)}
+                        className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-xl px-4 py-3 text-[12px] font-semibold text-[#202124] outline-none focus:border-[#fe7302]"
+                        placeholder="Nome completo"
+                      />
+                    </div>
+                    {!isInternational && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">CPF (Somente Números)</label>
+                          <input 
+                            type="text"
+                            value={editCpf}
+                            onChange={(e) => setEditCpf(formatCPFMask(e.target.value))}
+                            className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-xl px-4 py-3 text-[12px] font-semibold text-[#202124] outline-none focus:border-[#fe7302]"
+                            placeholder="000.000.000-00"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold uppercase text-gray-500 tracking-wider">WhatsApp com DDD</label>
+                          <input 
+                            type="text"
+                            value={editPhone}
+                            onChange={(e) => setEditPhone(formatPhoneMask(e.target.value))}
+                            className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-xl px-4 py-3 text-[12px] font-semibold text-[#202124] outline-none focus:border-[#fe7302]"
+                            placeholder="(00) 00000-0000"
+                          />
+                        </div>
+                      </div>
+                    )}
+                    {editError && (
+                      <p className="text-[11px] text-red-500 font-bold flex items-center gap-1.5 animate-in fade-in duration-200">
+                        <AlertCircle size={13} className="flex-shrink-0" /> {editError}
+                      </p>
+                    )}
+                    <button
+                      onClick={handleSaveUserData}
+                      disabled={savingEdit}
+                      className="bg-[#202124] text-white text-[10px] font-bold uppercase px-6 py-3 rounded-xl hover:bg-[#fe7302] transition-all flex items-center gap-2 tracking-wider"
+                    >
+                      {savingEdit ? <Loader2 size={13} className="animate-spin" /> : <><Check size={13} /> Salvar Dados</>}
+                    </button>
+                  </div>
+                )}
+              </section>
+
+              {/* 3. CAMPO DE CUPOM NO CHECKOUT */}
               <section className="bg-white p-8 rounded-[2rem] border border-[#dadce0]">
                 <div className="flex items-center gap-4 mb-6">
-                  <span className="w-7 h-7 rounded-full bg-[#202124] text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                  <span className="w-7 h-7 rounded-full bg-[#202124] text-white flex items-center justify-center text-[10px] font-bold">3</span>
                   <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#202124] flex items-center gap-2">
                     <Tag size={14} className="text-[#fe7302]" /> Cupom de Desconto
                   </h2>
@@ -380,6 +571,17 @@ function CheckoutContent() {
                       </div>
                     </div>
                     
+                    {/* ALERTA DE ERRO VISUAL AMIGÁVEL */}
+                    {pixError && (
+                      <div className="mb-6 bg-red-500/10 border border-red-500/30 rounded-2xl p-4 flex items-start gap-3 animate-in fade-in duration-300">
+                        <AlertCircle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+                        <div className="text-left">
+                          <p className="text-[11px] font-bold text-red-300 uppercase tracking-wider">Atenção</p>
+                          <p className="text-[11px] text-red-200 mt-0.5 leading-snug">{pixError}</p>
+                        </div>
+                      </div>
+                    )}
+
                     {isFulfilling ? (
                       <div className="bg-white p-6 rounded-2xl flex flex-col items-center justify-center text-black">
                         <Loader2 className="animate-spin text-[#fe7302] mb-2" size={32} />
@@ -424,32 +626,48 @@ function CheckoutContent() {
                                 <PayPalButtons 
                                   style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
                                   createOrder={async () => {
-                                    const res = await fetch("/api/checkout/paypal/create", {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({
-                                        items: cartItems,
-                                        userId: user?.uid,
-                                        email: userData?.email || user?.email,
-                                        currency: currencyCode,
-                                        couponCode: couponData ? couponData.code : undefined,
-                                      })
-                                    });
-                                    const order = await res.json();
-                                    return order.id;
+                                    try {
+                                      const res = await fetch("/api/checkout/paypal/create", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({
+                                          items: cartItems,
+                                          userId: user?.uid,
+                                          email: userData?.email || user?.email,
+                                          currency: currencyCode,
+                                          couponCode: couponData ? couponData.code : undefined,
+                                        })
+                                      });
+                                      const order = await res.json();
+                                      if (!res.ok || !order.id) {
+                                        const errorMsg = order.error || "O checkout via PayPal está temporariamente indisponível. Por favor, utilize o Pix para liberação instantânea.";
+                                        alert(errorMsg);
+                                        throw new Error(errorMsg);
+                                      }
+                                      return order.id;
+                                    } catch (err: any) {
+                                      throw err;
+                                    }
                                   }}
                                   onApprove={async (data) => {
-                                    const res = await fetch("/api/checkout/paypal/capture", {
-                                      method: "POST",
-                                      headers: { "Content-Type": "application/json" },
-                                      body: JSON.stringify({ orderID: data.orderID })
-                                    });
-                                    const captureData = await res.json();
-                                    if (captureData.status === "COMPLETED") {
-                                      processFulfillment(data.orderID, 'paypal');
-                                    } else {
-                                      alert(t('errorPaypalCapture'));
+                                    try {
+                                      const res = await fetch("/api/checkout/paypal/capture", {
+                                        method: "POST",
+                                        headers: { "Content-Type": "application/json" },
+                                        body: JSON.stringify({ orderID: data.orderID })
+                                      });
+                                      const captureData = await res.json();
+                                      if (captureData.status === "COMPLETED") {
+                                        processFulfillment(data.orderID, 'paypal');
+                                      } else {
+                                        alert(captureData.error || t('paypalCaptureError') || "Não foi possível confirmar o pagamento.");
+                                      }
+                                    } catch (err) {
+                                      alert("Erro de conexão ao validar pagamento PayPal.");
                                     }
+                                  }}
+                                  onError={(err) => {
+                                    console.error('PayPal Checkout:', err);
                                   }}
                                 />
                               </PayPalScriptProvider>
@@ -457,42 +675,23 @@ function CheckoutContent() {
                         )}
                       </>
                     )}
-
-                    <p className="text-[9px] text-white/40 font-medium leading-relaxed mt-8 text-center uppercase tracking-widest">
-                      {t('privacyNote')}
-                    </p>
                   </>
                 ) : (
-                  <div className="flex flex-col items-center text-center py-10 px-6 animate-in zoom-in-95 duration-500 bg-[#141414] rounded-[2.5rem] border border-[#1ea362] shadow-[0_0_25px_rgba(30,163,98,0.15)] relative overflow-hidden">
-                    
-                    <div className="relative mb-8 flex justify-center items-center">
-                       <div className="absolute -top-4 -right-4 text-[#fe7302] animate-pulse">✨</div>
-                       <CheckCircle2 size={70} className="text-[#fe7302]" strokeWidth={2.5} />
-                    </div>
-                    
-                    <h2 className="text-2xl md:text-3xl font-medium uppercase tracking-wide mb-6 text-white">
-                      {t('paymentApproved')}
-                    </h2>
-                    
-                    <p className="text-[11px] font-medium uppercase tracking-[0.15em] text-gray-300 mb-12 leading-relaxed max-w-[280px]">
-                      {t('thankYou')}<br/>
-                      <span className="text-white font-bold">{userData?.nome?.split(' ')[0] || t('defaultUser')}</span>!
-                    </p>
-                    
-                    <button onClick={() => router.push('/downloads')} className="group w-full bg-[#56c271] text-white font-bold py-5 rounded-2xl flex items-center justify-center gap-3 shadow-lg hover:bg-[#4ab063] uppercase text-[12px] tracking-[0.2em] transition-all">
-                        <Download size={20} className="group-hover:-translate-y-1 transition-transform" /> 
-                        {t('goToDownloads')}
-                    </button>
-                    
-                    <div className="mt-10 mb-6 w-full h-[1px] bg-[#fe7302]/50"></div>
-                    
-                    <Link href="/" className="text-[10px] font-medium uppercase tracking-[0.2em] text-gray-400 hover:text-white transition-all">
-                      {t('exploreMore')}
-                    </Link>
+                  <div className="text-center py-8">
+                     <div className="w-16 h-16 bg-green-500/20 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <CheckCircle2 size={32} />
+                     </div>
+                     <h3 className="text-xl font-bold uppercase tracking-wider mb-2">{t('paymentApproved')}</h3>
+                     <p className="text-xs text-gray-400 mb-8">{t('downloadFilesDesc')}</p>
+                     
+                     <Link href="/perfil" className="bg-[#fe7302] text-white px-8 py-4 rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all inline-flex items-center gap-2">
+                        <Download size={16} /> {t('accessMyDownloads')}
+                     </Link>
                   </div>
                 )}
               </div>
             </div>
+
           </div>
         </div>
       </main>
@@ -500,9 +699,9 @@ function CheckoutContent() {
   );
 }
 
-export default function CheckoutPage() {
+export default function Checkout() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center bg-white"><div className="w-8 h-8 border-2 border-[#fe7302] border-t-transparent rounded-full animate-spin"></div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#f8f9fa]" />}>
       <CheckoutContent />
     </Suspense>
   );

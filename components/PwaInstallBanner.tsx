@@ -3,13 +3,14 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { X, Download } from 'lucide-react';
+import { safeLocalStorage } from '@/lib/safeStorage';
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-const DISMISSED_KEY = 'cv_install_dismissed';
+const DISMISSED_KEY = 'cv_pwa_banner_dismissed';
 
 export default function PwaInstallBanner() {
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -22,7 +23,7 @@ export default function PwaInstallBanner() {
     setIsMobile(window.innerWidth <= 768);
 
     // Não mostra se já foi dispensado
-    if (localStorage.getItem(DISMISSED_KEY)) return;
+    if (safeLocalStorage.getItem(DISMISSED_KEY)) return;
 
     // Não mostra se já está instalado (modo standalone)
     if (window.matchMedia('(display-mode: standalone)').matches) return;
@@ -70,7 +71,7 @@ export default function PwaInstallBanner() {
 
   const handleDismiss = () => {
     setVisible(false);
-    localStorage.setItem(DISMISSED_KEY, '1');
+    safeLocalStorage.setItem(DISMISSED_KEY, '1');
   };
 
   if (!visible || !prompt) return null;

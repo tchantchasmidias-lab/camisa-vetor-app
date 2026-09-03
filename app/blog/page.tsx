@@ -10,6 +10,9 @@ export const dynamic = 'force-dynamic';
 export const metadata = {
   title: 'Blog - Camisa Vetor',
   description: 'Dicas, novidades e tutoriais sobre estampas, sublimação e vetores.',
+  alternates: {
+    canonical: 'https://camisavetor.com.br/blog',
+  },
 };
 
 export default async function BlogIndex() {

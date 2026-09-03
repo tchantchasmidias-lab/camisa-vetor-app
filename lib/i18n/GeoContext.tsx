@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, ReactNode, useRef } from 'react';
+import { safeSessionStorage, safeLocalStorage } from '@/lib/safeStorage';
 
 // ── Set de controle de duplicatas compartilhado entre TODOS os componentes ──
 // (módulo-level: persiste enquanto a aba estiver aberta)
@@ -72,7 +73,7 @@ export function GeoProvider({ children }: { children: ReactNode }) {
     }
 
     // 1. Tenta usar cache do sessionStorage
-    const cached = sessionStorage.getItem('geo_info');
+    const cached = safeSessionStorage.getItem('geo_info');
     if (cached) {
       try {
         setGeo(JSON.parse(cached));
@@ -86,7 +87,7 @@ export function GeoProvider({ children }: { children: ReactNode }) {
       .then(res => res.json())
       .then((data: GeoInfo) => {
         setGeo(data);
-        sessionStorage.setItem('geo_info', JSON.stringify(data));
+        safeSessionStorage.setItem('geo_info', JSON.stringify(data));
       })
       .catch(() => {
         setGeo(defaultGeo);
@@ -98,7 +99,7 @@ export function GeoProvider({ children }: { children: ReactNode }) {
 
   // Carrega o cache inicial do localStorage
   useEffect(() => {
-    const savedCache = localStorage.getItem('translation_cache');
+    const savedCache = safeLocalStorage.getItem('translation_cache');
     if (savedCache) {
       try {
         setDynamicCache(JSON.parse(savedCache));
@@ -111,7 +112,7 @@ export function GeoProvider({ children }: { children: ReactNode }) {
   // Salva o cache no localStorage sempre que mudar
   useEffect(() => {
     if (Object.keys(dynamicCache).length > 0) {
-      localStorage.setItem('translation_cache', JSON.stringify(dynamicCache));
+      safeLocalStorage.setItem('translation_cache', JSON.stringify(dynamicCache));
     }
   }, [dynamicCache]);
 

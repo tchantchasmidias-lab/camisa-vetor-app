@@ -27,3 +27,23 @@
 /* Esconder barra de rolagem horizontal mantendo a funcionalidade */
 .no-scrollbar::-webkit-scrollbar { display: none !important; }
 .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
+
+/* ── Regra Preventiva para Títulos de Produtos (Title Case) ── */
+.product-card-title,
+.card-title,
+.product-title {
+  text-transform: capitalize; /* Garante que nunca seja exibido em ALL CAPS */
+}
+
+/* ── Sidebar de Categorias da Página de Produto e Menus (100% Caixa Alta / Uppercase) ── */
+.category-sidebar-item,
+.category-list-link,
+.categories-sidebar a,
+.categories-sidebar span,
+.category-drawer-item,
+.category-drawer-link,
+.category-menu-item {
+  text-transform: uppercase !important;
+  letter-spacing: 0.025em; /* Leve espaçamento entre letras para melhor legibilidade */
+  font-weight: 600;
+}

@@ -3,11 +3,12 @@
 import { useState, useEffect, Suspense } from 'react';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { doc, getDoc, updateDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 import { Loader2, FileText, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { formatCPFMask, formatPhoneMask, isValidCPF, cleanPhone } from '@/lib/validationUtils';
 
 function CompletarPerfilContent() {
   const [cpf, setCpf] = useState('');
@@ -18,7 +19,7 @@ function CompletarPerfilContent() {
   const [error, setError] = useState('');
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/checkout';
+  const redirectUrl = (searchParams?.get ? searchParams.get('redirect') : null) || '/checkout';
   
   const { t, isInternational, isLoading: loadingGeo } = useGeo();
 
@@ -38,6 +39,10 @@ function CompletarPerfilContent() {
           if (snap.exists() && snap.data().cpf && snap.data().phone) {
              router.push(redirectUrl);
           } else {
+             if (snap.exists()) {
+               if (snap.data().cpf) setCpf(formatCPFMask(snap.data().cpf));
+               if (snap.data().phone) setPhone(formatPhoneMask(snap.data().phone));
+             }
              setLoading(false);
           }
         } catch (err) {
@@ -51,32 +56,17 @@ function CompletarPerfilContent() {
     return () => unsubscribe();
   }, [router, redirectUrl, isInternational, loadingGeo]);
 
-  const maskCPF = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d)/, '$1.$2')
-      .replace(/(\d{3})(\d{1,2})/, '$1-$2')
-      .replace(/(-\d{2})\d+?$/, '$1');
-  };
-
-  const maskPhone = (value: string) => {
-    return value
-      .replace(/\D/g, '')
-      .replace(/(\d{2})(\d)/, '($1) $2')
-      .replace(/(\d{5})(\d)/, '$1-$2')
-      .replace(/(-\d{4})\d+?$/, '$1');
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     
-    if (cpf.length < 14) {
-      setError(t('incompleteCpf'));
+    if (!isValidCPF(cpf)) {
+      setError('CPF inválido. Por favor, verifique os dígitos digitados.');
       return;
     }
-    if (phone.length < 15) {
+
+    const rawPhone = cleanPhone(phone);
+    if (rawPhone.length < 10) {
       setError(t('incompleteWhatsapp'));
       return;
     }
@@ -85,8 +75,8 @@ function CompletarPerfilContent() {
     try {
       const userRef = doc(db, 'users', user.uid);
       await setDoc(userRef, {
-        cpf,
-        phone,
+        cpf: formatCPFMask(cpf),
+        phone: formatPhoneMask(phone),
         updatedAt: new Date().toISOString()
       }, { merge: true });
       router.push(redirectUrl);
@@ -128,7 +118,10 @@ function CompletarPerfilContent() {
                   required
                   placeholder="000.000.000-00"
                   value={cpf}
-                  onChange={(e) => setCpf(maskCPF(e.target.value))}
+                  onChange={(e) => {
+                    setCpf(formatCPFMask(e.target.value));
+                    if (error) setError('');
+                  }}
                   className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 pl-12 text-[13px] font-medium outline-none focus:border-[#fe7302] focus:bg-white transition-all text-[#202124] placeholder:text-gray-300"
                 />
               </div>
@@ -143,7 +136,10 @@ function CompletarPerfilContent() {
                   required
                   placeholder="(00) 00000-0000"
                   value={phone}
-                  onChange={(e) => setPhone(maskPhone(e.target.value))}
+                  onChange={(e) => {
+                    setPhone(formatPhoneMask(e.target.value));
+                    if (error) setError('');
+                  }}
                   className="w-full bg-[#f8f9fa] border border-[#dadce0] rounded-2xl p-4 pl-12 text-[13px] font-medium outline-none focus:border-[#fe7302] focus:bg-white transition-all text-[#202124] placeholder:text-gray-300"
                 />
               </div>
@@ -151,23 +147,17 @@ function CompletarPerfilContent() {
 
             {error && (
               <div className="flex items-center gap-2 text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 animate-in fade-in zoom-in duration-300">
-                <AlertCircle size={14} />
-                <p className="text-[10px] font-bold uppercase tracking-widest">{error}</p>
+                <AlertCircle size={14} className="flex-shrink-0" />
+                <p className="text-[11px] font-bold leading-tight">{error}</p>
               </div>
             )}
 
             <button
+              type="submit"
               disabled={saving}
-              className="w-full bg-[#fe7302] text-white font-bold py-5 rounded-2xl hover:bg-[#202124] transition-all shadow-lg shadow-orange-500/20 uppercase tracking-[0.2em] text-[11px] flex items-center justify-center gap-3 disabled:opacity-50 active:scale-95"
+              className={`w-full font-bold py-5 rounded-2xl transition-all shadow-xl uppercase text-[11px] tracking-[0.2em] flex items-center justify-center gap-3 ${!saving ? 'bg-[#fe7302] text-white hover:bg-black' : 'bg-gray-200 text-gray-400 cursor-not-allowed'}`}
             >
-              {saving ? (
-                <Loader2 size={18} className="animate-spin" />
-              ) : (
-                <>
-                  <CheckCircle2 size={18} />
-                  <span>{t('saveAndContinue')}</span>
-                </>
-              )}
+              {saving ? <Loader2 className="animate-spin" size={16} /> : <><CheckCircle2 size={16} /> {t('continue')}</>}
             </button>
           </form>
         </div>
@@ -176,9 +166,9 @@ function CompletarPerfilContent() {
   );
 }
 
-export default function CompletarPerfilPage() {
+export default function CompletarPerfil() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-[#050505] flex items-center justify-center"><div className="w-10 h-10 border-2 border-[#fe7302] border-t-transparent rounded-full animate-spin"></div></div>}>
+    <Suspense fallback={<div className="min-h-screen bg-[#050505]" />}>
       <CompletarPerfilContent />
     </Suspense>
   );

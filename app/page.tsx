@@ -1,8 +1,53 @@
+import type { Metadata } from 'next';
 import { adminDb } from '@/lib/firebaseAdmin';
 import HomeClient, { Product } from '@/components/HomeClient';
+import { formatTitleCase } from '@/lib/stringUtils';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0; // Atualização imediata em tempo real ao publicar novos produtos
+
+export const metadata: Metadata = {
+  title: 'Camisa Vetor | Artes e Vetores Editáveis para Sublimação',
+  description: 'Compre e baixe artes vetoriais profissionais editáveis em CorelDraw, PDF e SVG. Estampas exclusivas para sublimação, camisas personalizadas e eventos com download imediato.',
+  keywords: [
+    'vetor camisa',
+    'artes para sublimação',
+    'estampas editáveis coreldraw',
+    'vetor interclasse',
+    'camisa personalizada vetor',
+    'download vetor sublimação'
+  ],
+  alternates: {
+    canonical: 'https://camisavetor.com.br',
+  },
+  openGraph: {
+    title: 'Camisa Vetor | Artes e Vetores Editáveis para Sublimação',
+    description: 'Vetores profissionais e editáveis em CorelDraw, PDF e SVG para sublimação e estamparia.',
+    url: 'https://camisavetor.com.br',
+    siteName: 'Camisa Vetor',
+    locale: 'pt_BR',
+    type: 'website',
+    images: [
+      {
+        url: 'https://camisavetor.com.br/icon.png',
+        width: 512,
+        height: 512,
+        alt: 'Camisa Vetor — Artes e Vetores Editáveis para Sublimação',
+      },
+    ],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+};
 
 async function getInitialProducts(): Promise<Product[]> {
   try {
@@ -32,7 +77,7 @@ async function getInitialProducts(): Promise<Product[]> {
 
       return {
         id: doc.id,
-        name: data.name || 'Sem nome',
+        name: formatTitleCase(data.name || 'Sem nome'),
         price: Number(data.price) || 0,
         isFree: Boolean(data.isFree) || Number(data.price) === 0,
         category: data.category || 'Geral',

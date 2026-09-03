@@ -11,13 +11,25 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import {
   Star, Shirt, Info, Loader2, Search, MessageCircle,
   ChevronDown, ChevronUp, FileText, Zap, Package,
-  CheckCircle2, Download, X, ChevronLeft, ChevronRight, Maximize2
+  CheckCircle2, Download, X, ChevronLeft, ChevronRight, Maximize2, Play
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import dynamic from 'next/dynamic';
 import { useGeo } from '@/lib/i18n/GeoContext';
-import RelatedProducts from '@/components/RelatedProducts';
+import { formatTitleCase } from '@/lib/stringUtils';
+import { safeLocalStorage } from '@/lib/safeStorage';
+import { getYouTubeId } from '@/lib/youtubeUtils';
+
+const RelatedProducts = dynamic(() => import('@/components/RelatedProducts'), {
+  loading: () => <div className="h-48" />,
+  ssr: true,
+});
+const ReviewsSection = dynamic(() => import('@/components/ReviewsSection'), {
+  loading: () => <div className="h-48" />,
+  ssr: true,
+});
 
 // ─── Especificações Técnicas ──────────────────────────────────────────────────
 const TECH_SPECS = [
@@ -139,6 +151,7 @@ function Breadcrumbs({ name, category }: { name: string; category?: string }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function ProductDetailView({ product }: { product: any }) {
   const [selectedImage, setSelectedImage] = useState(product?.urls?.destaque || '');
+  const [selectedMedia, setSelectedMedia] = useState<'image' | 'video'>('image');
   const [isAdding, setIsAdding] = useState(false);
   const [dbCategories, setDbCategories] = useState<string[]>([]);
   const [zoomPos, setZoomPos] = useState('center');
@@ -155,6 +168,7 @@ export default function ProductDetailView({ product }: { product: any }) {
   const { t, tp, formatPrice } = useGeo();
   const router = useRouter();
 
+  const youtubeId = getYouTubeId(product?.videoUrl);
 
   // ── 1. PRÉ-CARREGAMENTO EM SEGUNDO PLANO (0ms DELAY NA TROCA) ──
   useEffect(() => {
@@ -219,12 +233,13 @@ export default function ProductDetailView({ product }: { product: any }) {
       } catch (e) { console.error(e); }
     };
     fetchSidebarData();
+    setSelectedMedia('image');
     if (product?.urls?.destaque) setSelectedImage(product.urls.destaque);
   }, [product]);
 
   if (!product) return null;
 
-  const productName = tp(product.name) || product.name || '';
+  const productName = formatTitleCase(tp(product.name) || product.name || '');
   const productCategory = product.category || '';
 
   const galleryImages = Array.from(
@@ -233,6 +248,7 @@ export default function ProductDetailView({ product }: { product: any }) {
 
   // Troca direta e instantânea no clique (0ms de delay)
   const handleThumbnailClick = (url: string) => {
+    setSelectedMedia('image');
     setSelectedImage(url);
     setIsZoomed(false);
   };
@@ -245,11 +261,17 @@ export default function ProductDetailView({ product }: { product: any }) {
 
   const handleBuyNow = () => {
     setIsAdding(true);
-    const cart = JSON.parse(localStorage.getItem('camisavetor_cart') || '[]');
+    const rawCart = safeLocalStorage.getItem('camisavetor_cart');
+    let cart: any[] = [];
+    try {
+      cart = rawCart ? JSON.parse(rawCart) : [];
+    } catch {
+      cart = [];
+    }
     if (!cart.some((i: any) => i.id === product.id)) {
       cart.push({ id: product.id, name: product.name, price: Number(product.price), image: product.urls?.capa || product.urls?.destaque, quantity: 1 });
     }
-    localStorage.setItem('camisavetor_cart', JSON.stringify(cart));
+    safeLocalStorage.setItem('camisavetor_cart', JSON.stringify(cart));
     window.dispatchEvent(new Event('cart-updated'));
     setTimeout(() => router.push('/carrinho'), 500);
   };
@@ -333,41 +355,53 @@ export default function ProductDetailView({ product }: { product: any }) {
 
           {/* ── COL 1: GALERIA ─────────────────────────────────── */}
           <div className="w-full lg:w-[42%] xl:w-[45%]">
-            {/* Imagem Principal com Zoom & Fullscreen Lightbox */}
-            <div
-              className={`product-image-wrapper relative aspect-square w-full bg-[#f8f9fa] rounded-xl overflow-hidden border border-[#dadce0] shadow-sm select-none group cursor-pointer ${
-                isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
-              }`}
-              onClick={() => setIsLightboxOpen(true)}
-              onMouseMove={handleMouseMove}
-              onMouseLeave={() => { setIsZoomed(false); setZoomPos('center'); }}
-            >
-              {selectedImage && (
-                <Image
-                  src={selectedImage}
-                  alt={`Vetor Estampa ${productName} - Mockup Editável em CDR, PDF, SVG e PNG`}
-                  fill
-                  quality={90}
-                  unoptimized
-                  sizes="(max-width: 768px) 100vw, 700px"
-                  className={`product-gallery-main-image object-cover transition-transform duration-300 ease-out pointer-events-none lg:pointer-events-auto rounded-xl ${
-                    isZoomed ? 'scale-[1.8]' : 'scale-100'
-                  }`}
-                  style={{ transformOrigin: zoomPos }}
-                  priority
+            {/* Visualizador Principal: Vídeo do YouTube ou Imagem com Zoom */}
+            {selectedMedia === 'video' && youtubeId ? (
+              <div className="relative aspect-square w-full bg-black rounded-xl overflow-hidden border border-[#dadce0] shadow-sm select-none">
+                <iframe
+                  src={`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=https://camisavetor.com.br`}
+                  title={productName || "Vídeo demonstrativo"}
+                  className="w-full h-full border-0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
                 />
-              )}
-              <button
-                type="button"
-                aria-label="Ampliar imagem do produto em tela cheia"
-                className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-md text-gray-700 group-hover:bg-[#fe7302] group-hover:text-white transition-all flex items-center justify-center cursor-pointer"
+              </div>
+            ) : (
+              <div
+                className={`product-image-wrapper relative aspect-square w-full bg-[#f8f9fa] rounded-xl overflow-hidden border border-[#dadce0] shadow-sm select-none group cursor-pointer ${
+                  isZoomed ? 'cursor-zoom-out' : 'cursor-zoom-in'
+                }`}
+                onClick={() => setIsLightboxOpen(true)}
+                onMouseMove={handleMouseMove}
+                onMouseLeave={() => { setIsZoomed(false); setZoomPos('center'); }}
               >
-                <Maximize2 size={16} />
-              </button>
-            </div>
+                {selectedImage && (
+                  <Image
+                    src={selectedImage}
+                    alt={`Vetor Estampa ${productName} - Mockup Editável em CDR, PDF, SVG e PNG`}
+                    fill
+                    quality={90}
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 700px"
+                    className={`product-gallery-main-image object-cover transition-transform duration-300 ease-out pointer-events-none lg:pointer-events-auto rounded-xl ${
+                      isZoomed ? 'scale-[1.8]' : 'scale-100'
+                    }`}
+                    style={{ transformOrigin: zoomPos }}
+                    priority
+                  />
+                )}
+                <button
+                  type="button"
+                  aria-label="Ampliar imagem do produto em tela cheia"
+                  className="absolute bottom-4 right-4 bg-white/90 backdrop-blur p-2.5 rounded-full shadow-md text-gray-700 group-hover:bg-[#fe7302] group-hover:text-white transition-all flex items-center justify-center cursor-pointer"
+                >
+                  <Maximize2 size={16} />
+                </button>
+              </div>
+            )}
 
-            {/* Thumbnails — lazy load */}
-            {galleryImages.length > 1 && (
+            {/* Thumbnails — Fotos e Vídeo YouTube */}
+            {(galleryImages.length > 1 || youtubeId) && (
               <div className="grid grid-cols-4 gap-3 mt-4">
                 {galleryImages.map((url: string, index: number) => (
                   <button
@@ -375,9 +409,9 @@ export default function ProductDetailView({ product }: { product: any }) {
                     onClick={() => handleThumbnailClick(url)}
                     aria-label={`Ver miniatura ${index + 1} da estampa ${productName}`}
                     className={`aspect-square min-h-[40px] relative rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                      selectedImage === url
+                      selectedMedia === 'image' && selectedImage === url
                         ? 'border-[#fe7302] shadow-md shadow-orange-100'
-                        : 'border-transparent opacity-50 hover:opacity-100'
+                        : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
                     <Image
@@ -391,6 +425,32 @@ export default function ProductDetailView({ product }: { product: any }) {
                     />
                   </button>
                 ))}
+
+                {/* Miniatura do Vídeo do YouTube */}
+                {youtubeId && (
+                  <button
+                    onClick={() => setSelectedMedia('video')}
+                    aria-label={`Assistir ao vídeo demonstrativo de ${productName}`}
+                    className={`aspect-square min-h-[40px] relative rounded-lg overflow-hidden border-2 transition-all duration-300 group flex items-center justify-center bg-black ${
+                      selectedMedia === 'video'
+                        ? 'border-red-500 shadow-md shadow-red-200 scale-[1.02]'
+                        : 'border-transparent opacity-75 hover:opacity-100'
+                    }`}
+                  >
+                    {/* Thumbnail do YouTube */}
+                    <img
+                      src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
+                      alt="Miniatura do Vídeo Demonstrativo"
+                      className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 transition-opacity"
+                    />
+                    {/* Overlay Escuro */}
+                    <div className="absolute inset-0 bg-black/30 group-hover:bg-black/10 transition-colors" />
+                    {/* Botão Play Estilizado */}
+                    <div className="relative z-10 w-9 h-9 md:w-10 md:h-10 rounded-full bg-red-600 group-hover:bg-red-500 text-white flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <Play size={18} className="fill-white translate-x-0.5" />
+                    </div>
+                  </button>
+                )}
               </div>
             )}
 
@@ -412,7 +472,7 @@ export default function ProductDetailView({ product }: { product: any }) {
           <div className="flex-1 w-full min-w-0 space-y-6">
 
             {/* 1. H1 — Nome */}
-            <h1 className="text-[22px] md:text-[26px] font-bold text-[#0f172a] uppercase tracking-tight leading-[1.3] text-center md:text-left">
+            <h1 className="text-[22px] md:text-[26px] font-bold text-[#0f172a] product-title tracking-tight leading-[1.3] text-center md:text-left">
               {productName}
             </h1>
 
@@ -508,7 +568,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 {t('availableFormats')}:
               </h3>
               <div className="flex flex-wrap justify-center md:justify-start gap-2">
-                {(product.formats || ['CDR', 'PDF', 'SVG', 'PNG']).map((fmt: string) => (
+                {(product?.formats || ['CDR', 'PDF', 'SVG', 'PNG']).map((fmt: string) => (
                   <span
                     key={fmt}
                     className="border border-[#dadce0] bg-white rounded-xl py-1 px-[10px] min-h-[40px] inline-flex items-center justify-center text-[13px] font-semibold text-[#202124] shadow-sm"
@@ -521,13 +581,13 @@ export default function ProductDetailView({ product }: { product: any }) {
 
             {/* 8. Descrição curta do produto */}
             <p className="text-[#334155] text-[16px] md:text-[15.5px] leading-[1.65] font-normal mx-auto md:mx-0 text-center md:text-left max-w-xl">
-              {tp(product.description)}
+              {tp(product?.description || '')}
             </p>
 
             {/* 9. Botão / Ação: Compartilhar no WhatsApp (Logo após a Descrição) */}
             <div className="product-share-whatsapp pt-1 flex items-center justify-center md:justify-start">
               <a
-                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Olha essa arte em vetor para camisetas: ${product.name} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`Olha essa arte em vetor para camisetas: ${product?.name || ''} - ${typeof window !== 'undefined' ? window.location.href : ''}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Compartilhar estampa no WhatsApp"
@@ -542,7 +602,7 @@ export default function ProductDetailView({ product }: { product: any }) {
           </div>
 
           {/* ── COL 3: SIDEBAR — CATEGORIAS ────────────────────── */}
-          <aside className="hidden xl:block w-[220px] flex-shrink-0 pt-2">
+          <aside className="hidden xl:block w-[220px] flex-shrink-0 pt-2 categories-sidebar">
             <h4 className="text-[12px] font-bold text-[#475569] uppercase tracking-[0.2em] mb-4 px-3">
               Categorias
             </h4>
@@ -551,7 +611,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                 <Link
                   key={cat}
                   href={`/?category=${encodeURIComponent(cat)}`}
-                  className={`flex items-center gap-2.5 py-2.5 px-3 min-h-[40px] rounded-xl hover:bg-[#f8f9fa] transition-all group ${
+                  className={`category-sidebar-item category-list-link flex items-center gap-2.5 py-2.5 px-3 min-h-[40px] rounded-xl hover:bg-[#f8f9fa] transition-all group ${
                     cat === productCategory ? 'bg-[#fff4ec]' : ''
                   }`}
                 >
@@ -562,8 +622,8 @@ export default function ProductDetailView({ product }: { product: any }) {
                     }`}
                   />
                   <span
-                    className={`sidebar-nav-link sidebar-link text-[13px] font-medium tracking-wide truncate ${
-                      cat === productCategory ? 'text-[#fe7302] font-bold' : 'text-[#334155] group-hover:text-[#0f172a]'
+                    className={`sidebar-nav-link sidebar-link uppercase text-xs font-semibold text-slate-700 tracking-[0.025em] truncate ${
+                      cat === productCategory ? '!text-[#fe7302] !font-bold' : 'group-hover:text-[#0f172a]'
                     }`}
                   >
                     {tp(cat)}
@@ -620,12 +680,17 @@ export default function ProductDetailView({ product }: { product: any }) {
         {/* ══════════════════════════════════════════════════════
             BLOCO 4 — PRODUTOS RELACIONADOS
         ══════════════════════════════════════════════════════ */}
-        {productCategory && (
+        {productCategory && product?.id && (
           <RelatedProducts
             category={productCategory}
             currentProductId={product.id}
           />
         )}
+
+        {/* ══════════════════════════════════════════════════════
+            BLOCO 5 — AVALIAÇÕES / PROVA SOCIAL
+        ══════════════════════════════════════════════════════ */}
+        <ReviewsSection />
 
         {/* ══════════════════════════════════════════════════════
             MODAL LIGHTBOX — FULLSCREEN ZOOM

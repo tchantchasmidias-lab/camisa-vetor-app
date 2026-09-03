@@ -9,6 +9,7 @@ import {
   onForegroundMessage,
   getNotificationPermissionStatus,
 } from '@/lib/messaging';
+import { safeLocalStorage } from '@/lib/safeStorage';
 
 const PERMISSION_ASKED_KEY = 'cv_notif_asked_at';
 const ASK_AGAIN_DAYS = 7;
@@ -43,7 +44,7 @@ export default function PwaInit() {
       if (status === 'denied') return;
 
       // Se ainda não perguntou ou já passou N dias, pede permissão
-      const lastAsked = localStorage.getItem(PERMISSION_ASKED_KEY);
+      const lastAsked = safeLocalStorage.getItem(PERMISSION_ASKED_KEY);
       const now = Date.now();
       const shouldAsk =
         !lastAsked ||
@@ -53,7 +54,7 @@ export default function PwaInit() {
 
       // Aguarda 4 segundos para não ser intrusivo na abertura
       setTimeout(async () => {
-        localStorage.setItem(PERMISSION_ASKED_KEY, String(now));
+        safeLocalStorage.setItem(PERMISSION_ASKED_KEY, String(now));
         const token = await requestNotificationPermission();
         if (token) {
           await saveFcmToken(user.uid, token);

@@ -46,6 +46,8 @@ export async function requestNotificationPermission(): Promise<string | null> {
   }
 }
 
+import { safeLocalStorage } from '@/lib/safeStorage';
+
 /**
  * Gera um ID único e estável para este dispositivo/browser.
  * Armazenado no localStorage para persistência entre sessões.
@@ -53,10 +55,10 @@ export async function requestNotificationPermission(): Promise<string | null> {
 function getDeviceId(): string {
   if (typeof window === 'undefined') return 'server';
   const key = 'cv_device_id';
-  let id = localStorage.getItem(key);
+  let id = safeLocalStorage.getItem(key);
   if (!id) {
     id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    localStorage.setItem(key, id);
+    safeLocalStorage.setItem(key, id);
   }
   return id;
 }

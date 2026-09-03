@@ -1,12 +1,15 @@
 import { Inter } from 'next/font/google';
 import { Suspense } from 'react'; // Importação essencial para evitar erro 500/Tela Branca
+import dynamic from 'next/dynamic';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MainContainer from '@/components/MainContainer';
 import { GeoProvider } from '@/lib/i18n/GeoContext';
-import PwaInit from '@/components/PwaInit';
-import PwaInstallBanner from '@/components/PwaInstallBanner';
+
+const PwaInit = dynamic(() => import('@/components/PwaInit'), { ssr: false });
+const PwaInstallBanner = dynamic(() => import('@/components/PwaInstallBanner'), { ssr: false });
+const ChunkErrorHandler = dynamic(() => import('@/components/ChunkErrorHandler'), { ssr: false });
 
 import Script from 'next/script';
 
@@ -25,8 +28,19 @@ export const viewport = {
 };
 
 export const metadata = {
-  title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
-  description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium. Camisas, times, personagens e muito mais.',
+  title: 'Camisa Vetor | Artes e Vetores Editáveis para Sublimação',
+  description: 'Compre e baixe artes vetoriais profissionais editáveis em CorelDraw, PDF e SVG. Estampas exclusivas para sublimação, camisas personalizadas e eventos com download imediato.',
+  keywords: [
+    'vetor camisa',
+    'artes para sublimação',
+    'estampas editáveis coreldraw',
+    'vetor interclasse',
+    'camisa personalizada vetor',
+    'download vetor sublimação',
+    'estampa religiosa vetor',
+    'vetor gospel',
+    'vetor futebol'
+  ],
   metadataBase: new URL('https://camisavetor.com.br'),
   alternates: {
     canonical: 'https://camisavetor.com.br',
@@ -49,8 +63,8 @@ export const metadata = {
     },
   },
   openGraph: {
-    title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
-    description: 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium.',
+    title: 'Camisa Vetor | Artes e Vetores Editáveis para Sublimação',
+    description: 'Vetores profissionais e editáveis em CorelDraw, PDF e SVG para sublimação e estamparia.',
     url: 'https://camisavetor.com.br',
     siteName: 'Camisa Vetor',
     locale: 'pt_BR',
@@ -60,14 +74,14 @@ export const metadata = {
         url: 'https://camisavetor.com.br/icon.png',
         width: 512,
         height: 512,
-        alt: 'Camisa Vetor — Vetores Profissionais para Estamparia',
+        alt: 'Camisa Vetor — Artes e Vetores Editáveis para Sublimação',
       },
     ],
   },
   twitter: {
-    card: 'summary',
-    title: 'Camisa Vetor | Vetores Profissionais para Estamparia',
-    description: 'Baixe vetores profissionais para estamparia e sublimação.',
+    card: 'summary_large_image',
+    title: 'Camisa Vetor | Artes e Vetores Editáveis para Sublimação',
+    description: 'Compre e baixe artes vetoriais profissionais editáveis em CorelDraw, PDF e SVG.',
     images: ['https://camisavetor.com.br/icon.png'],
   },
   manifest: '/manifest.json',
@@ -92,15 +106,42 @@ export const metadata = {
   },
 };
 
-const orgJsonLd = {
-  '@context': 'https://schema.org',
-  '@type': 'OnlineStore',
-  'name': 'Camisa Vetor',
-  'url': 'https://camisavetor.com.br',
-  'logo': 'https://camisavetor.com.br/icon-192.png',
-  'image': 'https://camisavetor.com.br/icon-192.png',
-  'description': 'Baixe vetores profissionais para estamparia e sublimação. Arquivos CDR, PDF, SVG, PNG e AI com qualidade premium.',
-};
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    'name': 'Camisa Vetor',
+    'url': 'https://camisavetor.com.br',
+    'description': 'Compre e baixe artes vetoriais profissionais editáveis em CorelDraw, PDF e SVG para sublimação.',
+    'potentialAction': {
+      '@type': 'SearchAction',
+      'target': {
+        '@type': 'EntryPoint',
+        'urlTemplate': 'https://camisavetor.com.br/?search={search_term_string}',
+      },
+      'query-input': 'required name=search_term_string',
+    },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'OnlineStore',
+    'name': 'Camisa Vetor',
+    'url': 'https://camisavetor.com.br',
+    'logo': 'https://camisavetor.com.br/icon-192.png',
+    'image': 'https://camisavetor.com.br/icon.png',
+    'description': 'Plataforma de venda e download imediato de artes e vetores profissionais para estamparia e sublimação.',
+    'priceRange': '$$',
+    'currenciesAccepted': 'BRL, USD, EUR',
+    'paymentAccepted': 'Pix, Credit Card, PayPal',
+    'contactPoint': {
+      '@type': 'ContactPoint',
+      'contactType': 'customer service',
+      'email': 'camisavetor@gmail.com',
+      'telephone': '+55-87-99142-5634',
+      'availableLanguage': ['Portuguese', 'English', 'Spanish'],
+    },
+  },
+];
 
 export default function RootLayout({
   children,
@@ -122,19 +163,23 @@ export default function RootLayout({
         {/* Otimização de Conexão (Preconnect & DNS Prefetch para Firebase Storage) */}
         <link rel="preconnect" href="https://firebasestorage.googleapis.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://firebasestorage.googleapis.com" />
+        <link rel="preconnect" href="https://firebasestorage.app" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://firebasestorage.app" />
+        <link rel="preconnect" href="https://storage.googleapis.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://storage.googleapis.com" />
 
         <meta name="p:domain_verify" content="788d73b308d72aa601b7864641f7218a" />
-        {/* Schema.org Organization/OnlineStore para o Snippet do Google */}
+        {/* Schema.org WebSite & Organization/OnlineStore para Sitelinks e Rich Snippets */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
         />
-        {/* Google Tag (gtag.js) */}
+        {/* Google Tag (gtag.js) - Carregamento diferido para não bloquear a thread principal */}
         <Script
           src="https://www.googletagmanager.com/gtag/js?id=GT-MJKT5LH7"
-          strategy="afterInteractive"
+          strategy="lazyOnload"
         />
-        <Script id="google-gtag" strategy="afterInteractive">
+        <Script id="google-gtag" strategy="lazyOnload">
           {`
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
@@ -144,6 +189,8 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="antialiased text-[#4a4a4a] bg-white selection:bg-orange-50 selection:text-[#fe7302]">
+        {/* Tratamento automático de ChunkLoadError pós-deploy */}
+        <ChunkErrorHandler />
         {/* PWA: Registro do Service Worker e gerenciamento de tokens FCM */}
         <PwaInit />
         {/* PWA: Banner de instalação para Android/Chrome */}

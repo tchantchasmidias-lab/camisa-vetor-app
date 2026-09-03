@@ -1,5 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  trailingSlash: false,
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'firebase/auth',
+      'firebase/firestore',
+      'firebase/storage',
+      'firebase/messaging',
+      '@google/generative-ai',
+    ],
+  },
   images: {
     // Mantém WebP para preservar qualidade das artes (sem recompressão AVIF)
     formats: ['image/webp'],

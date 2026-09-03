@@ -268,7 +268,7 @@ export default function ProductClientPage({ product, categories }: any) {
 
                 <li key={category}>
 
-                  <Link href={`/categoria/${category.toLowerCase()}`} className="flex items-center gap-3 text-[10px] font-black text-gray-500 py-3 border-b border-gray-50 hover:text-[#fe7302] transition-colors uppercase tracking-widest">
+                  <Link href={`/?category=${encodeURIComponent(category)}`} className="category-sidebar-item category-list-link flex items-center gap-3 text-[10px] font-bold text-gray-500 py-3 border-b border-gray-50 hover:text-[#fe7302] transition-colors uppercase tracking-widest">
 
                     <Shirt size={14} className="opacity-50" />
 

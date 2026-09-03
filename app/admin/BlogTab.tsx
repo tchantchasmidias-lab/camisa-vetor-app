@@ -20,7 +20,13 @@ export default function BlogTab() {
   const fetchPosts = async () => {
     setFetching(true);
     try {
-      const res = await fetch('/api/admin/blog/list');
+      const res = await fetch(`/api/admin/blog/list?_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+        },
+      });
       const data = await res.json();
       if (res.ok && Array.isArray(data)) {
         setPublishedPosts(data);

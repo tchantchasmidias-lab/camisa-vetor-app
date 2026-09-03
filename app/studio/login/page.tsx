@@ -27,7 +27,7 @@ const app = getApps().length === 0
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/studio';
+  const callbackUrl = (searchParams?.get ? searchParams.get('callbackUrl') : null) ?? '/studio';
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 

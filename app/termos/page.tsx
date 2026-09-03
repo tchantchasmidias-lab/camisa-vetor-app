@@ -3,6 +3,9 @@ import { Metadata } from 'next';
 export const metadata: Metadata = {
   title: 'Termos de Uso | Camisa Vetor',
   description: 'Termos de Uso e Condições da plataforma Camisa Vetor.',
+  alternates: {
+    canonical: 'https://camisavetor.com.br/termos',
+  },
 };
 
 export default function TermosPage() {

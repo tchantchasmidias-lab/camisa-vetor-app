@@ -1,18 +1,10 @@
-ProductGrid
-
-
-
 'use client';
 
-
-
 import { useState, useEffect, useRef, useMemo } from 'react';
-
 import ProductCard from './ProductCard';
-
-import { db } from '@/lib/firebase'; // Certifique-se que o caminho está correto
-
+import { db } from '@/lib/firebase';
 import { collection, query, orderBy, getDocs, limit, startAfter, where } from 'firebase/firestore';
+import { normalizeSearchTerm } from '@/lib/stringUtils';
 
 
 
@@ -164,18 +156,19 @@ export default function ProductGrid({
 
 
 
-  // Filtro de Busca por Texto (Local no estado atual para ser instantâneo)
-
+  // Filtro de Busca por Texto (Normalizado e Instantâneo)
   const filteredProducts = useMemo(() => {
+    if (!searchQuery) return products;
+    const normalizedQuery = normalizeSearchTerm(searchQuery);
 
     return products.filter(product => {
-
-      const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase());
-
-      return matchesSearch;
-
+      const normalizedName = normalizeSearchTerm(product.name || '');
+      const normalizedCategory = normalizeSearchTerm(product.category || '');
+      return (
+        normalizedName.includes(normalizedQuery) ||
+        normalizedCategory.includes(normalizedQuery)
+      );
     });
-
   }, [products, searchQuery]);
 
 

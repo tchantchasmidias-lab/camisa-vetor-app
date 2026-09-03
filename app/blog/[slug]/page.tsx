@@ -4,6 +4,7 @@ import { BlogPost } from '@/lib/types/blog';
 import { notFound } from 'next/navigation';
 import CategoryCarousel from '@/components/CategoryCarousel';
 import BlogViewTracker from '@/components/BlogViewTracker';
+import BlogProductSidebar, { BlogProductItem } from '@/components/BlogProductSidebar';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, BookOpen } from 'lucide-react';
@@ -118,6 +119,34 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
     console.error("Erro ao buscar artigos recentes:", err);
   }
 
+  // Busca 5 produtos para o widget da barra lateral
+  let featuredProducts: BlogProductItem[] = [];
+  try {
+    let productsSnap;
+    try {
+      productsSnap = await adminDb.collection('products')
+        .orderBy('createdAt', 'desc')
+        .limit(5)
+        .get();
+    } catch {
+      productsSnap = await adminDb.collection('products').limit(5).get();
+    }
+
+    featuredProducts = productsSnap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name || '',
+        slug: data.slug || doc.id,
+        price: Number(data.price || 0),
+        isFree: Boolean(data.isFree) || Number(data.price) === 0,
+        image: data.urls?.capa || data.urls?.destaque || data.image || '',
+      };
+    });
+  } catch (err) {
+    console.error("Erro ao buscar produtos para sidebar do blog:", err);
+  }
+
   const formatDate = (val: any) => {
     if (!val) return 'Data não definida';
     const d = new Date(typeof val === 'number' ? val : val.seconds ? val.seconds * 1000 : val);
@@ -221,8 +250,8 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               `}} />
             </article>
 
-            {/* COLUNA LATERAL: ARTIGOS RECENTES */}
-            <aside className="w-full lg:w-[360px] xl:w-[380px] flex-shrink-0">
+            {/* COLUNA LATERAL: ARTIGOS RECENTES E PRODUTOS EM DESTAQUE */}
+            <aside className="w-full lg:w-[360px] xl:w-[380px] flex-shrink-0 space-y-6">
               <div className="bg-[#111111] border border-white/10 rounded-3xl p-6 shadow-2xl text-white">
                 
                 {/* CABEÇALHO DA LATERAL */}
@@ -284,6 +313,9 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 </div>
 
               </div>
+
+              {/* WIDGET LATERAL: PRODUTOS EM DESTAQUE */}
+              <BlogProductSidebar products={featuredProducts} />
             </aside>
 
           </div>

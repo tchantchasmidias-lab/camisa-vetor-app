@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { adminDb } from '@/lib/firebaseAdmin';
+
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
@@ -29,6 +32,15 @@ export async function POST(req: NextRequest) {
       });
       docId = docRef.id;
     }
+
+    // Revalida o cache das rotas do blog
+    try {
+      revalidatePath('/blog');
+      revalidatePath('/admin');
+      if (dataToSave.slug) {
+        revalidatePath(`/blog/${dataToSave.slug}`);
+      }
+    } catch {}
 
     return NextResponse.json({ success: true, id: docId });
   } catch (error: any) {

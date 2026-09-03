@@ -4,18 +4,7 @@ runConfig:
   concurrency: 80
   cpu: 1
   memoryMiB: 512
-# ─── Variáveis de ambiente sensíveis ───────────────────────────────────────────
-# Configure estas variáveis diretamente no console do Firebase App Hosting.
-# NUNCA adicione valores reais aqui (este arquivo vai para o git).
-#
-# GOOGLE_GENAI_API_KEY        → chave da Genkit / Gemini AI
-# GOOGLE_TRANSLATE_API_KEY    → chave da Cloud Translation API V2
-#
-# ─── Variáveis públicas (não sensíveis) ────────────────────────────────────────
-# NEXT_PUBLIC_APP_URL=https://camisa-vetor-app.web.app
-#   └─ Usado para validar o Referer nas chamadas à /api/translate.
-#      Configure com a URL de produção do seu app.
-#
-# NEXT_PUBLIC_DISABLE_DYNAMIC_TRANSLATE=false
-#   └─ Mude para "true" como flag de emergência para parar todas as chamadas
-#      dinâmicas à Cloud Translation API (usa apenas dicionário estático).
+
+env:
+  - variable: PAYPAL_MODE
+    value: live

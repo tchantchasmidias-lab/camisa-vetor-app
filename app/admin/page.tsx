@@ -12,9 +12,10 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithPopu
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
   Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
-  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag, Clock, Search, Calendar
+  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag, Clock, Search, Calendar, Sparkles
 } from 'lucide-react';
 import Image from 'next/image';
+import { formatTitleCase, normalizeSearchTerm } from '@/lib/stringUtils';
 
 export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos' | 'clientes' | 'blog'>('produtos');
@@ -79,6 +80,7 @@ export default function AdminPage() {
   const [fileVetor, setFileVetor] = useState<File | null>(null);
   const [removeExistingVetor, setRemoveExistingVetor] = useState(false);
   const [isProductFree, setIsProductFree] = useState(false);
+  const [videoUrl, setVideoUrl] = useState('');
 
 
   const formatosDisponiveis = ['CDR', 'PDF', 'SVG', 'PNG', 'AI'];
@@ -580,8 +582,31 @@ export default function AdminPage() {
     }
   };
 
-  // --- MANTÉM AS FUNÇÕES DE PRODUTO (handleSubmitProduct, startEdit, handleImageChange, etc) ---
-  // (Omitidas aqui para brevidade, mas devem permanecer no seu arquivo)
+  const [isMigratingTitles, setIsMigratingTitles] = useState(false);
+
+  const handleMigrateTitles = async () => {
+    if (!confirm('Deseja padronizar todos os títulos dos produtos do banco de dados para o formato Title Case (Capitalizado)?')) return;
+    setIsMigratingTitles(true);
+    try {
+      const token = await auth.currentUser?.getIdToken();
+      const res = await fetch('/api/admin/migrate-titles', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      alert(`Migração concluída com sucesso!\n${data.updatedCount} produtos foram convertidos para Title Case de um total de ${data.totalProducts} produtos.`);
+      loadData();
+    } catch (err: any) {
+      console.error(err);
+      alert('Erro ao migrar títulos: ' + err.message);
+    } finally {
+      setIsMigratingTitles(false);
+    }
+  };
+
   const handleToggleFree = () => {
     setIsProductFree(prev => {
       const next = !prev;
@@ -602,6 +627,7 @@ export default function AdminPage() {
     setSelectedFormats(p.formats || []);
     const isFreeProduct = Boolean(p.isFree) || Number(p.price) === 0;
     setIsProductFree(isFreeProduct);
+    setVideoUrl(p.videoUrl || '');
     setPreviews({ capa: p.urls?.capa || '', destaque: p.urls?.destaque || '', galeria: p.urls?.galeria || [] });
     if (formRef.current) {
         (formRef.current.elements.namedItem('productName') as HTMLInputElement).value = p.name || '';
@@ -674,8 +700,9 @@ export default function AdminPage() {
         const novos = await Promise.all(filesGaleria.map(img => uploadFile(img, 'galeria')));
         galeriaUrls = [...galeriaUrls, ...novos];
       }
-      const productName = formData.get('productName')?.toString().trim() || '';
-      const productSlug = createSlug(formData.get('productName')?.toString() || '');
+      const rawProductName = formData.get('productName')?.toString().trim() || '';
+      const productName = formatTitleCase(rawProductName);
+      const productSlug = createSlug(rawProductName);
       const rawPrice = formData.get('price');
       const numericPrice = isProductFree ? 0 : (rawPrice !== null && rawPrice !== '' ? Number(rawPrice) : 0);
       const isFree = isProductFree || numericPrice === 0;
@@ -691,6 +718,7 @@ export default function AdminPage() {
         seoDescription: formData.get('seoDescription'),
         keywords: formData.get('keywords'),
         urls: { capa: urlCapa || "", destaque: urlDestaque || "", galeria: galeriaUrls, download: urlVetor || "" },
+        videoUrl: videoUrl.trim(),
         updatedAt: serverTimestamp(),
       };
 
@@ -832,10 +860,13 @@ export default function AdminPage() {
   }
 
   // --- LÓGICA DERIVADA: BUSCA E PAGINAÇÃO DE PRODUTOS ---
-  const produtosFiltrados = products.filter(p =>
-    p.name?.toLowerCase().includes(buscaProduto.toLowerCase()) ||
-    p.category?.toLowerCase().includes(buscaProduto.toLowerCase())
-  );
+  const normalizedBusca = normalizeSearchTerm(buscaProduto);
+  const produtosFiltrados = products.filter(p => {
+    if (!normalizedBusca) return true;
+    const normName = normalizeSearchTerm(p.name || '');
+    const normCategory = normalizeSearchTerm(p.category || '');
+    return normName.includes(normalizedBusca) || normCategory.includes(normalizedBusca);
+  });
   const totalPaginas = Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA);
   const produtosPaginados = produtosFiltrados.slice(
     (paginaAtual - 1) * ITENS_POR_PAGINA,
@@ -956,6 +987,23 @@ export default function AdminPage() {
                           <Plus size={20} className="text-gray-600"/><input type="file" multiple accept="image/*" onChange={(e) => handleImageChange(e, 'galeria')} className="absolute inset-0 opacity-0 cursor-pointer"/>
                         </div>
                       </div>
+                    </div>
+
+                    {/* VÍDEO DO PRODUTO (YOUTUBE) */}
+                    <div className="p-5 bg-white/[0.03] border border-white/10 rounded-[2rem] space-y-2 mb-8">
+                      <label className="text-[9px] font-black uppercase text-gray-400 tracking-widest flex items-center gap-2">
+                        <span className="text-red-500 font-bold text-xs">▶</span> VÍDEO DO PRODUTO (YOUTUBE)
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="Ex: https://www.youtube.com/watch?v=... ou youtu.be/..."
+                        value={videoUrl}
+                        onChange={(e) => setVideoUrl(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-[12px] text-white outline-none focus:border-[#fe7302]/50 focus:bg-white/[0.08] transition-all placeholder:text-gray-700"
+                      />
+                      <span className="text-[8.5px] font-medium text-gray-500 block px-1">
+                        Cole o link do vídeo demonstrativo ou speedart do seu canal.
+                      </span>
                     </div>
 
                     {(() => {
@@ -1136,16 +1184,28 @@ export default function AdminPage() {
 
               {/* LISTAGEM DE GESTÃO */}
               <div className="space-y-6">
-                {/* CABEÇALHO COM BADGE DINÂMICO */}
-                <div className="flex items-center gap-4">
-                  <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Produtos Cadastrados</h2>
-                  <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">
-                    {buscaProduto
-                      ? `${produtosFiltrados.length} de ${products.length} produtos`
-                      : `${products.length} produtos`
-                    }
-                  </span>
-                  <div className="h-px flex-1 bg-white/5"></div>
+                {/* CABEÇALHO COM BADGE DINÂMICO E BOTÃO DE MIGRAÇÃO */}
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <h2 className="text-[11px] font-black uppercase text-gray-600 tracking-[0.5em]">Produtos Cadastrados</h2>
+                    <span className="text-[9px] font-bold text-gray-600 uppercase bg-white/5 px-3 py-1 rounded-full">
+                      {buscaProduto
+                        ? `${produtosFiltrados.length} de ${products.length} produtos`
+                        : `${products.length} produtos`
+                      }
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleMigrateTitles}
+                    disabled={isMigratingTitles}
+                    className="text-[10px] font-black text-[#fe7302] hover:text-white uppercase bg-[#fe7302]/10 hover:bg-[#fe7302] border border-[#fe7302]/30 px-4 py-2 rounded-2xl transition-all flex items-center gap-2 shadow-lg shadow-orange-600/10 disabled:opacity-50"
+                    title="Padronizar todos os títulos gravados em ALL CAPS para Title Case"
+                  >
+                    {isMigratingTitles ? <Loader2 size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                    {isMigratingTitles ? 'Padronizando...' : 'Padronizar Títulos (Title Case)'}
+                  </button>
                 </div>
 
                 {/* CAMPO DE BUSCA */}

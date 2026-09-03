@@ -1,6 +1,7 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { adminDb, adminAuth } from "@/lib/firebaseAdmin";
 import { Resend } from "resend";
+import { sendCriticalErrorAlert } from "@/lib/errorNotifier";
 
 const ADMIN_EMAIL = "camisavetor@gmail.com";
 
@@ -112,6 +113,18 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("[FulfillManual] Erro:", error);
+
+    // 🚨 Alerta de falha no fulfillment manual
+    sendCriticalErrorAlert({
+      subject: `🚨 [ALERTA] Falha no Envio Manual de Arquivos`,
+      context: 'Administração / Fulfillment Manual',
+      errorMessage: error?.message || 'Erro no fulfillment manual',
+      stack: error?.stack,
+      error,
+      req,
+      level: 'ALERTA',
+    }).catch(err => console.error('[FulfillManual] Erro ao disparar alerta:', err));
+
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

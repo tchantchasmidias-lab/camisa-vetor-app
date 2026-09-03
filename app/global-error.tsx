@@ -1,19 +1,16 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useGeo } from '@/lib/i18n/GeoContext';
 import { safeSessionStorage } from '@/lib/safeStorage';
 import { shouldIgnoreError } from '@/lib/errorUtils';
 
-export default function Error({
+export default function GlobalError({
   error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  const { t } = useGeo();
-
   useEffect(() => {
     const message = (error?.message || '').toLowerCase();
     const isChunkError =
@@ -43,7 +40,7 @@ export default function Error({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: error?.message || 'Erro não tratado no cliente',
+          message: error?.message || 'Erro crítico global na aplicação',
           stack: error?.stack,
           digest: error?.digest,
           pathname: typeof window !== 'undefined' ? window.location.pathname : '',
@@ -55,20 +52,19 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center">
-      <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mb-4 text-2xl font-bold">
-        !
-      </div>
-      <h2 className="text-xl font-bold uppercase tracking-widest text-gray-900 mb-2">
-        {t('somethingWentWrong')}
-      </h2>
-      <p className="text-gray-500 text-sm max-w-md mb-6">{error.message || 'Ocorreu um erro inesperado ao carregar esta página.'}</p>
-      <button
-        onClick={() => reset()}
-        className="bg-[#fe7302] text-white px-8 py-3.5 rounded-2xl font-bold uppercase tracking-wider text-[11px] shadow-lg shadow-orange-500/20 hover:bg-black transition-all"
-      >
-        {t('tryAgain')}
-      </button>
-    </div>
+    <html lang="pt-BR">
+      <body style={{ fontFamily: 'sans-serif', margin: 0, padding: 0, backgroundColor: '#0c0d0e', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <div style={{ textAlign: 'center', padding: 32, maxWidth: 500 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, marginBottom: 12 }}>Ocorreu uma falha no sistema</h1>
+          <p style={{ color: '#9ca3af', fontSize: 14, marginBottom: 24 }}>Nossa equipe já foi notificada automaticamente com os detalhes técnicos do erro.</p>
+          <button
+            onClick={() => reset()}
+            style={{ backgroundColor: '#fe7302', color: '#ffffff', border: 'none', padding: '12px 24px', borderRadius: 12, fontWeight: 700, cursor: 'pointer', fontSize: 13, textTransform: 'uppercase', letterSpacing: 1 }}
+          >
+            Recarregar Aplicação
+          </button>
+        </div>
+      </body>
+    </html>
   );
 }

@@ -5,6 +5,7 @@ import ProductCard from '@/components/ProductCard';
 import { Heart, ArrowLeft, Ghost } from 'lucide-react';
 import Link from 'next/link';
 import { useGeo } from '@/lib/i18n/GeoContext';
+import { safeLocalStorage } from '@/lib/safeStorage';
 
 function FavoritosContent() {
   const [favorites, setFavorites] = useState<any[]>([]);
@@ -13,8 +14,12 @@ function FavoritosContent() {
   // Carrega os favoritos reais do localStorage ao abrir a página
   useEffect(() => {
     const loadFavorites = () => {
-      const saved = JSON.parse(localStorage.getItem('camisavetor_favorites') || '[]');
-      setFavorites(saved);
+      try {
+        const raw = safeLocalStorage.getItem('camisavetor_favorites');
+        setFavorites(raw ? JSON.parse(raw) : []);
+      } catch {
+        setFavorites([]);
+      }
     };
 
     loadFavorites();
