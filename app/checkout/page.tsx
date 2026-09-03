@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { 
-  CreditCard, QrCode, ChevronLeft, Download, CheckCircle2, 
+  QrCode, ChevronLeft, Download, CheckCircle2, 
   AlertCircle, Loader2, FileText, Tag, X, User, Phone, Edit2, Check
 } from 'lucide-react';
 import Link from 'next/link';
@@ -11,7 +11,6 @@ import { useRouter } from 'next/navigation';
 import { auth, db } from '@/lib/firebase';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { useGeo } from '@/lib/i18n/GeoContext';
 import { formatCPFMask, formatPhoneMask, isValidCPF, cleanCPF, cleanPhone } from '@/lib/validationUtils';
 import { safeLocalStorage, safeSessionStorage } from '@/lib/safeStorage';
@@ -25,7 +24,7 @@ interface CouponData {
 }
 
 function CheckoutContent() {
-  const [paymentMethod, setPaymentMethod] = useState<'pix' | 'paypal'>('pix');
+  const [paymentMethod, setPaymentMethod] = useState<'pix'>('pix');
   const [user, setUser] = useState<FirebaseUser | null>(null);
   const [userData, setUserData] = useState<{nome: string, cpf: string, phone: string, email: string} | null>(null);
   const [loadingUser, setLoadingUser] = useState(true);
@@ -87,7 +86,7 @@ function CheckoutContent() {
             setEditCpf(formatCPFMask(data.cpf));
             setEditPhone(formatPhoneMask(data.phone));
             setLoadingUser(false);
-            setPaymentMethod('paypal');
+            setPaymentMethod('pix');
             return;
           }
 
@@ -355,17 +354,14 @@ function CheckoutContent() {
                   <span className="w-7 h-7 rounded-full bg-[#202124] text-white flex items-center justify-center text-[10px] font-bold">1</span>
                   <h2 className="text-[11px] font-bold uppercase tracking-[0.3em] text-[#202124]">{t('paymentMethod')}</h2>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {!isInternational && (
-                    <button onClick={() => { setPaymentMethod('pix'); setPixError(''); }} className={`p-6 rounded-2xl border-2 flex items-center gap-4 transition-all ${paymentMethod === 'pix' ? 'border-[#fe7302] bg-orange-50/30' : 'border-[#f1f3f4] bg-[#f8f9fa]'}`}>
-                      <QrCode size={20} className={paymentMethod === 'pix' ? 'text-[#fe7302]' : 'text-[#dadce0]'} />
-                      <div className="text-left"><p className="text-[11px] font-bold text-[#202124] uppercase">PIX</p><p className="text-[9px] font-medium text-[#5f6368] uppercase">{t('pixInstant')}</p></div>
-                    </button>
-                  )}
-                  <button onClick={() => { setPaymentMethod('paypal'); setPixError(''); }} className={`p-6 rounded-2xl border-2 flex items-center gap-4 transition-all ${paymentMethod === 'paypal' ? 'border-blue-500 bg-blue-50/30' : 'border-[#f1f3f4] bg-[#f8f9fa]'} ${isInternational ? 'md:col-span-2' : ''}`}>
-                    <CreditCard size={20} className={paymentMethod === 'paypal' ? 'text-blue-500' : 'text-[#dadce0]'} />
-                    <div className="text-left"><p className="text-[11px] font-bold text-[#202124] uppercase">PAYPAL</p><p className="text-[9px] font-medium text-[#5f6368] uppercase">{t('creditCard')}</p></div>
-                  </button>
+                <div className="grid grid-cols-1 gap-4">
+                  <div className="p-6 rounded-2xl border-2 border-[#fe7302] bg-orange-50/30 flex items-center gap-4 transition-all">
+                    <QrCode size={20} className="text-[#fe7302]" />
+                    <div className="text-left">
+                      <p className="text-[11px] font-bold text-[#202124] uppercase">PIX</p>
+                      <p className="text-[9px] font-medium text-[#5f6368] uppercase">{t('pixInstant')}</p>
+                    </div>
+                  </div>
                 </div>
               </section>
 
@@ -589,7 +585,7 @@ function CheckoutContent() {
                       </div>
                     ) : (
                       <>
-                        {paymentMethod === 'pix' && !pixData && (
+                        {!pixData && (
                           <button 
                               onClick={handleFinalPayment} 
                               disabled={isGeneratingPix}
@@ -599,7 +595,7 @@ function CheckoutContent() {
                           </button>
                         )}
 
-                        {paymentMethod === 'pix' && pixData && (
+                        {pixData && (
                           <div className="bg-white p-6 rounded-2xl text-center text-black shadow-inner">
                             <p className="text-[12px] font-bold uppercase mb-4 text-[#fe7302]">{t('scanQrCode')}</p>
                             <div className="bg-white p-2 rounded-xl inline-block border border-gray-100">
@@ -617,60 +613,6 @@ function CheckoutContent() {
                             <p className="text-[10px] mt-6 font-bold text-gray-300 uppercase tracking-widest animate-pulse flex items-center justify-center gap-2">
                                <Loader2 size={12} className="animate-spin" /> {t('waitingPayment')}
                             </p>
-                          </div>
-                        )}
-
-                        {paymentMethod === 'paypal' && (
-                          <div className="bg-white p-6 rounded-2xl">
-                              <PayPalScriptProvider options={{ "clientId": process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID || "sb", currency: currencyCode }}>
-                                <PayPalButtons 
-                                  style={{ layout: "vertical", color: "blue", shape: "rect", label: "pay" }}
-                                  createOrder={async () => {
-                                    try {
-                                      const res = await fetch("/api/checkout/paypal/create", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({
-                                          items: cartItems,
-                                          userId: user?.uid,
-                                          email: userData?.email || user?.email,
-                                          currency: currencyCode,
-                                          couponCode: couponData ? couponData.code : undefined,
-                                        })
-                                      });
-                                      const order = await res.json();
-                                      if (!res.ok || !order.id) {
-                                        const errorMsg = order.error || "O checkout via PayPal está temporariamente indisponível. Por favor, utilize o Pix para liberação instantânea.";
-                                        alert(errorMsg);
-                                        throw new Error(errorMsg);
-                                      }
-                                      return order.id;
-                                    } catch (err: any) {
-                                      throw err;
-                                    }
-                                  }}
-                                  onApprove={async (data) => {
-                                    try {
-                                      const res = await fetch("/api/checkout/paypal/capture", {
-                                        method: "POST",
-                                        headers: { "Content-Type": "application/json" },
-                                        body: JSON.stringify({ orderID: data.orderID })
-                                      });
-                                      const captureData = await res.json();
-                                      if (captureData.status === "COMPLETED") {
-                                        processFulfillment(data.orderID, 'paypal');
-                                      } else {
-                                        alert(captureData.error || t('paypalCaptureError') || "Não foi possível confirmar o pagamento.");
-                                      }
-                                    } catch (err) {
-                                      alert("Erro de conexão ao validar pagamento PayPal.");
-                                    }
-                                  }}
-                                  onError={(err) => {
-                                    console.error('PayPal Checkout:', err);
-                                  }}
-                                />
-                              </PayPalScriptProvider>
                           </div>
                         )}
                       </>
