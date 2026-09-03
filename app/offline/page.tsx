@@ -1,23 +1,10 @@
 'use client';
 
-import Image from 'next/image';
 import { WifiOff, RefreshCw } from 'lucide-react';
 
 export default function OfflinePage() {
   return (
     <div className="min-h-screen bg-white flex flex-col items-center justify-center px-6 text-center">
-      {/* Logo */}
-      <div className="mb-10">
-        <Image
-          src="/logo.svg"
-          alt="Camisa Vetor"
-          width={180}
-          height={40}
-          className="h-10 w-auto"
-          priority
-        />
-      </div>
-
       {/* Ícone de sem internet */}
       <div className="w-20 h-20 bg-orange-50 rounded-full flex items-center justify-center mb-6">
         <WifiOff size={36} className="text-[#fe7302]" />
