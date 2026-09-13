@@ -392,10 +392,11 @@ export default function ProductDetailView({ product }: { product: any }) {
       touchStateRef.current.lastTapTime = now;
 
       // Início do toque com 1 dedo
-      touchStateRef.current.startX = e.touches[0].clientX;
-      touchStateRef.current.startY = e.touches[0].clientY;
-      touchStateRef.current.currentX = e.touches[0].clientX;
-      touchStateRef.current.currentY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      touchStateRef.current.startX = touch.clientX;
+      touchStateRef.current.startY = touch.clientY;
+      touchStateRef.current.currentX = touch.clientX;
+      touchStateRef.current.currentY = touch.clientY;
       touchStateRef.current.startPosX = lightboxPos.x;
       touchStateRef.current.startPosY = lightboxPos.y;
       touchStateRef.current.startTime = now;
@@ -421,10 +422,11 @@ export default function ProductDetailView({ product }: { product: any }) {
         setLightboxPos({ x: 0, y: 0 });
       }
     } else if (e.touches.length === 1) {
-      touchStateRef.current.currentX = e.touches[0].clientX;
-      touchStateRef.current.currentY = e.touches[0].clientY;
-      const dx = e.touches[0].clientX - touchStateRef.current.startX;
-      const dy = e.touches[0].clientY - touchStateRef.current.startY;
+      const touch = e.touches[0];
+      touchStateRef.current.currentX = touch.clientX;
+      touchStateRef.current.currentY = touch.clientY;
+      const dx = touch.clientX - touchStateRef.current.startX;
+      const dy = touch.clientY - touchStateRef.current.startY;
 
       if (lightboxScale > 1.05) {
         // Modo Pan (Imagem ampliada: navegação livre pelos detalhes)
@@ -433,16 +435,21 @@ export default function ProductDetailView({ product }: { product: any }) {
         const newY = Math.min(Math.max(touchStateRef.current.startPosY + dy, -maxOffset), maxOffset);
         setLightboxPos({ x: newX, y: newY });
       } else if (touchStateRef.current.isSwiping && galleryImages.length > 1) {
-        // Modo Swipe (Sem zoom: feedback elástico ao arrastar para os lados)
+        // Modo Swipe (Sem zoom: feedback fluido ao arrastar lateralmente)
         if (Math.abs(dx) > Math.abs(dy)) {
           setIsLightboxDragging(true);
-          setLightboxPos({ x: dx * 0.4, y: 0 });
+          setLightboxPos({ x: dx * 0.7, y: 0 });
         }
       }
     }
   };
 
   const handleLightboxTouchEnd = (e: React.TouchEvent) => {
+    if (e.changedTouches && e.changedTouches.length > 0) {
+      touchStateRef.current.currentX = e.changedTouches[0].clientX;
+      touchStateRef.current.currentY = e.changedTouches[0].clientY;
+    }
+
     if (e.touches.length === 0) {
       setIsLightboxDragging(false);
       touchStateRef.current.startDistance = 0;
@@ -453,12 +460,12 @@ export default function ProductDetailView({ product }: { product: any }) {
         const dy = touchStateRef.current.currentY - touchStateRef.current.startY;
         const dt = Date.now() - touchStateRef.current.startTime;
 
-        const isHorizontalSwipe = Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.2 && dt < 600;
+        const isHorizontalSwipe = Math.abs(dx) > 35 && Math.abs(dx) > Math.abs(dy) * 0.8 && dt < 800;
 
         if (isHorizontalSwipe && galleryImages.length > 1) {
-          if (dx < -40) {
+          if (dx < -35) {
             handleNextLightbox(); // Deslize para a esquerda -> próxima foto
-          } else if (dx > 40) {
+          } else if (dx > 35) {
             handlePrevLightbox(); // Deslize para a direita -> foto anterior
           }
         }
@@ -468,10 +475,11 @@ export default function ProductDetailView({ product }: { product: any }) {
         setLightboxPos({ x: 0, y: 0 });
       }
     } else if (e.touches.length === 1) {
-      touchStateRef.current.startX = e.touches[0].clientX;
-      touchStateRef.current.startY = e.touches[0].clientY;
-      touchStateRef.current.currentX = e.touches[0].clientX;
-      touchStateRef.current.currentY = e.touches[0].clientY;
+      const touch = e.touches[0];
+      touchStateRef.current.startX = touch.clientX;
+      touchStateRef.current.startY = touch.clientY;
+      touchStateRef.current.currentX = touch.clientX;
+      touchStateRef.current.currentY = touch.clientY;
       touchStateRef.current.startPosX = lightboxPos.x;
       touchStateRef.current.startPosY = lightboxPos.y;
     }

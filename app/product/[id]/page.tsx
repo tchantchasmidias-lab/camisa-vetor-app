@@ -213,7 +213,18 @@ export default async function Page({ params }: Props) {
               description: `Vídeo demonstrativo e speed art do vetor ${name}`,
               thumbnailUrl: `https://img.youtube.com/vi/${getYouTubeId(serializedProduct.videoUrl)}/maxresdefault.jpg`,
               embedUrl: `https://www.youtube.com/embed/${getYouTubeId(serializedProduct.videoUrl)}`,
-              uploadDate: '2026-01-01',
+              uploadDate: (() => {
+                try {
+                  const rawDate = serializedProduct.createdAt || serializedProduct.updatedAt;
+                  if (rawDate) {
+                    const parsed = new Date(rawDate);
+                    if (!isNaN(parsed.getTime())) {
+                      return parsed.toISOString();
+                    }
+                  }
+                } catch {}
+                return new Date().toISOString();
+              })(),
             },
           }
         : {}),
