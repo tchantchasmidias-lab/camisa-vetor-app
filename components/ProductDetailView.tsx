@@ -631,13 +631,10 @@ export default function ProductDetailView({ product }: { product: any }) {
             {/* Card de Aviso — Imagem meramente ilustrativa */}
             <div className="product-mockup-disclaimer bg-[#f8fafc] border border-[#e2e8f0] rounded-lg p-[12px_14px] mt-[14px] text-center">
               <p className="disclaimer-title text-[13px] font-bold text-[#1e293b] mb-1">
-                Imagem meramente ilustrativa
+                Imagem meramente ilustrativa.
               </p>
-              <p className="disclaimer-text text-[13px] leading-[1.5] text-[#475569] mb-1.5">
-                Você receberá o <strong className="font-semibold text-[#1e293b]">arquivo digital aberto e 100% editável</strong> (frente, costas e mangas separadas), pronto para personalizar e produzir.
-              </p>
-              <p className="disclaimer-subtitle text-[12px] text-[#475569] italic m-0">
-                Essa imagem serve apenas para demonstrar o resultado final da estampa.
+              <p className="disclaimer-text text-[13px] leading-[1.5] text-[#475569] m-0">
+                Você receberá o <strong className="font-semibold text-[#1e293b]">arquivo digital aberto e 100% editável</strong>.
               </p>
             </div>
           </div>
