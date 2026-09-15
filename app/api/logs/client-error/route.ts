@@ -6,12 +6,28 @@ export const dynamic = 'force-dynamic';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, stack, digest, pathname, userEmail, userId } = body;
+    const { message, stack, digest, pathname, userEmail, userId } = body || {};
 
-    // Filtra erros de rede transitórios, desconexões de crawlers/Googlebot, chunks pós-deploy e restrições de sandbox
+    // 1. Filtra erros de rede transitórios, desconexões de crawlers, chunks e extensões
     if (shouldIgnoreError(message) || shouldIgnoreError(stack)) {
       return NextResponse.json(
-        { status: 'ignored', reason: 'Transient client/crawler network artifact' },
+        { status: 'ignored', reason: 'Browser extension, translation or transient network artifact' },
+        { status: 200 }
+      );
+    }
+
+    // 2. Checagem extra de segurança para extensões de terceiros e manipulação de nós do DOM
+    const fullText = `${message || ''} ${stack || ''}`.toLowerCase();
+    if (
+      fullText.includes('chrome-extension://') ||
+      fullText.includes('moz-extension://') ||
+      fullText.includes('safari-extension://') ||
+      fullText.includes('insertbefore') ||
+      fullText.includes('removechild') ||
+      fullText.includes('not a child of this node')
+    ) {
+      return NextResponse.json(
+        { status: 'ignored', reason: 'Third-party extension or DOM manipulation' },
         { status: 200 }
       );
     }
