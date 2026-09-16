@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useRef } from 'react';
 import Link from 'next/link';
@@ -33,17 +33,17 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
   };
 
   return (
-    <section className="w-full mt-8 first:mt-0">
+    <section className="w-full py-8 sm:py-10 border-t border-[#f1f5f9] first:border-t-0 first:pt-4">
       {/* Cabecalho da Secao */}
-      <div className="flex items-center justify-between mb-3 px-1">
-        <h2 className="text-[15px] md:text-[17px] font-bold text-[#0f172a] uppercase tracking-wider">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
+        <h2 className="text-xl sm:text-2xl font-black text-[#0f172a] uppercase tracking-wide leading-tight">
           {title}
         </h2>
         <Link
           href={viewAllHref}
-          className="text-[12px] md:text-[13px] font-semibold text-[#fe7302] hover:text-[#c85c00] transition-colors flex items-center gap-0.5"
+          className="text-sm sm:text-base font-semibold text-[#fe7302] hover:text-[#c85c00] hover:underline transition-colors flex items-center gap-1 shrink-0 ml-4"
         >
-          Ver todos <span className="text-[15px] leading-none">→</span>
+          Ver todos <span className="text-base leading-none">→</span>
         </Link>
       </div>
 
