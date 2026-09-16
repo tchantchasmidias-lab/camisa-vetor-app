@@ -12,6 +12,11 @@ interface ProductRailProps {
   viewAllHref: string;
 }
 
+// Larguras dos cards:
+//   Mobile  (~390px viewport): w-[44vw]  => ~2.2 cards visíveis (indica continuacao)
+//   Tablet  (md ~768px)      : w-[31%]   => 3 cards visíveis com gap-3
+//   Desktop (lg ~1024px+)    : w-[calc((100%-4*1rem)/5)] => exatos 5 cards com gap-4
+
 export default function ProductRail({ title, products, viewAllHref }: ProductRailProps) {
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -19,7 +24,8 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
 
   const scroll = (direction: 'left' | 'right') => {
     if (!railRef.current) return;
-    const scrollAmount = railRef.current.clientWidth * 0.75;
+    // Avanca ~5 cards no desktop, ~3 no tablet, ~2 no mobile
+    const scrollAmount = railRef.current.clientWidth;
     railRef.current.scrollBy({
       left: direction === 'right' ? scrollAmount : -scrollAmount,
       behavior: 'smooth',
@@ -47,7 +53,7 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
         <button
           onClick={() => scroll('left')}
           aria-label="Anterior"
-          className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-20
+          className="hidden md:flex absolute -left-5 top-[40%] -translate-y-1/2 z-20
                      w-9 h-9 items-center justify-center
                      bg-white border border-[#e2e8f0] shadow-md rounded-full
                      text-[#0f172a] hover:bg-[#fe7302] hover:text-white hover:border-[#fe7302]
@@ -59,17 +65,18 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
         {/* Trilho Horizontal com Scroll Fluido */}
         <div
           ref={railRef}
-          className="flex gap-3 md:gap-4 overflow-x-auto scroll-smooth pb-3
+          className="flex gap-3 lg:gap-4 overflow-x-auto scroll-smooth pb-3
                      [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollSnapType: 'x mandatory' }}
         >
           {products.map((product, index) => (
             <div
               key={product.id}
-              className="flex-shrink-0 w-[155px] md:w-[195px]"
+              // Mobile: 44vw (~2.2 cards), md: ~31% (~3 cards), lg: calc 5 cards exact
+              className="flex-shrink-0 w-[44vw] md:w-[31%] lg:w-[calc((100%-4*1rem)/5)]"
               style={{ scrollSnapAlign: 'start' }}
             >
-              <ProductCard product={product} priority={index < 3} />
+              <ProductCard product={product} priority={index < 5} />
             </div>
           ))}
         </div>
@@ -78,7 +85,7 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
         <button
           onClick={() => scroll('right')}
           aria-label="Proximo"
-          className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-20
+          className="hidden md:flex absolute -right-5 top-[40%] -translate-y-1/2 z-20
                      w-9 h-9 items-center justify-center
                      bg-white border border-[#e2e8f0] shadow-md rounded-full
                      text-[#0f172a] hover:bg-[#fe7302] hover:text-white hover:border-[#fe7302]
