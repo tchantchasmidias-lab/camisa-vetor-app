@@ -35,7 +35,7 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
   return (
     <section className="w-full py-8 sm:py-10 border-t border-[#f1f5f9] first:border-t-0 first:pt-4">
       {/* Cabecalho da Secao */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6 px-1">
+      <div className="flex items-center justify-between mb-4 sm:mb-6 px-0">
         <h2 className="text-xl sm:text-2xl font-black text-[#0f172a] uppercase tracking-wide leading-tight">
           {title}
         </h2>
