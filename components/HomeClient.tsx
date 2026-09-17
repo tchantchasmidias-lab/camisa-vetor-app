@@ -70,7 +70,7 @@ const RAIL_CONFIGS = [
   },
   {
     title: 'Caça Esportiva',
-    categoryKeys: ['caca esportiva', 'cacaesportiva', 'pesca esportiva', 'pescaesportiva'],
+    categoryKeys: ['caca esportiva', 'cacaesportiva', 'caca'],
     viewAllHref: '/?category=Ca%C3%A7a+Esportiva',
     limit: 20,
   },
