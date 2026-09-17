@@ -67,19 +67,24 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
           const imgSrc = product.urls?.capa || product.urls?.destaque || '';
           const href = `/product/${product.slug || product.id}`;
 
+          const productTitle = formatTitleCase(tp(product.name || 'Vetor para Camiseta'));
+          const semanticAlt = `Arte Vetor ${productTitle} - Camisa Editável CorelDRAW Sublimação`;
+
           return (
             <Link
               key={product.id}
               href={href}
               className="group block"
-              aria-label={`Ver ${tp(product.name)}`}
+              aria-label={`Ver ${productTitle}`}
+              title={semanticAlt}
             >
               {/* Card imagem — lazy load */}
               <div className="aspect-square relative rounded-xl overflow-hidden bg-[#f8f9fa] border border-transparent group-hover:border-[#0f172a] group-hover:bg-black transition-all duration-300 group-hover:shadow-xl group-hover:shadow-black/20 mb-3">
                 {imgSrc ? (
                   <Image
                     src={imgSrc}
-                    alt={`Arte em vetor para camiseta ${tp(product.name)} - CDR, PDF, SVG, PNG`}
+                    alt={semanticAlt}
+                    title={semanticAlt}
                     fill
                     sizes="(max-width: 640px) 45vw, 25vw"
                     quality={75}

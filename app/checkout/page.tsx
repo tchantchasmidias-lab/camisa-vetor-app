@@ -14,6 +14,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { useGeo } from '@/lib/i18n/GeoContext';
 import { formatCPFMask, formatPhoneMask, isValidCPF, cleanCPF, cleanPhone } from '@/lib/validationUtils';
 import { safeLocalStorage, safeSessionStorage } from '@/lib/safeStorage';
+import { formatTitleCase } from '@/lib/stringUtils';
 
 interface CouponData {
   code: string;
@@ -536,9 +537,15 @@ function CheckoutContent() {
                     <div className="space-y-4 mb-8 max-h-[280px] overflow-y-auto no-scrollbar pr-2">
                       {cartItems.map((item) => (
                         <div key={item.id} className="flex items-center gap-4 bg-white p-3 rounded-2xl shadow-inner">
-                          <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                             <Image src={item.image} alt={item.name} fill className="object-cover" />
-                          </div>
+                           <div className="w-14 h-14 relative rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
+                             <Image
+                               src={item.image}
+                               alt={`Arte Vetor ${formatTitleCase(tp(item.name))} - Camisa Editável CorelDRAW Sublimação`}
+                               title={`Arte Vetor ${formatTitleCase(tp(item.name))} - Camisa Editável CorelDRAW Sublimação`}
+                               fill
+                               className="object-cover"
+                             />
+                           </div>
                           <div className="flex-1 overflow-hidden">
                             <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#202124] truncate">{tp(item.name)}</h4>
                             <p className="text-[11px] font-bold text-[#fe7302] mt-1">{formatPrice(item.price)}</p>

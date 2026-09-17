@@ -552,10 +552,10 @@ export default function ProductDetailView({ product }: { product: any }) {
                 {selectedImage && (
                   <Image
                     src={selectedImage}
-                    alt={`Vetor Estampa ${productName} - Mockup Editável em CDR, PDF, SVG e PNG`}
+                    alt={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
+                    title={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
                     fill
                     quality={90}
-                    unoptimized
                     sizes="(max-width: 768px) 100vw, 700px"
                     className={`product-gallery-main-image object-cover transition-transform duration-300 ease-out pointer-events-none lg:pointer-events-auto rounded-xl ${
                       isZoomed ? 'scale-[1.8]' : 'scale-100'
@@ -590,10 +590,11 @@ export default function ProductDetailView({ product }: { product: any }) {
                   >
                     <Image
                       src={url}
-                      alt={`Miniatura ${index + 1} - Arte em vetor ${productName}`}
+                      alt={`Arte Vetor ${productName} - Miniatura ${index + 1} Editável CorelDRAW Sublimação`}
+                      title={`Arte Vetor ${productName} - Foto ${index + 1}`}
                       fill
                       sizes="128px"
-                      quality={70}
+                      quality={75}
                       loading="lazy"
                       className="object-cover rounded-lg"
                     />
@@ -904,10 +905,10 @@ export default function ProductDetailView({ product }: { product: any }) {
                 >
                   <Image
                     src={selectedImage}
-                    alt={productName}
+                    alt={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
+                    title={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
                     fill
-                    quality={100}
-                    unoptimized
+                    quality={95}
                     draggable={false}
                     className="object-contain max-h-[82vh] rounded-lg pointer-events-none"
                   />
@@ -950,7 +951,13 @@ export default function ProductDetailView({ product }: { product: any }) {
                       selectedImage === url ? 'border-[#fe7302] scale-105 shadow-md shadow-orange-500/30' : 'border-transparent opacity-40 hover:opacity-100'
                     }`}
                   >
-                    <Image src={url} alt={`Miniatura ${index + 1} da estampa no zoom em tela cheia`} fill className="object-cover rounded-lg" />
+                    <Image
+                      src={url}
+                      alt={`Arte Vetor ${productName} - Miniatura ${index + 1} no zoom em tela cheia`}
+                      title={`Miniatura ${index + 1} - ${productName}`}
+                      fill
+                      className="object-cover rounded-lg"
+                    />
                   </button>
                 ))}
               </div>

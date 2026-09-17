@@ -153,7 +153,8 @@ function CarrinhoContent() {
                     <div className="w-20 h-20 md:w-28 md:h-28 bg-[#f1f3f4] rounded-2xl overflow-hidden flex-shrink-0 relative border border-[#dadce0]">
                       <Image
                         src={item.image}
-                        alt={item.name}
+                        alt={`Arte Vetor ${formatTitleCase(tp(item.name))} - Camisa Editável CorelDRAW Sublimação`}
+                        title={`Arte Vetor ${formatTitleCase(tp(item.name))} - Camisa Editável CorelDRAW Sublimação`}
                         fill
                         className="object-cover transition-transform duration-500 group-hover:scale-105"
                       />

@@ -79,10 +79,11 @@ export async function GET() {
         });
       }
 
-      // Se nenhuma imagem foi adicionada mas existe destaque/capa única
-      if (productImages.length === 0 && data.urls?.destaque) {
+      // Se nenhuma imagem foi adicionada mas existe destaque/capa única ou coverImage/images[0]
+      const fallbackImage = data.urls?.destaque || data.coverImage || (Array.isArray(data.images) ? data.images[0] : null);
+      if (productImages.length === 0 && fallbackImage) {
         productImages.push({
-          url: buildCleanImageUrl(data.urls.destaque, slug, 'destaque'),
+          url: buildCleanImageUrl(fallbackImage, slug, 'capa'),
           title: `${name} | Arte em Vetor Editável`,
           caption: `Vetor ${name} para sublimação e serigrafia`,
         });

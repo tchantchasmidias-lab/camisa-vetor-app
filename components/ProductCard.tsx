@@ -45,13 +45,16 @@ export default function ProductCard({ product, priority = false }: { product: an
     }
   };
 
+  const productTitle = formatTitleCase(product.name || product.title || 'Vetor para Camiseta');
+  const semanticAlt = `Arte Vetor ${productTitle} - Camisa Editável CorelDRAW Sublimação`;
+
   return (
     <div className="relative group transition-all duration-500">
       <button onClick={toggleFavorite} className="absolute top-4 right-4 z-20 transition-all active:scale-75">
         <Heart size={20} className={isFavorite ? 'fill-[#fe7302] text-[#fe7302]' : 'text-gray-300'} />
       </button>
 
-      <Link href={`/product/${product.slug || product.id}`} className="block" title={formatTitleCase(product.name)}>
+      <Link href={`/product/${product.slug || product.id}`} className="block" title={semanticAlt}>
         <div className="aspect-square relative overflow-hidden rounded-xl bg-[#f8f8f8] border border-transparent group-hover:border-[#0f172a] group-hover:bg-black mb-4 group-hover:shadow-xl group-hover:shadow-black/30 transition-all duration-300">
 
           {capaSrc ? (
@@ -59,7 +62,8 @@ export default function ProductCard({ product, priority = false }: { product: an
               {/* Imagem CAPA — prioridade de carregamento para LCP nos primeiros cards */}
               <Image
                 src={capaSrc}
-                alt={`Arte em vetor ${formatTitleCase(product.name || 'para camiseta')} editável`}
+                alt={semanticAlt}
+                title={semanticAlt}
                 fill
                 priority={priority}
                 // Breakpoints corretos: mobile é 1 coluna (100vw), md=3 colunas, lg=5 colunas
@@ -76,7 +80,8 @@ export default function ProductCard({ product, priority = false }: { product: an
               {hasHoverImage && (
                 <Image
                   src={destaqueSrc}
-                  alt={`Detalhes da estampa ${formatTitleCase(product.name || 'em vetor')}`}
+                  alt={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
+                  title={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
                   fill
                   sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
                   quality={85}

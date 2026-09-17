@@ -54,7 +54,8 @@ export default function BlogProductSidebar({ products }: BlogProductSidebarProps
                 {product.image ? (
                   <Image
                     src={product.image}
-                    alt={`Arte em vetor ${formattedTitle}`}
+                    alt={`Arte Vetor ${formattedTitle} - Camisa Editável CorelDRAW Sublimação`}
+                    title={`Arte Vetor ${formattedTitle} - Camisa Editável CorelDRAW Sublimação`}
                     fill
                     sizes="64px"
                     loading="lazy"
