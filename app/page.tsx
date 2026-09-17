@@ -3,7 +3,8 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import HomeClient, { Product } from '@/components/HomeClient';
 import { formatTitleCase } from '@/lib/stringUtils';
 
-export const revalidate = 1800; // ISR: atualiza a home a cada 30 minutos
+export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Atualização imediata em tempo real ao publicar novos produtos
 
 export const metadata: Metadata = {
   title: 'Camisa Vetor | Artes e Vetores Editáveis para Sublimação',

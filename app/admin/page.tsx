@@ -461,11 +461,24 @@ export default function AdminPage() {
     }
   };
 
+  const triggerRevalidate = async (path = '/') => {
+    try {
+      await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path }),
+      });
+    } catch (err) {
+      console.warn('Erro ao acionar revalidação on-demand:', err);
+    }
+  };
+
   const handleAddCategory = async (e: any) => {
     e.preventDefault();
     const name = e.target.catName.value.trim();
     if (!name) return;
     await addDoc(collection(db, "categories"), { name, imageUrl: '', createdAt: serverTimestamp() });
+    await triggerRevalidate();
     e.target.reset();
     loadData();
   };
@@ -724,6 +737,9 @@ export default function AdminPage() {
 
       editingId ? await updateDoc(doc(db, "products", editingId), data) : await addDoc(collection(db, 'products'), { ...data, salesCount: 0, createdAt: serverTimestamp() });
       
+      // Revalidação on-demand instantânea da Home e Catálogo
+      await triggerRevalidate();
+
       // Se é um produto novo, mostra opção de notificar usuários
       if (isNewProduct) {
         setLastPublishedProduct({ name: productName, slug: productSlug });
@@ -1260,7 +1276,7 @@ export default function AdminPage() {
                         </div>
                         <div className="flex gap-3 pr-4">
                           <button onClick={() => startEdit(p)} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-[#fe7302] hover:text-white transition-all"><Edit3 size={20}/></button>
-                          <button onClick={async () => { if(confirm("Excluir definitivamente?")) { await deleteDoc(doc(db, "products", p.id)); loadData(); } }} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
+                          <button onClick={async () => { if(confirm("Excluir definitivamente?")) { await deleteDoc(doc(db, "products", p.id)); await triggerRevalidate(); loadData(); } }} className="p-4 bg-white/5 text-gray-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all"><Trash2 size={20}/></button>
                         </div>
                       </div>
                     ))
@@ -1351,7 +1367,7 @@ export default function AdminPage() {
                                   </div>
                                   <span className="text-[11px] font-black uppercase text-gray-400 tracking-tight">{cat.name}</span>
                               </div>
-                              <button onClick={async () => { if(confirm("Remover esta categoria?")) { await deleteDoc(doc(db, "categories", cat.id)); loadData(); } }} className="p-3 text-gray-700 hover:text-red-500 transition-colors"><Trash2 size={18}/></button>
+                              <button onClick={async () => { if(confirm("Remover esta categoria?")) { await deleteDoc(doc(db, "categories", cat.id)); await triggerRevalidate(); loadData(); } }} className="p-3 text-gray-700 hover:text-red-500 transition-colors"><Trash2 size={18}/></button>
                           </div>
                       ))}
                   </div>

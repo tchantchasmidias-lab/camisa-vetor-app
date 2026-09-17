@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -83,10 +83,18 @@ const RAIL_CONFIGS = [
 ] as const;
 
 function HomeClientContent({ initialProducts }: HomeClientProps) {
-  const products = initialProducts || [];
+  const [products, setProducts] = useState<Product[]>(initialProducts || []);
+  const [isSyncing, setIsSyncing] = useState(false);
   const searchParams = useSearchParams();
   const router = useRouter();
   const { t, tp } = useGeo();
+
+  // Sincroniza estado quando initialProducts atualizar do servidor
+  useEffect(() => {
+    if (initialProducts && initialProducts.length > 0) {
+      setProducts(initialProducts);
+    }
+  }, [initialProducts]);
 
   // 1. Captura filtros da URL em tempo real de forma defensiva
   const searchQuery = (searchParams?.get ? searchParams.get('search') : null) || '';
@@ -101,6 +109,28 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
 
   const normalizedQuery = normalizeSearchTerm(searchQuery);
   const normalizedCategoryQuery = normalizeSearchTerm(categoryQuery);
+
+  // Sincronização em tempo real caso a categoria clicada não tenha produtos no cache inicial
+  useEffect(() => {
+    if (!categoryParam || isAllSelected) return;
+
+    const hasMatchingProducts = products.some(
+      p => normalizeSearchTerm(p.category) === normalizedCategoryQuery
+    );
+
+    if (!hasMatchingProducts) {
+      setIsSyncing(true);
+      fetch('/api/products', { cache: 'no-store' })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data?.products) && data.products.length > 0) {
+            setProducts(data.products);
+          }
+        })
+        .catch(err => console.error('Erro ao buscar produtos atualizados:', err))
+        .finally(() => setIsSyncing(false));
+    }
+  }, [categoryParam, normalizedCategoryQuery, isAllSelected, products]);
 
   // Detecta se a home está em modo "default" (sem busca nem filtro)
   const isDefaultHome = !searchQuery && isAllSelected;
@@ -216,8 +246,13 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
 
               {/* Seção de Produtos Filtrados */}
               <section className="mt-1 md:mt-4">
-                {/* Mensagem de "Nada encontrado" */}
-                {filteredProducts.length === 0 && (
+                {/* Mensagem de carregamento ou "Nada encontrado" */}
+                {isSyncing ? (
+                  <div className="text-center py-20 px-4 animate-in fade-in duration-300">
+                    <div className="w-8 h-8 border-2 border-[#fe7302] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+                    <p className="text-sm font-medium text-gray-500">Buscando artes em tempo real...</p>
+                  </div>
+                ) : filteredProducts.length === 0 ? (
                   <div className="text-center py-20 px-4 animate-in fade-in duration-700">
                     <div className="w-16 h-16 bg-orange-50 text-[#fe7302] rounded-full flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
                       🔍
@@ -235,7 +270,7 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
                       <span>Ver Todos os Vetores</span>
                     </button>
                   </div>
-                )}
+                ) : null}
 
                 {/* Grid de Produtos SSR */}
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
