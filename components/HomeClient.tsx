@@ -168,7 +168,7 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
   return (
     <div className="bg-white min-h-screen font-sans">
       <div className="pt-4 md:pt-4 pb-[28px] md:pb-10">
-        <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Carrossel de Categorias */}
           <CategoryCarousel />
