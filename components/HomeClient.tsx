@@ -6,6 +6,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useGeo } from '@/lib/i18n/GeoContext';
 import { normalizeSearchTerm } from '@/lib/stringUtils';
+import { shuffleArray } from '@/lib/arrayUtils';
 
 import ProductCard from '@/components/ProductCard';
 import CategoryCarousel from '@/components/CategoryCarousel';
@@ -41,43 +42,43 @@ const RAIL_CONFIGS = [
     title: 'Novidades',
     // Novidades: todos os produtos, ordenados por createdAt desc — feito na função de filtro
     categoryKeys: null as string[] | null,
-    viewAllHref: '/',
+    viewAllHref: '/catalog?sort=recent',
     limit: 20,
   },
   {
     title: 'Interclasse',
     categoryKeys: ['interclasse'],
-    viewAllHref: '/?category=Interclasse',
+    viewAllHref: '/catalog?category=Interclasse',
     limit: 20,
   },
   {
     title: 'Cavalgada',
     categoryKeys: ['cavalgada'],
-    viewAllHref: '/?category=Cavalgada',
+    viewAllHref: '/catalog?category=Cavalgada',
     limit: 20,
   },
   {
     title: 'Cristã',
     categoryKeys: ['crista', 'cristas'],
-    viewAllHref: '/?category=Crist%C3%A3',
+    viewAllHref: '/catalog?category=Crist%C3%A3',
     limit: 20,
   },
   {
     title: 'Católica',
     categoryKeys: ['catolica', 'catolicismo'],
-    viewAllHref: '/?category=Cat%C3%B3lica',
+    viewAllHref: '/catalog?category=Cat%C3%B3lica',
     limit: 20,
   },
   {
     title: 'Caça Esportiva',
     categoryKeys: ['caca esportiva', 'cacaesportiva', 'caca'],
-    viewAllHref: '/?category=Ca%C3%A7a+Esportiva',
+    viewAllHref: '/catalog?category=Ca%C3%A7a+Esportiva',
     limit: 20,
   },
   {
     title: 'Terceirão',
     categoryKeys: ['terceirao', 'terceiro'],
-    viewAllHref: '/?category=Tercair%C3%A3o',
+    viewAllHref: '/catalog?category=Terceir%C3%A3o',
     limit: 20,
   },
 ] as const;
@@ -99,6 +100,8 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
   // 1. Captura filtros da URL em tempo real de forma defensiva
   const searchQuery = (searchParams?.get ? searchParams.get('search') : null) || '';
   const categoryParam = searchParams?.get ? searchParams.get('category') : null;
+  const sortParam = searchParams?.get ? searchParams.get('sort') : null;
+  const isRecentSort = sortParam === 'recent';
   
   // Se não houver categoria na URL, ou se for a tradução de "Todos", usamos o valor padrão
   const allLabel = t('allCategories');
@@ -132,13 +135,16 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
     }
   }, [categoryParam, normalizedCategoryQuery, isAllSelected, products]);
 
-  // Detecta se a home está em modo "default" (sem busca nem filtro)
-  const isDefaultHome = !searchQuery && isAllSelected;
+  // Detecta se a home está em modo "default" (sem busca, filtro ou ordenação recente)
+  const isDefaultHome = !searchQuery && isAllSelected && !isRecentSort;
 
   // 2. FILTRO REATIVO NORMALIZADO (sem acentos e case-insensitive) — usado quando há busca/filtro ativo
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
       if (!product) return false;
+
+      // Se for sort=recent sem busca nem categoria específica, exibe todos os produtos (já ordenados por createdAt desc)
+      if (isRecentSort && !searchQuery && isAllSelected) return true;
 
       // 2.1 Verificação de Busca por Texto com Suporte Abrangente
       let matchesSearch = true;
@@ -164,7 +170,10 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
 
       return matchesSearch && matchesCategory;
     });
-  }, [products, normalizedQuery, normalizedCategoryQuery, isAllSelected]);
+  }, [products, normalizedQuery, normalizedCategoryQuery, isAllSelected, isRecentSort, searchQuery]);
+
+  // Estado para armazenar produtos embaralhados das categorias temáticas no client (previne hydration mismatch)
+  const [shuffledRails, setShuffledRails] = useState<Record<string, Product[]>>({});
 
   // 3. SEGMENTOS DOS 7 TRILHOS — computados apenas na home default
   const railSegments = useMemo(() => {
@@ -191,6 +200,25 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
     });
   }, [products, isDefaultHome]);
 
+  // Embaralha as categorias temáticas no client após a montagem (evita hydration mismatch)
+  // A seção "Novidades" é mantida estritamente com ordenação cronológica decrescente
+  useEffect(() => {
+    if (!isDefaultHome || products.length === 0) return;
+
+    const randomized: Record<string, Product[]> = {};
+    for (const rail of RAIL_CONFIGS) {
+      if (rail.categoryKeys !== null) {
+        const matching = products.filter(p => {
+          if (!p?.category) return false;
+          const normCat = normalizeSearchTerm(p.category).replace(/-/g, ' ');
+          return rail.categoryKeys!.some(key => normCat === key.replace(/-/g, ' '));
+        });
+        randomized[rail.title] = shuffleArray(matching).slice(0, rail.limit);
+      }
+    }
+    setShuffledRails(randomized);
+  }, [products, isDefaultHome]);
+
   const handleClearSearch = () => {
     router.push('/');
   };
@@ -206,43 +234,54 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
           {/* ── HOME DEFAULT: 7 Trilhos de Produtos ── */}
           {isDefaultHome && (
             <div className="mt-4 space-y-2">
-              {railSegments.map(rail => (
-                <ProductRail
-                  key={rail.title}
-                  title={rail.title}
-                  products={rail.products}
-                  viewAllHref={rail.viewAllHref}
-                />
-              ))}
+              {railSegments.map(rail => {
+                // Novidades: NÃO embaralhar. Rigorosamente por ordem de criação (createdAt decrescente)
+                // Demais categorias: produtos embaralhados aleatoriamente
+                const railProducts = rail.categoryKeys === null
+                  ? rail.products
+                  : (shuffledRails[rail.title] || rail.products);
+
+                return (
+                  <ProductRail
+                    key={rail.title}
+                    title={rail.title}
+                    products={railProducts}
+                    viewAllHref={rail.viewAllHref}
+                  />
+                );
+              })}
             </div>
           )}
 
           {/* ── MODO BUSCA/FILTRO ── */}
           {!isDefaultHome && (
             <>
-              {/* Cabeçalho Dinâmico de Resultados de Busca */}
-              {searchQuery && (
-                <div className="flex flex-col items-center justify-center text-center my-6 px-4 bg-transparent animate-in fade-in duration-500">
-                  {/* Breadcrumbs */}
-                  <nav className="text-xs md:text-sm font-medium text-slate-500 mb-2 flex items-center justify-center gap-2 flex-wrap">
-                    <span className="hover:text-slate-900 transition-colors cursor-pointer" onClick={handleClearSearch}>Início</span>
-                    <span className="text-slate-400">&gt;</span>
-                    <span className="hover:text-slate-900 transition-colors cursor-pointer" onClick={handleClearSearch}>Catálogo</span>
-                    <span className="text-slate-400">&gt;</span>
-                    <span className="text-[#fe7302] font-bold capitalize">{searchQuery}</span>
-                  </nav>
+              {/* Cabeçalho Dinâmico de Resultados de Busca / Categoria / Novidades */}
+              {(() => {
+                const headerTitle = searchQuery || (isRecentSort ? 'Novidades' : (categoryParam || tp(categoryQuery)));
+                return (
+                  <div className="flex flex-col items-center justify-center text-center my-6 px-4 bg-transparent animate-in fade-in duration-500">
+                    {/* Breadcrumbs */}
+                    <nav className="text-xs md:text-sm font-medium text-slate-500 mb-2 flex items-center justify-center gap-2 flex-wrap">
+                      <span className="hover:text-slate-900 transition-colors cursor-pointer" onClick={handleClearSearch}>Início</span>
+                      <span className="text-slate-400">&gt;</span>
+                      <span className="hover:text-slate-900 transition-colors cursor-pointer" onClick={handleClearSearch}>Catálogo</span>
+                      <span className="text-slate-400">&gt;</span>
+                      <span className="text-[#fe7302] font-bold capitalize">{headerTitle}</span>
+                    </nav>
 
-                  {/* Título Grande em Preto/Grafite Escuro */}
-                  <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 capitalize tracking-tight">
-                    {searchQuery}
-                  </h1>
+                    {/* Título Grande em Preto/Grafite Escuro */}
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 capitalize tracking-tight">
+                      {headerTitle}
+                    </h1>
 
-                  {/* Contador de Resultados */}
-                  <p className="text-sm md:text-base font-normal text-slate-600 mt-1">
-                    <span className="font-semibold text-slate-800">{filteredProducts.length}</span> {filteredProducts.length === 1 ? 'arte encontrada' : 'artes encontradas'} para &quot;<span className="font-semibold text-slate-800">{searchQuery}</span>&quot;
-                  </p>
-                </div>
-              )}
+                    {/* Contador de Resultados */}
+                    <p className="text-sm md:text-base font-normal text-slate-600 mt-1">
+                      <span className="font-semibold text-slate-800">{filteredProducts.length}</span> {filteredProducts.length === 1 ? 'arte encontrada' : 'artes encontradas'} {searchQuery ? `para "${searchQuery}"` : `em ${headerTitle}`}
+                    </p>
+                  </div>
+                );
+              })()}
 
               {/* Seção de Produtos Filtrados */}
               <section className="mt-1 md:mt-4">

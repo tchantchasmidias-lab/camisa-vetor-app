@@ -60,6 +60,11 @@ const nextConfig = {
         has: [{ type: 'host', value: 'studio.camisavetor.com' }],
         destination: '/studio/:path*',
       },
+      // Rota de catálogo reescrita para a Home com filtros
+      {
+        source: '/catalog',
+        destination: '/',
+      },
     ];
   },
 };
