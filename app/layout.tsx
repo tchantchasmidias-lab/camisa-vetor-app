@@ -13,10 +13,10 @@ const ChunkErrorHandler = dynamic(() => import('@/components/ChunkErrorHandler')
 
 import Script from 'next/script';
 
-// Configuração da fonte Inter (Padrão Google Premium)
+// Configuração da fonte Inter (Padrão Google Premium com suporte a Black 900 e ExtraBold 800)
 const inter = Inter({ 
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
   display: 'swap',
 });
 
