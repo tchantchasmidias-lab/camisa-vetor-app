@@ -35,10 +35,10 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
 
   return (
     <section className={`w-full ${isFirst ? 'pt-2 sm:pt-4' : ''}`}>
-      {/* Linha divisória visual estilizada na cor laranja entre os trilhos */}
+      {/* Linha divisória suave e tracejada na cor laranja entre os trilhos */}
       {!isFirst && (
-        <div className="w-full my-10 sm:my-12">
-          <hr className="border-0 h-[3px] bg-orange-500/80 rounded-full" />
+        <div className="w-full my-8 sm:my-10">
+          <div className="border-t border-dashed border-orange-500/50 w-full" />
         </div>
       )}
 
