@@ -234,23 +234,32 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
 
           {/* ── HOME DEFAULT: 7 Trilhos de Produtos ── */}
           {isDefaultHome && (
-            <div className="mt-4 space-y-2">
-              {railSegments.map(rail => {
-                // Novidades: NÃO embaralhar. Rigorosamente por ordem de criação (createdAt decrescente)
-                // Demais categorias: produtos embaralhados aleatoriamente
-                const railProducts = rail.categoryKeys === null
-                  ? rail.products
-                  : (shuffledRails[rail.title] || rail.products);
+            <div className="mt-4">
+              {(() => {
+                let renderedCount = 0;
+                return railSegments.map(rail => {
+                  // Novidades: NÃO embaralhar. Rigorosamente por ordem de criação (createdAt decrescente)
+                  // Demais categorias: produtos embaralhados aleatoriamente
+                  const railProducts = rail.categoryKeys === null
+                    ? rail.products
+                    : (shuffledRails[rail.title] || rail.products);
 
-                return (
-                  <ProductRail
-                    key={rail.title}
-                    title={rail.title}
-                    products={railProducts}
-                    viewAllHref={rail.viewAllHref}
-                  />
-                );
-              })}
+                  if (!railProducts || railProducts.length === 0) return null;
+
+                  const isFirst = renderedCount === 0;
+                  renderedCount++;
+
+                  return (
+                    <ProductRail
+                      key={rail.title}
+                      title={rail.title}
+                      products={railProducts}
+                      viewAllHref={rail.viewAllHref}
+                      isFirst={isFirst}
+                    />
+                  );
+                });
+              })()}
             </div>
           )}
 

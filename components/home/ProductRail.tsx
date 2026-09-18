@@ -10,6 +10,7 @@ interface ProductRailProps {
   title: string;
   products: Product[];
   viewAllHref: string;
+  isFirst?: boolean;
 }
 
 // Larguras dos cards:
@@ -17,7 +18,7 @@ interface ProductRailProps {
 //   Tablet  (md ~768px)      : w-[31%]   => 3 cards visíveis com gap-3
 //   Desktop (lg ~1024px+)    : w-[calc((100%-4*1rem)/5)] => exatos 5 cards com gap-4
 
-export default function ProductRail({ title, products, viewAllHref }: ProductRailProps) {
+export default function ProductRail({ title, products, viewAllHref, isFirst = false }: ProductRailProps) {
   const railRef = useRef<HTMLDivElement>(null);
 
   if (!products || products.length === 0) return null;
@@ -33,7 +34,14 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
   };
 
   return (
-    <section className="w-full py-8 sm:py-10 border-t border-[#f1f5f9] first:border-t-0 first:pt-4">
+    <section className={`w-full ${isFirst ? 'pt-2 sm:pt-4' : ''}`}>
+      {/* Linha divisória visual estilizada na cor laranja entre os trilhos */}
+      {!isFirst && (
+        <div className="w-full my-10 sm:my-12">
+          <hr className="border-0 h-[3px] bg-orange-500/80 rounded-full" />
+        </div>
+      )}
+
       {/* Cabecalho da Secao */}
       <div className="flex items-center justify-between mb-4 sm:mb-6 px-0">
         <h2 className="text-xl sm:text-2xl font-black text-[#0f172a] uppercase tracking-wider leading-tight">
