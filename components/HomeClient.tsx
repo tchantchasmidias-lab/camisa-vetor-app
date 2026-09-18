@@ -220,6 +220,7 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
   }, [products, isDefaultHome]);
 
   const handleClearSearch = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     router.push('/');
   };
 

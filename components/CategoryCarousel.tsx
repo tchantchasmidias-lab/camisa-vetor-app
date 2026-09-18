@@ -193,11 +193,12 @@ function CategoryCarouselContent() {
               imageUrl={cat.imageUrl}
               priority={index < 6}
               isActive={normalizeSearchTerm(activeCategory) === normalizeSearchTerm(cat.name)}
-              onClick={() =>
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 cat.name === t('allCategories')
                   ? router.push('/')
-                  : router.push(`/?category=${encodeURIComponent(cat.name)}`)
-              }
+                  : router.push(`/?category=${encodeURIComponent(cat.name)}`);
+              }}
             />
           ))}
         </div>

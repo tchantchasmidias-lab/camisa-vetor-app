@@ -41,6 +41,8 @@ export default function ProductRail({ title, products, viewAllHref }: ProductRai
         </h2>
         <Link
           href={viewAllHref}
+          scroll={true}
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           className="text-sm sm:text-base font-semibold text-[#fe7302] hover:text-[#c85c00] hover:underline transition-colors flex items-center gap-1 shrink-0 ml-4"
         >
           Ver todos <span className="text-base leading-none">→</span>

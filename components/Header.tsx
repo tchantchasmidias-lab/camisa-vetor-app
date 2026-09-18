@@ -93,6 +93,7 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
         setDrawerOpen(false);
         setMobileSearchOpen(false);
         setSearchTerm('');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
         const term = value.trim();
         if (!term || (type === 'category' && term === t('allCategories'))) { router.push('/'); return; }
         router.push(`/?${type === 'category' ? 'category' : 'search'}=${encodeURIComponent(term)}`);

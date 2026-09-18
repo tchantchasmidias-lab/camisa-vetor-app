@@ -10,6 +10,7 @@ import { GeoProvider } from '@/lib/i18n/GeoContext';
 const PwaInit = dynamic(() => import('@/components/PwaInit'), { ssr: false });
 const PwaInstallBanner = dynamic(() => import('@/components/PwaInstallBanner'), { ssr: false });
 const ChunkErrorHandler = dynamic(() => import('@/components/ChunkErrorHandler'), { ssr: false });
+import ScrollToTop from '@/components/ScrollToTop';
 
 import Script from 'next/script';
 
@@ -189,6 +190,8 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="antialiased text-[#4a4a4a] bg-white selection:bg-orange-50 selection:text-[#fe7302]">
+        {/* Forçar rolagem ao topo em trocas de rota e parâmetros de busca */}
+        <ScrollToTop />
         {/* Tratamento automático de ChunkLoadError pós-deploy */}
         <ChunkErrorHandler />
         {/* PWA: Registro do Service Worker e gerenciamento de tokens FCM */}
