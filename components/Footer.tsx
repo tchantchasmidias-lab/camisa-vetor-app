@@ -10,7 +10,7 @@ export default function Footer() {
   const { t } = useGeo();
   const pathname = usePathname();
 
-  if (pathname === '/admin') return null;
+  if (pathname === '/admin' || pathname.startsWith('/xp') || pathname.startsWith('/studio')) return null;
 
   return (
     <footer className="bg-[#0a0a0a] border-t border-white/5 mt-4 md:mt-20 text-white font-sans">
@@ -165,11 +165,22 @@ export default function Footer() {
 
       </div>
 
-      {/* BLOCO INFERIOR: COPYRIGHT */}
-      <div className="footer-bottom max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-2 text-white opacity-90">
+      {/* BLOCO INFERIOR: COPYRIGHT E ACESSO RETRÔ */}
+      <div className="footer-bottom max-w-7xl mx-auto px-4 py-4 flex flex-col md:flex-row justify-between items-center gap-3 text-white opacity-90">
         <p className="footer-copyright text-[10px] font-bold uppercase tracking-[0.2em] text-center md:text-left text-white">
           © {currentYear} CAMISA VETOR. {t('allRightsReserved')}.
         </p>
+
+        {/* Link Discreto Modo Retrô */}
+        <Link
+          href="/xp"
+          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 hover:bg-orange-500/20 text-white/70 hover:text-orange-400 border border-white/10 hover:border-orange-500/30 text-[11px] font-medium transition-all duration-200 group cursor-pointer"
+          title="Experimente nossa interface retrô inspirada no Windows XP"
+        >
+          <span className="text-xs group-hover:scale-110 transition-transform">💾</span>
+          <span>Modo Retrô: Windows XP Edition 🚀</span>
+        </Link>
+
         <p className="footer-bottom-notice text-[10px] text-center text-white">
           Produtos digitais — Entrega imediata após pagamento
         </p>

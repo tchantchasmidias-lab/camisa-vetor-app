@@ -86,8 +86,8 @@ function HeaderContent({ onSearch }: { onSearch?: (term: string) => void }) {
         };
     }, [isDrawerOpen]);
 
-    // 🛡️ PROTEÇÃO ADMIN: Não renderiza o menu na página de admin
-    if (pathname === '/admin') return null;
+    // 🛡️ PROTEÇÃO: Não renderiza o header no admin, no studio ou na experiência retrô XP
+    if (pathname === '/admin' || pathname.startsWith('/xp') || pathname.startsWith('/studio')) return null;
 
     const navigate = (type: 'search' | 'category', value: string) => {
         setDrawerOpen(false);
