@@ -81,6 +81,23 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
   const [isShutdownOpen, setIsShutdownOpen] = useState(false);
   const [selectedDesktopIcon, setSelectedDesktopIcon] = useState<string | null>(null);
   const [hasPlayedStartup, setHasPlayedStartup] = useState(false);
+  const [explorerStatusBar, setExplorerStatusBar] = useState<string>('Carregando catálogo...');
+
+  const handleExplorerStatusChange = useCallback((statusText: string, title?: string) => {
+    setExplorerStatusBar(statusText);
+    if (title) {
+      setWindows(prev => {
+        if (prev.explorer.title === title) return prev;
+        return {
+          ...prev,
+          explorer: {
+            ...prev.explorer,
+            title,
+          },
+        };
+      });
+    }
+  }, []);
 
   // Toca o acorde de inicialização na primeira interação do usuário (respeitando autoplay policy)
   useEffect(() => {
@@ -443,12 +460,13 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         onFocus={() => focusWindow('explorer')}
         initialPosition={{ x: 100, y: 40 }}
         initialSize={{ width: 840, height: 540 }}
-        statusBarText={`${initialProducts.length} objeto(s) no catálogo • Download Imediato`}
+        statusBarText={explorerStatusBar}
       >
         <XPExplorer
           products={initialProducts}
           onOpenProduct={handleOpenProduct}
           onPlayClick={sounds.playClick}
+          onStatusChange={handleExplorerStatusChange}
         />
       </XPWindow>
 
