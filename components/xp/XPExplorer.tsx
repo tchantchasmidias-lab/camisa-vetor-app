@@ -26,6 +26,28 @@ interface CategoryFolderItem {
   isSpecial?: boolean;
 }
 
+// Normaliza strings para Title Case em português (ex.: "PESCA ESPORTIVA" -> "Pesca Esportiva")
+function toTitleCase(str: string): string {
+  if (!str) return '';
+  const lowerWords = new Set(['e', 'de', 'da', 'do', 'das', 'dos', 'em', 'com', 'para', 'por']);
+  const clean = str.trim().replace(/\s+/g, ' ');
+  if (clean.includes('/')) {
+    return clean
+      .split('/')
+      .map(part => toTitleCase(part.trim()))
+      .join(' / ');
+  }
+  return clean
+    .toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      if (['&', '-'].includes(word)) return word;
+      if (index > 0 && lowerWords.has(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
 export default function XPExplorer({ products, onOpenProduct, onPlayClick, onStatusChange }: XPExplorerProps) {
   const { formatPrice } = useGeo();
   const [searchQuery, setSearchQuery] = useState('');
@@ -41,26 +63,33 @@ export default function XPExplorer({ products, onOpenProduct, onPlayClick, onSta
   const [folderHistory, setFolderHistory] = useState<(string | null)[]>([null]);
   const [historyIndex, setHistoryIndex] = useState(0);
 
-  // Extrai lista única de categorias e até 4 miniaturas representativas por categoria
+  // Extrai lista única de categorias unificadas por minúsculas e convertidas para Title Case
   const categories = useMemo(() => {
-    const map = new Map<string, { count: number; previews: string[] }>();
+    const map = new Map<string, { name: string; count: number; previews: string[] }>();
     products.forEach(p => {
-      const cat = p.category?.trim() || 'Geral';
-      const entry = map.get(cat) || { count: 0, previews: [] };
-      entry.count += 1;
+      const rawCat = p.category?.trim() || 'Geral';
+      const key = rawCat.toLowerCase();
+      const existing = map.get(key);
       const imgUrl = p.urls?.capa || p.urls?.destaque;
-      if (imgUrl && entry.previews.length < 4 && !entry.previews.includes(imgUrl)) {
-        entry.previews.push(imgUrl);
+
+      if (existing) {
+        existing.count += 1;
+        if (imgUrl && existing.previews.length < 4 && !existing.previews.includes(imgUrl)) {
+          existing.previews.push(imgUrl);
+        }
+      } else {
+        const titleName = toTitleCase(rawCat);
+        const previews: string[] = [];
+        if (imgUrl) previews.push(imgUrl);
+        map.set(key, {
+          name: titleName,
+          count: 1,
+          previews,
+        });
       }
-      map.set(cat, entry);
     });
-    return Array.from(map.entries())
-      .map(([name, data]) => ({
-        name,
-        count: data.count,
-        previews: data.previews,
-      }))
-      .sort((a, b) => b.count - a.count);
+
+    return Array.from(map.values()).sort((a, b) => b.count - a.count);
   }, [products]);
 
   // Miniaturas diversificadas para a pasta especial "Todos os Vetores"
@@ -107,14 +136,18 @@ export default function XPExplorer({ products, onOpenProduct, onPlayClick, onSta
   // Filtra produtos de acordo com a pasta atual e/ou termo de busca
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
+      const rawCat = p.category?.trim() || 'Geral';
       const matchesCategory =
         currentFolder === 'all' ||
-        (currentFolder !== null && normalizeSearchTerm(p.category) === normalizeSearchTerm(currentFolder));
+        (currentFolder !== null &&
+          (rawCat.toLowerCase() === currentFolder.toLowerCase() ||
+           normalizeSearchTerm(rawCat) === normalizeSearchTerm(currentFolder) ||
+           toTitleCase(rawCat) === currentFolder));
 
       const matchesSearch =
         !searchQuery.trim() ||
         normalizeSearchTerm(p.name).includes(normalizeSearchTerm(searchQuery)) ||
-        normalizeSearchTerm(p.category).includes(normalizeSearchTerm(searchQuery));
+        normalizeSearchTerm(rawCat).includes(normalizeSearchTerm(searchQuery));
 
       if (searchQuery.trim()) {
         return matchesSearch;
@@ -512,7 +545,7 @@ export default function XPExplorer({ products, onOpenProduct, onPlayClick, onSta
           {isViewingRoot ? (
             /* ── VISUALIZAÇÃO RAIZ: PASTAS AMARELAS CLÁSSICAS DO WINDOWS XP ── */
             viewMode === 'thumbnails' ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+              <div className="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-x-4 gap-y-5 p-4 justify-items-center">
                 {allFolderItems.map(folder => {
                   const isSelected = selectedFolderId === folder.id;
                   return (
@@ -523,7 +556,7 @@ export default function XPExplorer({ products, onOpenProduct, onPlayClick, onSta
                         handleOpenFolder(folder.id);
                       }}
                       onDoubleClick={() => handleOpenFolder(folder.id)}
-                      className={`group flex flex-col items-center p-2.5 rounded cursor-pointer border transition-all select-none ${
+                      className={`group w-[115px] sm:w-[120px] flex flex-col items-center p-1.5 rounded cursor-pointer border transition-all select-none ${
                         isSelected
                           ? 'bg-[#316ac5]/15 border-[#316ac5] shadow-sm'
                           : 'border-transparent hover:bg-blue-50/70 hover:border-blue-200'
@@ -583,9 +616,9 @@ export default function XPExplorer({ products, onOpenProduct, onPlayClick, onSta
                       </div>
 
                       {/* Nome da Categoria e Quantidade de Arquivos */}
-                      <div className="mt-2 text-center flex flex-col items-center w-full px-1">
+                      <div className="mt-1.5 text-center flex flex-col items-center w-full px-0.5">
                         <span
-                          className={`text-[11px] font-medium leading-snug line-clamp-2 px-1 rounded transition-colors ${
+                          className={`text-[11px] font-medium leading-tight line-clamp-2 px-1 rounded transition-colors break-words max-w-full ${
                             isSelected ? 'bg-[#316ac5] text-white' : 'text-gray-900 group-hover:text-blue-700'
                           }`}
                           title={folder.name}
@@ -768,7 +801,7 @@ export default function XPExplorer({ products, onOpenProduct, onPlayClick, onSta
                             <FileText size={14} className={isSelected ? 'text-white' : 'text-[#0055ea]'} />
                             <span className="truncate max-w-[200px] sm:max-w-xs">{product.name}</span>
                           </td>
-                          <td className="py-1.5 px-2">{product.category}</td>
+                          <td className="py-1.5 px-2">{toTitleCase(product.category)}</td>
                           <td className="py-1.5 px-2 font-mono text-[10px]">Vetor CorelDRAW (.CDR)</td>
                           <td className={`py-1.5 px-2 font-bold ${isSelected ? 'text-white' : 'text-[#e65100]'}`}>
                             {formatPrice(product.price)}
