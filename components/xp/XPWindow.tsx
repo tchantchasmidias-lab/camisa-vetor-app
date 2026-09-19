@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Minus, Square, Copy, X } from 'lucide-react';
@@ -96,7 +96,7 @@ export default function XPWindow({
     }
   };
 
-  if (!isOpen || isMinimized) return null;
+  if (!isOpen) return null;
 
   return (
     <div
@@ -108,7 +108,11 @@ export default function XPWindow({
           ? { top: 0, left: 0, width: '100vw', height: 'calc(100vh - 36px)' }
           : { top: position.y, left: position.x, width: size.width, height: size.height }),
       }}
-      className={`fixed flex flex-col select-none rounded-t-lg shadow-2xl transition-[opacity,transform] duration-75 overflow-hidden border-[3px] ${
+      className={`fixed flex flex-col select-none rounded-t-lg shadow-2xl transition-all duration-200 ease-out overflow-hidden border-[3px] ${
+        isMinimized
+          ? 'opacity-0 scale-90 translate-y-12 pointer-events-none'
+          : 'opacity-100 scale-100 translate-y-0'
+      } ${
         isActive ? 'border-[#0055ea] shadow-black/50' : 'border-[#7697d9] shadow-black/20'
       }`}
     >

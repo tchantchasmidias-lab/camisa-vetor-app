@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
@@ -153,6 +153,31 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
     }
   }, [activeWindowId, sounds]);
 
+  // Minimizar / Restaurar todas as janelas ativas (Comportamento do Meu Computador)
+  const minimizeAllWindows = useCallback(() => {
+    sounds.playClick();
+    const hasVisibleWindows = Object.values(windows).some(w => w.isOpen && !w.isMinimized);
+
+    setWindows(prev => {
+      const next = { ...prev };
+      Object.keys(next).forEach(key => {
+        if (next[key].isOpen) {
+          next[key] = {
+            ...next[key],
+            isMinimized: hasVisibleWindows ? true : false,
+          };
+        }
+      });
+      return next;
+    });
+
+    if (hasVisibleWindows) {
+      setActiveWindowId(null);
+    } else {
+      setActiveWindowId('explorer');
+    }
+  }, [windows, sounds]);
+
   // Maximizar / Restaurar Janela
   const toggleMaximizeWindow = useCallback((id: string) => {
     sounds.playClick();
@@ -306,17 +331,25 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
 
       {/* ── ÍCONES DA ÁREA DE TRABALHO (DESKTOP ICONS) ── */}
       <div className="absolute top-4 left-4 z-10 flex flex-col gap-5">
-        {/* 1. Meu Computador / Catálogo */}
+        {/* 1. Meu Computador (Minimizar / Mostrar Área de Trabalho) */}
         <div
-          onClick={e => { e.stopPropagation(); sounds.playClick(); setSelectedDesktopIcon('computer'); }}
-          onDoubleClick={e => { e.stopPropagation(); openWindow('explorer'); }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-colors ${
+          onClick={e => {
+            e.stopPropagation();
+            setSelectedDesktopIcon('computer');
+            minimizeAllWindows();
+          }}
+          onDoubleClick={e => {
+            e.stopPropagation();
+            minimizeAllWindows();
+          }}
+          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-all active:scale-95 group ${
             selectedDesktopIcon === 'computer'
               ? 'bg-[#316ac5]/60 border border-[#316ac5]'
               : 'hover:bg-white/20 border border-transparent'
           }`}
+          title="Meu Computador (Clique para minimizar ou restaurar as janelas abertas)"
         >
-          <div className="w-10 h-10 rounded bg-gradient-to-b from-blue-100 to-blue-200 border border-blue-400 flex items-center justify-center text-blue-600 shadow-md">
+          <div className="w-10 h-10 rounded bg-gradient-to-b from-blue-100 to-blue-200 border border-blue-400 flex items-center justify-center text-blue-600 shadow-md group-hover:scale-105 transition-transform">
             <HardDrive size={22} />
           </div>
           <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
@@ -324,17 +357,26 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
           </span>
         </div>
 
-        {/* 2. Catálogo de Vetores */}
+        {/* 2. Catálogo de Camisas */}
         <div
-          onClick={e => { e.stopPropagation(); sounds.playClick(); setSelectedDesktopIcon('catalog'); }}
-          onDoubleClick={e => { e.stopPropagation(); openWindow('explorer'); }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-colors ${
+          onClick={e => {
+            e.stopPropagation();
+            sounds.playClick();
+            setSelectedDesktopIcon('catalog');
+            openWindow('explorer');
+          }}
+          onDoubleClick={e => {
+            e.stopPropagation();
+            openWindow('explorer');
+          }}
+          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-all active:scale-95 group ${
             selectedDesktopIcon === 'catalog'
               ? 'bg-[#316ac5]/60 border border-[#316ac5]'
               : 'hover:bg-white/20 border border-transparent'
           }`}
+          title="Catálogo de Camisas (Explorar arquivos .CDR)"
         >
-          <div className="w-10 h-10 rounded bg-amber-100 border border-amber-400 flex items-center justify-center text-[#f5a623] shadow-md">
+          <div className="w-10 h-10 rounded bg-amber-100 border border-amber-400 flex items-center justify-center text-[#f5a623] shadow-md group-hover:scale-105 transition-transform">
             <Folder size={24} className="fill-[#f5a623]" />
           </div>
           <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
@@ -342,35 +384,26 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
           </span>
         </div>
 
-        {/* 3. Visualizador de Imagens */}
+        {/* 3. Carrinho de Compras */}
         <div
-          onClick={e => { e.stopPropagation(); sounds.playClick(); setSelectedDesktopIcon('viewer'); }}
-          onDoubleClick={e => { e.stopPropagation(); openWindow('viewer'); }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-colors ${
-            selectedDesktopIcon === 'viewer'
-              ? 'bg-[#316ac5]/60 border border-[#316ac5]'
-              : 'hover:bg-white/20 border border-transparent'
-          }`}
-        >
-          <div className="w-10 h-10 rounded bg-purple-100 border border-purple-400 flex items-center justify-center text-purple-600 shadow-md">
-            <ImageIcon size={22} />
-          </div>
-          <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
-            Visualizador de Estampas
-          </span>
-        </div>
-
-        {/* 4. Carrinho de Compras */}
-        <div
-          onClick={e => { e.stopPropagation(); sounds.playClick(); setSelectedDesktopIcon('cart'); }}
-          onDoubleClick={e => { e.stopPropagation(); openWindow('cart'); }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-colors ${
+          onClick={e => {
+            e.stopPropagation();
+            sounds.playClick();
+            setSelectedDesktopIcon('cart');
+            openWindow('cart');
+          }}
+          onDoubleClick={e => {
+            e.stopPropagation();
+            openWindow('cart');
+          }}
+          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-all active:scale-95 group ${
             selectedDesktopIcon === 'cart'
               ? 'bg-[#316ac5]/60 border border-[#316ac5]'
               : 'hover:bg-white/20 border border-transparent'
           }`}
+          title="Carrinho de Compras"
         >
-          <div className="w-10 h-10 rounded bg-orange-100 border border-orange-400 flex items-center justify-center text-[#fe7302] shadow-md">
+          <div className="w-10 h-10 rounded bg-orange-100 border border-orange-400 flex items-center justify-center text-[#fe7302] shadow-md group-hover:scale-105 transition-transform">
             <ShoppingCart size={22} />
           </div>
           <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
@@ -378,29 +411,12 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
           </span>
         </div>
 
-        {/* 5. Bloco de Notas (LEIAME.txt) */}
-        <div
-          onClick={e => { e.stopPropagation(); sounds.playClick(); setSelectedDesktopIcon('notepad'); }}
-          onDoubleClick={e => { e.stopPropagation(); openWindow('notepad'); }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-colors ${
-            selectedDesktopIcon === 'notepad'
-              ? 'bg-[#316ac5]/60 border border-[#316ac5]'
-              : 'hover:bg-white/20 border border-transparent'
-          }`}
-        >
-          <div className="w-10 h-10 rounded bg-sky-100 border border-sky-400 flex items-center justify-center text-sky-600 shadow-md">
-            <FileText size={22} />
-          </div>
-          <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
-            LEIAME.txt
-          </span>
-        </div>
-
-        {/* 6. Voltar para Loja Moderna */}
+        {/* 4. Voltar para Loja Moderna */}
         <Link
           href="/"
           onClick={() => sounds.playClick()}
-          className="flex flex-col items-center w-20 p-1.5 rounded cursor-pointer hover:bg-white/20 border border-transparent transition-colors group"
+          className="flex flex-col items-center w-20 p-1.5 rounded cursor-pointer hover:bg-white/20 border border-transparent transition-all active:scale-95 group"
+          title="Voltar para a Loja Oficial Moderna"
         >
           <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-emerald-600 shadow-md group-hover:scale-105 transition-transform">
             <Globe size={22} />
