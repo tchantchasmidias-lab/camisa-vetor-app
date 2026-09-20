@@ -16,7 +16,16 @@ import XPImageViewer from '@/components/xp/XPImageViewer';
 import XPCartWindow from '@/components/xp/XPCartWindow';
 import XPNotepad from '@/components/xp/XPNotepad';
 import XPShutdownDialog from '@/components/xp/XPShutdownDialog';
-import XPBrowser, { SocialNetwork, SOCIAL_NETWORKS_CONFIG } from '@/components/xp/XPBrowser';
+
+export type SocialNetwork = 'instagram' | 'tiktok' | 'youtube' | 'pinterest' | 'linkedin';
+
+export const SOCIAL_URLS: Record<SocialNetwork, string> = {
+  instagram: 'https://www.instagram.com/camisavetor',
+  tiktok: 'https://www.tiktok.com/@camisavetor',
+  youtube: 'https://www.youtube.com/@CAMISAVETOR',
+  pinterest: 'https://br.pinterest.com/camisavetor/',
+  linkedin: 'https://www.linkedin.com/in/camisa-vetor-404859332/',
+};
 
 interface XPDesktopClientProps {
   initialProducts: Product[];
@@ -40,6 +49,7 @@ interface DesktopIconDef {
   defaultY: number;
   image?: string;
   socialKey?: SocialNetwork;
+  url?: string;
   systemIcon?: React.ReactNode;
 }
 
@@ -102,6 +112,7 @@ const DESKTOP_ICONS: DesktopIconDef[] = [
     type: 'social',
     image: '/Instagram.png',
     socialKey: 'instagram',
+    url: 'https://www.instagram.com/camisavetor',
     defaultX: 110,
     defaultY: 16,
   },
@@ -111,6 +122,7 @@ const DESKTOP_ICONS: DesktopIconDef[] = [
     type: 'social',
     image: '/tiktok.png',
     socialKey: 'tiktok',
+    url: 'https://www.tiktok.com/@camisavetor',
     defaultX: 110,
     defaultY: 104,
   },
@@ -120,6 +132,7 @@ const DESKTOP_ICONS: DesktopIconDef[] = [
     type: 'social',
     image: '/youtube.png',
     socialKey: 'youtube',
+    url: 'https://www.youtube.com/@CAMISAVETOR',
     defaultX: 110,
     defaultY: 192,
   },
@@ -129,6 +142,7 @@ const DESKTOP_ICONS: DesktopIconDef[] = [
     type: 'social',
     image: '/Pinterest.png',
     socialKey: 'pinterest',
+    url: 'https://br.pinterest.com/camisavetor/',
     defaultX: 110,
     defaultY: 280,
   },
@@ -138,6 +152,7 @@ const DESKTOP_ICONS: DesktopIconDef[] = [
     type: 'social',
     image: '/LinkedIn.png',
     socialKey: 'linkedin',
+    url: 'https://www.linkedin.com/in/camisa-vetor-404859332/',
     defaultX: 110,
     defaultY: 368,
   },
@@ -184,15 +199,6 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
       isMaximized: false,
       zIndex: 13,
     },
-    browser: {
-      id: 'browser',
-      title: 'Instagram - Camisa Vetor',
-      icon: <Globe size={14} className="text-[#0055ea]" />,
-      isOpen: false,
-      isMinimized: false,
-      isMaximized: false,
-      zIndex: 14,
-    },
   });
 
   const [activeWindowId, setActiveWindowId] = useState<string | null>('explorer');
@@ -203,7 +209,6 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
   const [selectedDesktopIcon, setSelectedDesktopIcon] = useState<string | null>(null);
   const [hasPlayedStartup, setHasPlayedStartup] = useState(false);
   const [explorerStatusBar, setExplorerStatusBar] = useState<string>('Carregando catálogo...');
-  const [browserNetwork, setBrowserNetwork] = useState<SocialNetwork>('instagram');
 
   // Posições arrastáveis dos ícones da área de trabalho
   const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>(() => {
@@ -383,36 +388,6 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
     focusWindow('viewer');
   }, [focusWindow]);
 
-  // Abrir o Internet Explorer simulado em uma rede social específica
-  const openBrowser = useCallback((network: SocialNetwork = 'instagram') => {
-    sounds.playClick();
-    setBrowserNetwork(network);
-    const cfg = SOCIAL_NETWORKS_CONFIG[network] || SOCIAL_NETWORKS_CONFIG.instagram;
-    setWindows(w => ({
-      ...w,
-      browser: {
-        ...w.browser,
-        title: cfg.windowTitle,
-        isOpen: true,
-        isMinimized: false,
-      },
-    }));
-    focusWindow('browser');
-  }, [focusWindow, sounds]);
-
-  // Navegar internamente dentro do navegador IE
-  const handleBrowserNavigate = useCallback((network: SocialNetwork) => {
-    setBrowserNetwork(network);
-    const cfg = SOCIAL_NETWORKS_CONFIG[network] || SOCIAL_NETWORKS_CONFIG.instagram;
-    setWindows(w => ({
-      ...w,
-      browser: {
-        ...w.browser,
-        title: cfg.windowTitle,
-      },
-    }));
-  }, []);
-
   // Reiniciar Desktop
   const handleRestart = useCallback(() => {
     setWindows({
@@ -452,15 +427,6 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         isMaximized: false,
         zIndex: 13,
       },
-      browser: {
-        id: 'browser',
-        title: 'Instagram - Camisa Vetor',
-        icon: <Globe size={14} className="text-[#0055ea]" />,
-        isOpen: false,
-        isMinimized: false,
-        isMaximized: false,
-        zIndex: 14,
-      },
     });
 
     const initialPos: Record<string, { x: number; y: number }> = {};
@@ -473,8 +439,14 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
     sounds.playStartup();
   }, [sounds]);
 
+  const lastActionRef = useRef<number>(0);
+
   // Executa a ação do ícone (quando houver clique ou duplo clique sem arraste)
   const executeIconAction = useCallback((icon: DesktopIconDef) => {
+    const now = Date.now();
+    if (now - lastActionRef.current < 400) return;
+    lastActionRef.current = now;
+
     if (icon.id === 'computer') {
       minimizeAllWindows();
     } else if (icon.id === 'catalog') {
@@ -482,12 +454,16 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
     } else if (icon.id === 'cart') {
       openWindow('cart');
     } else if (icon.id === 'store') {
-      sounds.playClick();
+      sounds.playBeep();
       window.location.href = '/';
-    } else if (icon.type === 'social' && icon.socialKey) {
-      openBrowser(icon.socialKey);
+    } else if (icon.type === 'social') {
+      const socialUrl = icon.url || (icon.socialKey && SOCIAL_URLS[icon.socialKey]);
+      if (socialUrl) {
+        sounds.playBeep();
+        window.open(socialUrl, '_blank', 'noopener,noreferrer');
+      }
     }
-  }, [minimizeAllWindows, openWindow, openBrowser, sounds]);
+  }, [minimizeAllWindows, openWindow, sounds]);
 
   // Início do arraste livre dos ícones do Desktop
   const handleIconPointerDown = (e: React.PointerEvent, icon: DesktopIconDef) => {
@@ -534,7 +510,6 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
 
       if (!hasMoved && iconId) {
         setSelectedDesktopIcon(iconId);
-        sounds.playClick();
         executeIconAction(icon);
       }
     };
@@ -752,32 +727,6 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         <XPNotepad />
       </XPWindow>
 
-      {/* ── JANELA 5: INTERNET EXPLORER RETRÔ (REDES SOCIAIS & WEB) ── */}
-      <XPWindow
-        id="browser"
-        title={windows.browser.title}
-        icon={windows.browser.icon}
-        isOpen={windows.browser.isOpen}
-        isMinimized={windows.browser.isMinimized}
-        isMaximized={windows.browser.isMaximized}
-        isActive={activeWindowId === 'browser'}
-        zIndex={windows.browser.zIndex}
-        onClose={() => closeWindow('browser')}
-        onMinimize={() => minimizeWindow('browser')}
-        onMaximize={() => toggleMaximizeWindow('browser')}
-        onFocus={() => focusWindow('browser')}
-        initialPosition={{ x: 140, y: 50 }}
-        initialSize={{ width: 860, height: 560 }}
-        statusBarText="Concluído • Zona da Internet (Modo Protegido: Ativado)"
-      >
-        <XPBrowser
-          currentNetwork={browserNetwork}
-          onNavigateNetwork={handleBrowserNavigate}
-          onPlayClick={sounds.playClick}
-          products={initialProducts}
-        />
-      </XPWindow>
-
       {/* ── DIÁLOGO DE DESLIGAR O COMPUTADOR ── */}
       <XPShutdownDialog
         isOpen={isShutdownOpen}
@@ -795,7 +744,10 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         onOpenViewer={() => openWindow('viewer')}
         onOpenCart={() => openWindow('cart')}
         onOpenNotepad={() => openWindow('notepad')}
-        onOpenBrowser={() => openBrowser('instagram')}
+        onOpenBrowser={() => {
+          sounds.playBeep();
+          window.open('https://www.instagram.com/camisavetor', '_blank', 'noopener,noreferrer');
+        }}
         onOpenShutdown={() => setIsShutdownOpen(true)}
         onPlayClick={sounds.playClick}
       />

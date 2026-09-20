@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 
@@ -71,6 +71,9 @@ export function useXPSounds() {
       // Audio error fallback silencioso
     }
   }, [isMuted, getAudioContext]);
+
+  // Bipe clássico de navegação do Windows XP
+  const playBeep = playClick;
 
   // Som de notificação / balão do XP (duas notas ascendentes brilhantes)
   const playNotify = useCallback(() => {
@@ -216,6 +219,7 @@ export function useXPSounds() {
     isMuted,
     toggleMute,
     playClick,
+    playBeep,
     playNotify,
     playError,
     playStartup,

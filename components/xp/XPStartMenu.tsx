@@ -88,7 +88,7 @@ export default function XPStartMenu({
               </div>
               <div className="flex flex-col">
                 <span className="text-xs font-bold leading-tight">Internet Explorer</span>
-                <span className="text-[10px] text-gray-400 group-hover:text-blue-100">Redes Sociais & Web</span>
+                <span className="text-[10px] text-gray-400 group-hover:text-blue-100">Abrir Instagram Oficial ↗</span>
               </div>
             </button>
 
