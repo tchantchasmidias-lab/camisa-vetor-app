@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import Image from 'next/image';
 import { 
   Folder, Image as ImageIcon, ShoppingCart, FileText, 
   HardDrive, Globe 
@@ -16,6 +16,7 @@ import XPImageViewer from '@/components/xp/XPImageViewer';
 import XPCartWindow from '@/components/xp/XPCartWindow';
 import XPNotepad from '@/components/xp/XPNotepad';
 import XPShutdownDialog from '@/components/xp/XPShutdownDialog';
+import XPBrowser, { SocialNetwork, SOCIAL_NETWORKS_CONFIG } from '@/components/xp/XPBrowser';
 
 interface XPDesktopClientProps {
   initialProducts: Product[];
@@ -30,6 +31,117 @@ interface WindowState {
   isMaximized: boolean;
   zIndex: number;
 }
+
+interface DesktopIconDef {
+  id: string;
+  title: string;
+  type: 'system' | 'social';
+  defaultX: number;
+  defaultY: number;
+  image?: string;
+  socialKey?: SocialNetwork;
+  systemIcon?: React.ReactNode;
+}
+
+// Definição dos ícones da área de trabalho (Coluna 1: Sistema | Coluna 2: Redes Sociais da pasta public/)
+const DESKTOP_ICONS: DesktopIconDef[] = [
+  // ── Coluna 1: Sistema (left: 16px) ──
+  {
+    id: 'computer',
+    title: 'Meu Computador',
+    type: 'system',
+    defaultX: 16,
+    defaultY: 16,
+    systemIcon: (
+      <div className="w-10 h-10 rounded bg-gradient-to-b from-blue-100 to-blue-200 border border-blue-400 flex items-center justify-center text-blue-600 shadow-md group-hover:scale-105 transition-transform">
+        <HardDrive size={22} />
+      </div>
+    ),
+  },
+  {
+    id: 'catalog',
+    title: 'Catálogo de Camisas',
+    type: 'system',
+    defaultX: 16,
+    defaultY: 104,
+    systemIcon: (
+      <div className="w-10 h-10 rounded bg-amber-100 border border-amber-400 flex items-center justify-center text-[#f5a623] shadow-md group-hover:scale-105 transition-transform">
+        <Folder size={24} className="fill-[#f5a623]" />
+      </div>
+    ),
+  },
+  {
+    id: 'cart',
+    title: 'Carrinho de Compras',
+    type: 'system',
+    defaultX: 16,
+    defaultY: 192,
+    systemIcon: (
+      <div className="w-10 h-10 rounded bg-orange-100 border border-orange-400 flex items-center justify-center text-[#fe7302] shadow-md group-hover:scale-105 transition-transform">
+        <ShoppingCart size={22} />
+      </div>
+    ),
+  },
+  {
+    id: 'store',
+    title: 'Loja Oficial Moderna',
+    type: 'system',
+    defaultX: 16,
+    defaultY: 280,
+    systemIcon: (
+      <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-emerald-600 shadow-md group-hover:scale-105 transition-transform">
+        <Globe size={22} />
+      </div>
+    ),
+  },
+
+  // ── Coluna 2: Redes Sociais da pasta public/ (left: 110px) ──
+  {
+    id: 'instagram',
+    title: 'Instagram',
+    type: 'social',
+    image: '/Instagram.png',
+    socialKey: 'instagram',
+    defaultX: 110,
+    defaultY: 16,
+  },
+  {
+    id: 'tiktok',
+    title: 'TikTok',
+    type: 'social',
+    image: '/tiktok.png',
+    socialKey: 'tiktok',
+    defaultX: 110,
+    defaultY: 104,
+  },
+  {
+    id: 'youtube',
+    title: 'YouTube',
+    type: 'social',
+    image: '/youtube.png',
+    socialKey: 'youtube',
+    defaultX: 110,
+    defaultY: 192,
+  },
+  {
+    id: 'pinterest',
+    title: 'Pinterest',
+    type: 'social',
+    image: '/Pinterest.png',
+    socialKey: 'pinterest',
+    defaultX: 110,
+    defaultY: 280,
+  },
+  {
+    id: 'linkedin',
+    title: 'LinkedIn',
+    type: 'social',
+    image: '/LinkedIn.png',
+    socialKey: 'linkedin',
+    defaultX: 110,
+    defaultY: 368,
+  },
+];
 
 export default function XPDesktopClient({ initialProducts }: XPDesktopClientProps) {
   const sounds = useXPSounds();
@@ -72,6 +184,15 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
       isMaximized: false,
       zIndex: 13,
     },
+    browser: {
+      id: 'browser',
+      title: 'Instagram - Camisa Vetor',
+      icon: <Globe size={14} className="text-[#0055ea]" />,
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 14,
+    },
   });
 
   const [activeWindowId, setActiveWindowId] = useState<string | null>('explorer');
@@ -82,6 +203,33 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
   const [selectedDesktopIcon, setSelectedDesktopIcon] = useState<string | null>(null);
   const [hasPlayedStartup, setHasPlayedStartup] = useState(false);
   const [explorerStatusBar, setExplorerStatusBar] = useState<string>('Carregando catálogo...');
+  const [browserNetwork, setBrowserNetwork] = useState<SocialNetwork>('instagram');
+
+  // Posições arrastáveis dos ícones da área de trabalho
+  const [iconPositions, setIconPositions] = useState<Record<string, { x: number; y: number }>>(() => {
+    const initial: Record<string, { x: number; y: number }> = {};
+    DESKTOP_ICONS.forEach(icon => {
+      initial[icon.id] = { x: icon.defaultX, y: icon.defaultY };
+    });
+    return initial;
+  });
+
+  // Ref para controle de arraste e diferenciação de clique vs movimentação
+  const dragInfo = useRef<{
+    iconId: string | null;
+    startX: number;
+    startY: number;
+    initialX: number;
+    initialY: number;
+    hasMoved: boolean;
+  }>({
+    iconId: null,
+    startX: 0,
+    startY: 0,
+    initialX: 0,
+    initialY: 0,
+    hasMoved: false,
+  });
 
   const handleExplorerStatusChange = useCallback((statusText: string, title?: string) => {
     setExplorerStatusBar(statusText);
@@ -235,6 +383,36 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
     focusWindow('viewer');
   }, [focusWindow]);
 
+  // Abrir o Internet Explorer simulado em uma rede social específica
+  const openBrowser = useCallback((network: SocialNetwork = 'instagram') => {
+    sounds.playClick();
+    setBrowserNetwork(network);
+    const cfg = SOCIAL_NETWORKS_CONFIG[network] || SOCIAL_NETWORKS_CONFIG.instagram;
+    setWindows(w => ({
+      ...w,
+      browser: {
+        ...w.browser,
+        title: cfg.windowTitle,
+        isOpen: true,
+        isMinimized: false,
+      },
+    }));
+    focusWindow('browser');
+  }, [focusWindow, sounds]);
+
+  // Navegar internamente dentro do navegador IE
+  const handleBrowserNavigate = useCallback((network: SocialNetwork) => {
+    setBrowserNetwork(network);
+    const cfg = SOCIAL_NETWORKS_CONFIG[network] || SOCIAL_NETWORKS_CONFIG.instagram;
+    setWindows(w => ({
+      ...w,
+      browser: {
+        ...w.browser,
+        title: cfg.windowTitle,
+      },
+    }));
+  }, []);
+
   // Reiniciar Desktop
   const handleRestart = useCallback(() => {
     setWindows({
@@ -274,10 +452,96 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         isMaximized: false,
         zIndex: 13,
       },
+      browser: {
+        id: 'browser',
+        title: 'Instagram - Camisa Vetor',
+        icon: <Globe size={14} className="text-[#0055ea]" />,
+        isOpen: false,
+        isMinimized: false,
+        isMaximized: false,
+        zIndex: 14,
+      },
     });
+
+    const initialPos: Record<string, { x: number; y: number }> = {};
+    DESKTOP_ICONS.forEach(icon => {
+      initialPos[icon.id] = { x: icon.defaultX, y: icon.defaultY };
+    });
+    setIconPositions(initialPos);
+
     setActiveWindowId('explorer');
     sounds.playStartup();
   }, [sounds]);
+
+  // Executa a ação do ícone (quando houver clique ou duplo clique sem arraste)
+  const executeIconAction = useCallback((icon: DesktopIconDef) => {
+    if (icon.id === 'computer') {
+      minimizeAllWindows();
+    } else if (icon.id === 'catalog') {
+      openWindow('explorer');
+    } else if (icon.id === 'cart') {
+      openWindow('cart');
+    } else if (icon.id === 'store') {
+      sounds.playClick();
+      window.location.href = '/';
+    } else if (icon.type === 'social' && icon.socialKey) {
+      openBrowser(icon.socialKey);
+    }
+  }, [minimizeAllWindows, openWindow, openBrowser, sounds]);
+
+  // Início do arraste livre dos ícones do Desktop
+  const handleIconPointerDown = (e: React.PointerEvent, icon: DesktopIconDef) => {
+    if (e.button !== 0) return; // apenas botão esquerdo
+    e.stopPropagation();
+
+    const currentPos = iconPositions[icon.id] || { x: icon.defaultX, y: icon.defaultY };
+    dragInfo.current = {
+      iconId: icon.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      initialX: currentPos.x,
+      initialY: currentPos.y,
+      hasMoved: false,
+    };
+
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      const dx = moveEvent.clientX - dragInfo.current.startX;
+      const dy = moveEvent.clientY - dragInfo.current.startY;
+
+      if (!dragInfo.current.hasMoved && Math.hypot(dx, dy) > 4) {
+        dragInfo.current.hasMoved = true;
+      }
+
+      if (dragInfo.current.hasMoved) {
+        const maxX = Math.max(0, window.innerWidth - 85);
+        const maxY = Math.max(0, window.innerHeight - 90);
+        const newX = Math.max(0, Math.min(maxX, dragInfo.current.initialX + dx));
+        const newY = Math.max(0, Math.min(maxY, dragInfo.current.initialY + dy));
+
+        setIconPositions(prev => ({
+          ...prev,
+          [icon.id]: { x: newX, y: newY },
+        }));
+      }
+    };
+
+    const handlePointerUp = () => {
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+
+      const { hasMoved, iconId } = dragInfo.current;
+      dragInfo.current.iconId = null;
+
+      if (!hasMoved && iconId) {
+        setSelectedDesktopIcon(iconId);
+        sounds.playClick();
+        executeIconAction(icon);
+      }
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
 
   const taskbarItems: TaskbarWindowItem[] = Object.values(windows).map(w => ({
     id: w.id,
@@ -346,103 +610,49 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         </svg>
       </div>
 
-      {/* ── ÍCONES DA ÁREA DE TRABALHO (DESKTOP ICONS) ── */}
-      <div className="absolute top-4 left-4 z-10 flex flex-col gap-5">
-        {/* 1. Meu Computador (Minimizar / Mostrar Área de Trabalho) */}
-        <div
-          onClick={e => {
-            e.stopPropagation();
-            setSelectedDesktopIcon('computer');
-            minimizeAllWindows();
-          }}
-          onDoubleClick={e => {
-            e.stopPropagation();
-            minimizeAllWindows();
-          }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-all active:scale-95 group ${
-            selectedDesktopIcon === 'computer'
-              ? 'bg-[#316ac5]/60 border border-[#316ac5]'
-              : 'hover:bg-white/20 border border-transparent'
-          }`}
-          title="Meu Computador (Clique para minimizar ou restaurar as janelas abertas)"
-        >
-          <div className="w-10 h-10 rounded bg-gradient-to-b from-blue-100 to-blue-200 border border-blue-400 flex items-center justify-center text-blue-600 shadow-md group-hover:scale-105 transition-transform">
-            <HardDrive size={22} />
-          </div>
-          <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
-            Meu Computador
-          </span>
-        </div>
+      {/* ── ÍCONES ARRASTÁVEIS DA ÁREA DE TRABALHO (DESKTOP ICONS DRAGGABLE) ── */}
+      {DESKTOP_ICONS.map(icon => {
+        const isSelected = selectedDesktopIcon === icon.id;
+        const pos = iconPositions[icon.id] || { x: icon.defaultX, y: icon.defaultY };
 
-        {/* 2. Catálogo de Camisas */}
-        <div
-          onClick={e => {
-            e.stopPropagation();
-            sounds.playClick();
-            setSelectedDesktopIcon('catalog');
-            openWindow('explorer');
-          }}
-          onDoubleClick={e => {
-            e.stopPropagation();
-            openWindow('explorer');
-          }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-all active:scale-95 group ${
-            selectedDesktopIcon === 'catalog'
-              ? 'bg-[#316ac5]/60 border border-[#316ac5]'
-              : 'hover:bg-white/20 border border-transparent'
-          }`}
-          title="Catálogo de Camisas (Explorar arquivos .CDR)"
-        >
-          <div className="w-10 h-10 rounded bg-amber-100 border border-amber-400 flex items-center justify-center text-[#f5a623] shadow-md group-hover:scale-105 transition-transform">
-            <Folder size={24} className="fill-[#f5a623]" />
+        return (
+          <div
+            key={icon.id}
+            onPointerDown={e => handleIconPointerDown(e, icon)}
+            onDoubleClick={e => {
+              e.stopPropagation();
+              executeIconAction(icon);
+            }}
+            style={{
+              left: `${pos.x}px`,
+              top: `${pos.y}px`,
+            }}
+            className={`absolute z-10 flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-colors group select-none ${
+              isSelected
+                ? 'bg-[#316ac5]/60 border border-[#316ac5]'
+                : 'hover:bg-white/20 border border-transparent'
+            }`}
+            title={`${icon.title} (Arraste para reposicionar ou clique para abrir)`}
+          >
+            {icon.type === 'system' ? (
+              icon.systemIcon
+            ) : (
+              <div className="w-10 h-10 rounded bg-white/95 border border-white/80 flex items-center justify-center p-1 shadow-md group-hover:scale-105 transition-transform overflow-hidden shrink-0">
+                <Image
+                  src={icon.image!}
+                  alt={icon.title}
+                  width={32}
+                  height={32}
+                  className="object-contain pointer-events-none"
+                />
+              </div>
+            )}
+            <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.95)] max-w-full break-words select-none">
+              {icon.title}
+            </span>
           </div>
-          <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
-            Catálogo de Camisas
-          </span>
-        </div>
-
-        {/* 3. Carrinho de Compras */}
-        <div
-          onClick={e => {
-            e.stopPropagation();
-            sounds.playClick();
-            setSelectedDesktopIcon('cart');
-            openWindow('cart');
-          }}
-          onDoubleClick={e => {
-            e.stopPropagation();
-            openWindow('cart');
-          }}
-          className={`flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-all active:scale-95 group ${
-            selectedDesktopIcon === 'cart'
-              ? 'bg-[#316ac5]/60 border border-[#316ac5]'
-              : 'hover:bg-white/20 border border-transparent'
-          }`}
-          title="Carrinho de Compras"
-        >
-          <div className="w-10 h-10 rounded bg-orange-100 border border-orange-400 flex items-center justify-center text-[#fe7302] shadow-md group-hover:scale-105 transition-transform">
-            <ShoppingCart size={22} />
-          </div>
-          <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
-            Carrinho de Compras
-          </span>
-        </div>
-
-        {/* 4. Voltar para Loja Moderna */}
-        <Link
-          href="/"
-          onClick={() => sounds.playClick()}
-          className="flex flex-col items-center w-20 p-1.5 rounded cursor-pointer hover:bg-white/20 border border-transparent transition-all active:scale-95 group"
-          title="Voltar para a Loja Oficial Moderna"
-        >
-          <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-emerald-600 shadow-md group-hover:scale-105 transition-transform">
-            <Globe size={22} />
-          </div>
-          <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.9)]">
-            Loja Oficial Moderna
-          </span>
-        </Link>
-      </div>
+        );
+      })}
 
       {/* ── JANELA 1: WINDOWS EXPLORER (CATÁLOGO DE VETORES) ── */}
       <XPWindow
@@ -543,6 +753,32 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         <XPNotepad />
       </XPWindow>
 
+      {/* ── JANELA 5: INTERNET EXPLORER RETRÔ (REDES SOCIAIS & WEB) ── */}
+      <XPWindow
+        id="browser"
+        title={windows.browser.title}
+        icon={windows.browser.icon}
+        isOpen={windows.browser.isOpen}
+        isMinimized={windows.browser.isMinimized}
+        isMaximized={windows.browser.isMaximized}
+        isActive={activeWindowId === 'browser'}
+        zIndex={windows.browser.zIndex}
+        onClose={() => closeWindow('browser')}
+        onMinimize={() => minimizeWindow('browser')}
+        onMaximize={() => toggleMaximizeWindow('browser')}
+        onFocus={() => focusWindow('browser')}
+        initialPosition={{ x: 140, y: 50 }}
+        initialSize={{ width: 860, height: 560 }}
+        statusBarText="Concluído • Zona da Internet (Modo Protegido: Ativado)"
+      >
+        <XPBrowser
+          currentNetwork={browserNetwork}
+          onNavigateNetwork={handleBrowserNavigate}
+          onPlayClick={sounds.playClick}
+          products={initialProducts}
+        />
+      </XPWindow>
+
       {/* ── DIÁLOGO DE DESLIGAR O COMPUTADOR ── */}
       <XPShutdownDialog
         isOpen={isShutdownOpen}
@@ -560,6 +796,7 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         onOpenViewer={() => openWindow('viewer')}
         onOpenCart={() => openWindow('cart')}
         onOpenNotepad={() => openWindow('notepad')}
+        onOpenBrowser={() => openBrowser('instagram')}
         onOpenShutdown={() => setIsShutdownOpen(true)}
         onPlayClick={sounds.playClick}
       />

@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useRef, useEffect } from 'react';
 import { 
@@ -13,6 +13,7 @@ interface XPStartMenuProps {
   onOpenViewer: () => void;
   onOpenCart: () => void;
   onOpenNotepad: () => void;
+  onOpenBrowser?: () => void;
   onOpenShutdown: () => void;
   onPlayClick: () => void;
 }
@@ -24,6 +25,7 @@ export default function XPStartMenu({
   onOpenViewer,
   onOpenCart,
   onOpenNotepad,
+  onOpenBrowser,
   onOpenShutdown,
   onPlayClick,
 }: XPStartMenuProps) {
@@ -71,19 +73,24 @@ export default function XPStartMenu({
         <div className="flex-1 p-2 flex flex-col justify-between border-r border-[#96aecd]">
           <div className="space-y-1">
             {/* Internet Explorer */}
-            <a
-              href="/"
-              onClick={onPlayClick}
-              className="flex items-center gap-2.5 p-2 rounded hover:bg-[#2f71cd] hover:text-white text-gray-800 transition-colors group cursor-pointer"
+            <button
+              onClick={() => {
+                onPlayClick();
+                if (onOpenBrowser) {
+                  onOpenBrowser();
+                }
+                onClose();
+              }}
+              className="w-full text-left flex items-center gap-2.5 p-2 rounded hover:bg-[#2f71cd] hover:text-white text-gray-800 transition-colors group cursor-pointer"
             >
-              <div className="w-8 h-8 rounded-full bg-blue-100 text-[#0055ea] flex items-center justify-center group-hover:bg-white shrink-0">
+              <div className="w-8 h-8 rounded-full bg-blue-100 text-[#0055ea] flex items-center justify-center group-hover:bg-white shrink-0 shadow-xs">
                 <Globe size={18} />
               </div>
               <div className="flex flex-col">
-                <span className="text-xs font-bold leading-tight">Loja Oficial Completa</span>
-                <span className="text-[10px] text-gray-400 group-hover:text-blue-100">Abrir camisavetor.com.br</span>
+                <span className="text-xs font-bold leading-tight">Internet Explorer</span>
+                <span className="text-[10px] text-gray-400 group-hover:text-blue-100">Redes Sociais & Web</span>
               </div>
-            </a>
+            </button>
 
             {/* Catálogo de Vetores */}
             <button
