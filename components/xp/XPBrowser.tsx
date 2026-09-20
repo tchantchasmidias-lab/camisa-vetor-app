@@ -211,6 +211,7 @@ export default function XPBrowser({
               alt={config.name}
               width={16}
               height={16}
+              unoptimized
               className="object-contain"
             />
           </div>
@@ -260,7 +261,7 @@ export default function XPBrowser({
               title={`Ir para ${item.name}`}
             >
               <div className="w-3.5 h-3.5 relative">
-                <Image src={item.image} alt={item.name} width={14} height={14} className="object-contain" />
+                <Image src={item.image} alt={item.name} width={14} height={14} unoptimized className="object-contain" />
               </div>
               <span>{item.name}</span>
             </button>
@@ -285,7 +286,7 @@ export default function XPBrowser({
               {/* Avatar com Story Ring */}
               <div className="relative p-1 rounded-full bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888] shadow-md shrink-0">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-white p-1 overflow-hidden flex items-center justify-center">
-                  <Image src="/Instagram.png" alt="Camisa Vetor" width={90} height={90} className="object-contain" />
+                  <Image src="/Instagram.png" alt="Camisa Vetor" width={90} height={90} unoptimized className="object-contain" />
                 </div>
               </div>
 
@@ -413,7 +414,7 @@ export default function XPBrowser({
             {/* Header TikTok */}
             <div className="flex flex-col sm:flex-row items-center gap-6 border-b border-gray-200 pb-6">
               <div className="w-24 h-24 rounded-full bg-slate-900 border-2 border-[#00f2fe] p-1 flex items-center justify-center shadow-md shrink-0">
-                <Image src="/tiktok.png" alt="TikTok" width={80} height={80} className="object-contain" />
+                <Image src="/tiktok.png" alt="TikTok" width={80} height={80} unoptimized className="object-contain" />
               </div>
 
               <div className="flex-1 text-center sm:text-left space-y-2">
@@ -513,7 +514,7 @@ export default function XPBrowser({
             {/* Cabeçalho do Canal */}
             <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 py-4 border-b border-gray-200">
               <div className="w-20 h-20 rounded-full border-2 border-red-600 p-0.5 bg-white shadow shrink-0 flex items-center justify-center overflow-hidden">
-                <Image src="/youtube.png" alt="YouTube" width={68} height={68} className="object-contain" />
+                <Image src="/youtube.png" alt="YouTube" width={68} height={68} unoptimized className="object-contain" />
               </div>
 
               <div className="flex-1 text-center sm:text-left space-y-1.5">
@@ -586,7 +587,7 @@ export default function XPBrowser({
             {/* Header Pinterest */}
             <div className="text-center space-y-2.5 pb-6 border-b border-gray-200">
               <div className="w-20 h-20 rounded-full border border-gray-200 bg-white p-2 mx-auto shadow flex items-center justify-center">
-                <Image src="/Pinterest.png" alt="Pinterest" width={64} height={64} className="object-contain" />
+                <Image src="/Pinterest.png" alt="Pinterest" width={64} height={64} unoptimized className="object-contain" />
               </div>
               <h1 className="text-xl font-bold text-slate-900">Camisa Vetor</h1>
               <p className="text-xs text-gray-500 font-medium">@camisavetor • <strong>72,4 mil visualizações mensais</strong></p>
@@ -652,7 +653,7 @@ export default function XPBrowser({
 
               <div className="px-5 pb-5 relative">
                 <div className="w-20 h-20 rounded-lg border-2 border-white bg-white p-1 -mt-10 shadow-md flex items-center justify-center">
-                  <Image src="/LinkedIn.png" alt="LinkedIn" width={68} height={68} className="object-contain" />
+                  <Image src="/LinkedIn.png" alt="LinkedIn" width={68} height={68} unoptimized className="object-contain" />
                 </div>
 
                 <div className="mt-3 space-y-1.5">
@@ -677,7 +678,7 @@ export default function XPBrowser({
             <div className="mt-5 rounded-lg border border-gray-300 bg-white p-4 shadow-sm space-y-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-10 h-10 rounded-full border border-gray-200 bg-white p-1 flex items-center justify-center overflow-hidden shrink-0">
-                  <Image src="/logo-icon.png" alt="Logo" width={32} height={32} className="object-contain" />
+                  <Image src="/logo-icon.png" alt="Logo" width={32} height={32} unoptimized className="object-contain" />
                 </div>
                 <div>
                   <h3 className="font-bold text-xs text-slate-900">Camisa Vetor</h3>

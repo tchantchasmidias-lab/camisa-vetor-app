@@ -627,7 +627,7 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
               left: `${pos.x}px`,
               top: `${pos.y}px`,
             }}
-            className={`absolute z-10 flex flex-col items-center w-20 p-1.5 rounded cursor-pointer transition-colors group select-none ${
+            className={`absolute z-10 flex flex-col items-center w-[84px] p-1 rounded cursor-pointer transition-colors group select-none ${
               isSelected
                 ? 'bg-[#316ac5]/60 border border-[#316ac5]'
                 : 'hover:bg-white/20 border border-transparent'
@@ -637,17 +637,16 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
             {icon.type === 'system' ? (
               icon.systemIcon
             ) : (
-              <div className="w-10 h-10 rounded bg-white/95 border border-white/80 flex items-center justify-center p-1 shadow-md group-hover:scale-105 transition-transform overflow-hidden shrink-0">
-                <Image
-                  src={icon.image!}
-                  alt={icon.title}
-                  width={32}
-                  height={32}
-                  className="object-contain pointer-events-none"
-                />
-              </div>
+              <Image
+                src={icon.image!}
+                alt={icon.title}
+                width={40}
+                height={40}
+                unoptimized
+                className="w-10 h-10 object-contain drop-shadow-md pointer-events-none select-none group-hover:scale-105 transition-transform"
+              />
             )}
-            <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_1px_rgba(0,0,0,0.95)] max-w-full break-words select-none">
+            <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_2px_rgba(0,0,0,0.95)] min-w-[70px] max-w-[85px] px-0.5 select-none break-words">
               {icon.title}
             </span>
           </div>
