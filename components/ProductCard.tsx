@@ -66,10 +66,9 @@ export default function ProductCard({ product, priority = false }: { product: an
                 title={semanticAlt}
                 fill
                 priority={priority}
-                // Breakpoints corretos: mobile é 1 coluna (100vw), md=3 colunas, lg=5 colunas
-                sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
-                quality={85}
-                className={`object-cover transition-transform duration-500 group-hover:scale-105 ${
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 280px"
+                quality={95}
+                className={`object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-transform duration-500 group-hover:scale-105 ${
                   hasHoverImage
                     ? 'group-hover:opacity-0'
                     : ''
@@ -83,10 +82,10 @@ export default function ProductCard({ product, priority = false }: { product: an
                   alt={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
                   title={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
                   fill
-                  sizes="(max-width: 767px) calc(100vw - 24px), (max-width: 1023px) calc(33vw - 24px), calc(20vw - 24px)"
-                  quality={85}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 280px"
+                  quality={95}
                   loading="lazy"
-                  className="object-contain transition-transform duration-500 opacity-0 scale-100 group-hover:opacity-100 group-hover:scale-105"
+                  className="object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-transform duration-500 opacity-0 scale-100 group-hover:opacity-100 group-hover:scale-105"
                 />
               )}
             </>
