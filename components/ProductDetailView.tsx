@@ -11,7 +11,8 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import {
   Star, Shirt, Info, Loader2, Search, MessageCircle,
   ChevronDown, ChevronUp, FileText, Zap, Package,
-  CheckCircle2, Download, X, ChevronLeft, ChevronRight, Maximize2, Play
+  CheckCircle2, Download, X, ChevronLeft, ChevronRight, Maximize2, Play,
+  ZoomIn, ZoomOut, RotateCcw
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -320,10 +321,25 @@ export default function ProductDetailView({ product }: { product: any }) {
     setSelectedImage(galleryImages[nextIndex]);
   };
 
-  // ── Lightbox Zoom & Gestos Mobile (Pinch-to-zoom, Pan, Double-tap) ──
+  // ── Lightbox Zoom & Gestos (Pinch-to-zoom, Pan, Mouse Drag, Double-tap) ──
   const [lightboxScale, setLightboxScale] = useState(1);
   const [lightboxPos, setLightboxPos] = useState({ x: 0, y: 0 });
   const [isLightboxDragging, setIsLightboxDragging] = useState(false);
+  const lightboxContainerRef = useRef<HTMLDivElement>(null);
+  const isMouseDownRef = useRef(false);
+  const mouseDragRef = useRef<{
+    startX: number;
+    startY: number;
+    startPosX: number;
+    startPosY: number;
+    hasDragged: boolean;
+  }>({
+    startX: 0,
+    startY: 0,
+    startPosX: 0,
+    startPosY: 0,
+    hasDragged: false,
+  });
   const touchStateRef = useRef<{
     startDistance: number;
     startScale: number;
@@ -354,9 +370,12 @@ export default function ProductDetailView({ product }: { product: any }) {
   useEffect(() => {
     setLightboxScale(1);
     setLightboxPos({ x: 0, y: 0 });
+    isMouseDownRef.current = false;
+    setIsLightboxDragging(false);
   }, [selectedImage, isLightboxOpen]);
 
   const handleLightboxTouchStart = (e: React.TouchEvent) => {
+    isMouseDownRef.current = false; // Garante que eventos de mouse não interfiram no mobile
     if (e.touches.length === 2) {
       // Gesto de pinça com 2 dedos (Pinch-to-zoom)
       const dist = Math.hypot(
@@ -430,9 +449,13 @@ export default function ProductDetailView({ product }: { product: any }) {
 
       if (lightboxScale > 1.05) {
         // Modo Pan (Imagem ampliada: navegação livre pelos detalhes)
-        const maxOffset = (lightboxScale - 1) * 250;
-        const newX = Math.min(Math.max(touchStateRef.current.startPosX + dx, -maxOffset), maxOffset);
-        const newY = Math.min(Math.max(touchStateRef.current.startPosY + dy, -maxOffset), maxOffset);
+        const container = lightboxContainerRef.current;
+        const containerWidth = container ? container.clientWidth : 800;
+        const containerHeight = container ? container.clientHeight : 600;
+        const maxOffsetX = Math.max(0, (containerWidth * (lightboxScale - 1)) / 1.6);
+        const maxOffsetY = Math.max(0, (containerHeight * (lightboxScale - 1)) / 1.6);
+        const newX = Math.min(Math.max(touchStateRef.current.startPosX + dx, -maxOffsetX), maxOffsetX);
+        const newY = Math.min(Math.max(touchStateRef.current.startPosY + dy, -maxOffsetY), maxOffsetY);
         setLightboxPos({ x: newX, y: newY });
       } else if (touchStateRef.current.isSwiping && galleryImages.length > 1) {
         // Modo Swipe (Sem zoom: feedback fluido ao arrastar lateralmente)
@@ -485,14 +508,132 @@ export default function ProductDetailView({ product }: { product: any }) {
     }
   };
 
-  const handleLightboxDoubleClick = () => {
+  // ── Handlers de Mouse para Desktop (Pan / Drag & Zoom) ──
+  const handleLightboxMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return; // apenas clique com botão esquerdo
+    if (lightboxScale <= 1) return;
+
+    e.preventDefault();
+    isMouseDownRef.current = true;
+    mouseDragRef.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      startPosX: lightboxPos.x,
+      startPosY: lightboxPos.y,
+      hasDragged: false,
+    };
+    setIsLightboxDragging(true);
+  };
+
+  const handleLightboxMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDownRef.current || lightboxScale <= 1) return;
+
+    const dx = e.clientX - mouseDragRef.current.startX;
+    const dy = e.clientY - mouseDragRef.current.startY;
+
+    if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+      mouseDragRef.current.hasDragged = true;
+    }
+
+    const container = lightboxContainerRef.current;
+    const containerWidth = container ? container.clientWidth : 900;
+    const containerHeight = container ? container.clientHeight : 600;
+
+    // Limites de deslocamento proporcionais à escala atual para inspecionar todas as bordas
+    const maxOffsetX = Math.max(0, (containerWidth * (lightboxScale - 1)) / 1.6);
+    const maxOffsetY = Math.max(0, (containerHeight * (lightboxScale - 1)) / 1.6);
+
+    const newX = Math.min(Math.max(mouseDragRef.current.startPosX + dx, -maxOffsetX), maxOffsetX);
+    const newY = Math.min(Math.max(mouseDragRef.current.startPosY + dy, -maxOffsetY), maxOffsetY);
+
+    setLightboxPos({ x: newX, y: newY });
+  };
+
+  const handleLightboxMouseUp = () => {
+    if (isMouseDownRef.current) {
+      isMouseDownRef.current = false;
+      setIsLightboxDragging(false);
+    }
+  };
+
+  const handleLightboxMouseLeave = () => {
+    if (isMouseDownRef.current) {
+      isMouseDownRef.current = false;
+      setIsLightboxDragging(false);
+    }
+  };
+
+  const handleLightboxContainerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // Se o usuário realizou arraste com o mouse, não interpreta como clique de zoom
+    if (mouseDragRef.current.hasDragged) {
+      mouseDragRef.current.hasDragged = false;
+      return;
+    }
+
+    if (lightboxScale === 1) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const offsetX = (rect.width / 2 - (e.clientX - rect.left)) * 0.7;
+      const offsetY = (rect.height / 2 - (e.clientY - rect.top)) * 0.7;
+      setLightboxScale(2.5);
+      setLightboxPos({ x: offsetX, y: offsetY });
+    }
+  };
+
+  const handleLightboxDoubleClick = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
     if (lightboxScale > 1) {
       setLightboxScale(1);
       setLightboxPos({ x: 0, y: 0 });
     } else {
-      setLightboxScale(2.5);
+      if (e && e.currentTarget) {
+        const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+        const offsetX = (rect.width / 2 - (e.clientX - rect.left)) * 0.7;
+        const offsetY = (rect.height / 2 - (e.clientY - rect.top)) * 0.7;
+        setLightboxScale(2.5);
+        setLightboxPos({ x: offsetX, y: offsetY });
+      } else {
+        setLightboxScale(2.5);
+      }
     }
   };
+
+  // Garante que soltar o mouse fora da área do container cancele o arraste
+  useEffect(() => {
+    const handleGlobalMouseUp = () => {
+      if (isMouseDownRef.current) {
+        isMouseDownRef.current = false;
+        setIsLightboxDragging(false);
+      }
+    };
+    window.addEventListener('mouseup', handleGlobalMouseUp);
+    return () => window.removeEventListener('mouseup', handleGlobalMouseUp);
+  }, []);
+
+  // Zoom suave com a roda do mouse (Wheel) no desktop
+  useEffect(() => {
+    if (!isLightboxOpen) return;
+    const container = lightboxContainerRef.current;
+    if (!container) return;
+
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const zoomFactor = e.deltaY < 0 ? 1.25 : 0.8;
+      setLightboxScale((prev) => {
+        const next = Math.min(Math.max(Number((prev * zoomFactor).toFixed(2)), 1), 5);
+        if (next <= 1.05) {
+          setLightboxPos({ x: 0, y: 0 });
+          return 1;
+        }
+        return next;
+      });
+    };
+
+    container.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      container.removeEventListener('wheel', onWheel);
+    };
+  }, [isLightboxOpen]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -877,19 +1018,82 @@ export default function ProductDetailView({ product }: { product: any }) {
               <span className="text-white/80 text-[12px] md:text-[13px] font-bold tracking-widest uppercase truncate pr-4">
                 {productName} {galleryImages.length > 1 ? `— (${galleryImages.indexOf(selectedImage) + 1}/${galleryImages.length})` : ''}
               </span>
-              <button
-                onClick={(e) => { e.stopPropagation(); setIsLightboxOpen(false); }}
-                className="p-2.5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all shrink-0 active:scale-95"
-                aria-label="Fechar zoom"
-              >
-                <X size={22} />
-              </button>
+              {/* Controles de Zoom & Fechar */}
+              <div className="flex items-center gap-2 shrink-0">
+                {/* Botões de Zoom Desktop e Tablet */}
+                <div className="hidden sm:flex items-center bg-white/10 backdrop-blur rounded-full px-2 py-1 gap-1 border border-white/10">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightboxScale(prev => Math.max(1, Number((prev - 0.5).toFixed(1))));
+                    }}
+                    disabled={lightboxScale <= 1}
+                    className="p-1.5 text-white/70 hover:text-white disabled:opacity-30 disabled:hover:text-white/70 transition-all rounded-full active:scale-95"
+                    aria-label="Diminuir zoom"
+                    title="Diminuir zoom"
+                  >
+                    <ZoomOut size={16} />
+                  </button>
+
+                  <span className="text-[11px] font-bold text-white/90 min-w-[42px] text-center select-none font-mono">
+                    {Math.round(lightboxScale * 100)}%
+                  </span>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightboxScale(prev => Math.min(5, Number((prev + 0.5).toFixed(1))));
+                    }}
+                    disabled={lightboxScale >= 5}
+                    className="p-1.5 text-white/70 hover:text-white disabled:opacity-30 disabled:hover:text-white/70 transition-all rounded-full active:scale-95"
+                    aria-label="Aumentar zoom"
+                    title="Aumentar zoom"
+                  >
+                    <ZoomIn size={16} />
+                  </button>
+
+                  {lightboxScale > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setLightboxScale(1);
+                        setLightboxPos({ x: 0, y: 0 });
+                      }}
+                      className="p-1.5 text-orange-400 hover:text-orange-300 transition-all rounded-full active:scale-95 border-l border-white/10 ml-0.5"
+                      aria-label="Resetar zoom"
+                      title="Resetar zoom (100%)"
+                    >
+                      <RotateCcw size={14} />
+                    </button>
+                  )}
+                </div>
+
+                <button
+                  onClick={(e) => { e.stopPropagation(); setIsLightboxOpen(false); }}
+                  className="p-2.5 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full transition-all shrink-0 active:scale-95"
+                  aria-label="Fechar zoom"
+                  title="Fechar (Esc)"
+                >
+                  <X size={22} />
+                </button>
+              </div>
             </div>
 
             {/* Container da Imagem em Tela Cheia com Pinch-to-Zoom e Pan */}
             <div
-              className="relative flex-1 w-full max-w-6xl mx-auto my-3 flex items-center justify-center overflow-hidden select-none touch-none"
-              onClick={(e) => e.stopPropagation()}
+              ref={lightboxContainerRef}
+              className={`relative flex-1 w-full max-w-6xl mx-auto my-3 flex items-center justify-center overflow-hidden select-none touch-none ${
+                lightboxScale > 1
+                  ? isLightboxDragging
+                    ? 'cursor-grabbing'
+                    : 'cursor-grab'
+                  : 'cursor-zoom-in'
+              }`}
+              onClick={handleLightboxContainerClick}
+              onMouseDown={handleLightboxMouseDown}
+              onMouseMove={handleLightboxMouseMove}
+              onMouseUp={handleLightboxMouseUp}
+              onMouseLeave={handleLightboxMouseLeave}
               onTouchStart={handleLightboxTouchStart}
               onTouchMove={handleLightboxTouchMove}
               onTouchEnd={handleLightboxTouchEnd}
@@ -897,7 +1101,7 @@ export default function ProductDetailView({ product }: { product: any }) {
             >
               {selectedImage && (
                 <div
-                  className="relative w-full h-full max-h-[82vh] flex items-center justify-center will-change-transform"
+                  className="relative w-full h-full max-h-[82vh] flex items-center justify-center will-change-transform pointer-events-none"
                   style={{
                     transform: `translate3d(${lightboxPos.x}px, ${lightboxPos.y}px, 0px) scale(${lightboxScale})`,
                     transition: isLightboxDragging ? 'none' : 'transform 200ms cubic-bezier(0.25, 1, 0.5, 1)',
