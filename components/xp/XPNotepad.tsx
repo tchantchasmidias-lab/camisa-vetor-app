@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import React, { useState } from 'react';
 
@@ -28,7 +28,7 @@ Como Usar o Windows XP da Camisa Vetor:
 
 Para voltar a loja moderna convencional a qualquer momento, 
 clique em 'Iniciar' -> 'Desligar o computador' ou no icone
-'Loja Oficial Moderna' na sua area de trabalho.
+'Camisa Vetor (Loja)' na sua area de trabalho.
 
 Equipe Camisa Vetor (Pesqueira - PE, Brasil)
 Suporte: contato@camisavetor.com

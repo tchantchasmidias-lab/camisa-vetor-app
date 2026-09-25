@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { 
   Folder, Image as ImageIcon, ShoppingCart, FileText, 
-  HardDrive, Globe 
+  HardDrive 
 } from 'lucide-react';
 import type { Product } from '@/components/HomeClient';
 import { useXPSounds } from '@/components/xp/useXPSounds';
@@ -94,15 +94,11 @@ const DESKTOP_ICONS: DesktopIconDef[] = [
   },
   {
     id: 'store',
-    title: 'Loja Oficial Moderna',
+    title: 'Camisa Vetor (Loja)',
     type: 'system',
+    image: '/icon.png',
     defaultX: 16,
     defaultY: 280,
-    systemIcon: (
-      <div className="w-10 h-10 rounded-full bg-emerald-100 border border-emerald-400 flex items-center justify-center text-emerald-600 shadow-md group-hover:scale-105 transition-transform">
-        <Globe size={22} />
-      </div>
-    ),
   },
 
   // ── Coluna 2: Redes Sociais da pasta public/ (left: 110px) ──
@@ -609,17 +605,17 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
             }`}
             title={`${icon.title} (Arraste para reposicionar ou clique para abrir)`}
           >
-            {icon.type === 'system' ? (
-              icon.systemIcon
-            ) : (
+            {icon.image ? (
               <Image
-                src={icon.image!}
+                src={icon.image}
                 alt={icon.title}
                 width={40}
                 height={40}
                 unoptimized
                 className="w-10 h-10 object-contain drop-shadow-md pointer-events-none select-none group-hover:scale-105 transition-transform"
               />
+            ) : (
+              icon.systemIcon
             )}
             <span className="text-white text-[11px] font-bold text-center mt-1 leading-tight drop-shadow-[1px_1px_2px_rgba(0,0,0,0.95)] min-w-[70px] max-w-[85px] px-0.5 select-none break-words">
               {icon.title}
