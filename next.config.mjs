@@ -15,7 +15,7 @@ const nextConfig = {
     // Mantém WebP para preservar qualidade das artes (sem recompressão AVIF)
     formats: ['image/webp'],
     imageSizes: [64, 128, 256, 384],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1600, 1920],
     minimumCacheTTL: 31536000, // 1 ano de cache para imagens otimizadas
     remotePatterns: [
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },

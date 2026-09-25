@@ -555,8 +555,8 @@ export default function ProductDetailView({ product }: { product: any }) {
                     alt={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
                     title={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
                     fill
-                    quality={90}
-                    sizes="(max-width: 768px) 100vw, 700px"
+                    quality={95}
+                    sizes="(max-width: 768px) 100vw, 1200px"
                     className={`product-gallery-main-image object-cover transition-transform duration-300 ease-out pointer-events-none lg:pointer-events-auto rounded-xl ${
                       isZoomed ? 'scale-[1.8]' : 'scale-100'
                     }`}
@@ -908,7 +908,7 @@ export default function ProductDetailView({ product }: { product: any }) {
                     alt={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
                     title={`Arte Vetor ${productName} - Camisa Editável CorelDRAW Sublimação`}
                     fill
-                    quality={95}
+                    unoptimized={true}
                     draggable={false}
                     className="object-contain max-h-[82vh] rounded-lg pointer-events-none"
                   />

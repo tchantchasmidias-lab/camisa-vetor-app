@@ -66,8 +66,8 @@ export default function ProductCard({ product, priority = false }: { product: an
                 title={semanticAlt}
                 fill
                 priority={priority}
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 280px"
-                quality={95}
+                sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
+                quality={90}
                 className={`object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-transform duration-500 group-hover:scale-105 ${
                   hasHoverImage
                     ? 'group-hover:opacity-0'
@@ -82,8 +82,8 @@ export default function ProductCard({ product, priority = false }: { product: an
                   alt={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
                   title={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
                   fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 33vw, 280px"
-                  quality={95}
+                  sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
+                  quality={90}
                   loading="lazy"
                   className="object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-transform duration-500 opacity-0 scale-100 group-hover:opacity-100 group-hover:scale-105"
                 />

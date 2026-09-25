@@ -397,12 +397,12 @@ export default function AdminPage() {
 
   // 2. FUNÇÕES DE UPLOAD
 
-  // Converte qualquer imagem (PNG, JPG, etc.) para WebP no navegador antes do upload.
-  // Garante máxima qualidade na fonte e arquivos menores no Firebase Storage.
-  const convertToWebP = (file: File, quality = 0.95): Promise<File> =>
+  // Preserva a imagem original em alta fidelidade (PNG sem perdas / RGB 4:4:4) antes do upload.
+  // Evita dupla compressão lossy e garante máxima qualidade na fonte para otimização do Next.js.
+  const convertToWebP = (file: File): Promise<File> =>
     new Promise<File>((resolve) => {
-      // Se já for WebP, devolve sem reprocessar
-      if (file.type === 'image/webp') { resolve(file); return; }
+      // Se já for PNG, mantém o arquivo original sem reprocessar (100% sem perdas)
+      if (file.type === 'image/png') { resolve(file); return; }
       const img = document.createElement('img');
       const objectUrl = URL.createObjectURL(file);
       img.onload = () => {
@@ -414,20 +414,20 @@ export default function AdminPage() {
           URL.revokeObjectURL(objectUrl);
           if (blob) {
             const baseName = file.name.replace(/\.[^/.]+$/, '');
-            resolve(new File([blob], `${baseName}.webp`, { type: 'image/webp' }));
+            resolve(new File([blob], `${baseName}.png`, { type: 'image/png' }));
           } else {
             resolve(file); // fallback: mantém original se conversão falhar
           }
-        }, 'image/webp', quality);
+        }, 'image/png');
       };
       img.onerror = () => { URL.revokeObjectURL(objectUrl); resolve(file); };
       img.src = objectUrl;
     });
 
   const uploadFile = async (file: File, path: string) => {
-    // Converte imagens para WebP antes de salvar (exceto arquivos de download/vetores)
+    // Garante imagens em alta fidelidade antes de salvar (exceto arquivos de download/vetores)
     const isImage = path !== 'downloads';
-    const fileToUpload = isImage ? await convertToWebP(file, 0.95) : file;
+    const fileToUpload = isImage ? await convertToWebP(file) : file;
     const sRef = ref(storage, `${path}/${Date.now()}_${fileToUpload.name}`);
     await uploadBytes(sRef, fileToUpload);
     return await getDownloadURL(sRef);
