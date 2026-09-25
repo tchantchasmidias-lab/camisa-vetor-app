@@ -194,7 +194,7 @@ export default function ReviewsSection({
   ).toFixed(1);
 
   return (
-    <section className="reviews-section w-full bg-white border-t border-[#f1f5f9] py-12 px-4 md:px-6">
+    <section className="reviews-section w-full bg-white py-8 sm:py-12 px-4 md:px-6">
       {/* Título */}
       <div className="flex flex-col items-center justify-center gap-1 mb-8">
         <div className="flex items-center gap-2">

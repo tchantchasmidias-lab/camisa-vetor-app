@@ -61,8 +61,8 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
         ✨ Você Também Pode Gostar
       </h2>
 
-      {/* Grid 4 colunas — 2 no mobile */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
+      {/* Grid 4 colunas — 2 no mobile com espaçamento inferior ampliado */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-10 sm:mb-12">
         {products.map((product) => {
           const imgSrc = product.urls?.capa || product.urls?.destaque || '';
           const href = `/product/${product.slug || product.id}`;
@@ -86,10 +86,10 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
                     alt={semanticAlt}
                     title={semanticAlt}
                     fill
-                    sizes="(max-width: 640px) 45vw, 25vw"
-                    quality={75}
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 25vw, 280px"
+                    quality={95}
                     loading="lazy"
-                    className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-transform duration-300 group-hover:scale-105"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -115,6 +115,11 @@ export default function RelatedProducts({ category, currentProductId }: RelatedP
             </Link>
           );
         })}
+      </div>
+
+      {/* Linha divisória suave e tracejada na cor laranja */}
+      <div className="w-full my-10 sm:my-14">
+        <div className="border-t border-dashed border-orange-500/50 w-full" />
       </div>
     </section>
   );
