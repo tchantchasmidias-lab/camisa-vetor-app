@@ -5,6 +5,7 @@ import { Resend } from 'resend';
 import { adminDb } from '@/lib/firebaseAdmin';
 import { sendCriticalErrorAlert } from '@/lib/errorNotifier';
 import { cleanCPF, cleanPhone, isValidCPF } from '@/lib/validationUtils';
+import { PLANS, isPaidPlan, type PaidPlan } from '@/lib/subscriptions';
 
 export async function POST(req: Request) {
   const resend = new Resend(process.env.RESEND_API_KEY || 're_stub');
@@ -35,6 +36,58 @@ export async function POST(req: Request) {
       options: { timeout: 10000 } 
     });
     const payment = new Payment(client);
+
+    // Suporte a Passe de 30 Dias (Clube PRO / Gráfica via Pix)
+    const passPlanId = body?.planId || body?.metadata?.planId;
+    if ((body?.type === 'subscription_pass' || body?.metadata?.type === 'subscription_pass') && isPaidPlan(passPlanId)) {
+      if (!userId) {
+        return NextResponse.json({ error: 'Usuário não autenticado.' }, { status: 401 });
+      }
+      const plan = PLANS[passPlanId as PaidPlan];
+      const transactionId = uuidv4();
+      const expirationDate = new Date();
+      expirationDate.setHours(expirationDate.getHours() + 1);
+      const phoneArea = sanitizedPhone.length >= 10 ? sanitizedPhone.substring(0, 2) : '';
+      const phoneNumber = sanitizedPhone.length >= 10 ? sanitizedPhone.substring(2) : sanitizedPhone;
+
+      const passResult = await payment.create({
+        body: {
+          transaction_amount: plan.price,
+          description: `${plan.name} (Passe 30 Dias - ${plan.credits} créditos) - Camisa Vetor`,
+          payment_method_id: 'pix',
+          date_of_expiration: expirationDate.toISOString(),
+          payer: {
+            email: (email || '').trim(),
+            first_name: (firstName || 'Cliente').trim(),
+            last_name: lastName ? lastName.trim() : undefined,
+            identification: sanitizedCpf ? { type: 'CPF', number: sanitizedCpf } : undefined,
+            ...(phoneArea && phoneNumber ? { phone: { area_code: phoneArea, number: phoneNumber } } : {}),
+          },
+          metadata: {
+            type: 'subscription_pass',
+            planId: plan.id,
+            userId,
+            plan_id: plan.id,
+            user_id: userId,
+          },
+          notification_url: 'https://camisavetor.com.br/api/checkout/pix/webhook',
+          external_reference: `subpass|${userId}|${plan.id}|${transactionId}`,
+        },
+        requestOptions: { idempotencyKey: transactionId },
+      });
+
+      const txData = passResult.point_of_interaction?.transaction_data;
+      if (!txData) {
+        throw new Error('Não foi possível obter os dados do Pix');
+      }
+
+      return NextResponse.json({
+        id: passResult.id,
+        transactionId,
+        qr_code: txData.qr_code,
+        qr_code_base64: txData.qr_code_base64,
+      });
+    }
 
     // Validação de Preços no Servidor
     let realCartTotal = 0;

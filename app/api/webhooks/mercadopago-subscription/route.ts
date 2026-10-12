@@ -3,11 +3,15 @@ import crypto from 'crypto';
 import { MercadoPagoConfig, Payment, PreApproval } from 'mercadopago';
 import { Timestamp } from 'firebase-admin/firestore';
 import { adminDb } from '@/lib/firebaseAdmin';
-import { BILLING_CYCLE_DAYS, PLANS, isPaidPlan, PaidPlan } from '@/lib/subscriptions';
+import { BILLING_CYCLE_DAYS, PLANS, isPaidPlan, toMillis, type PaidPlan } from '@/lib/subscriptions';
+import {
+  activatePixSubscriptionPass,
+  extractSubscriptionPassInfo,
+} from '@/lib/subscriptionServer';
 
 /**
  * Webhook de assinaturas do Mercado Pago.
- * Eventos tratados: `payment` (cobrança recorrente) e `subscription_preapproval` (ciclo de vida).
+ * Eventos tratados: `payment` (cobrança recorrente ou Passe Pix) e `subscription_preapproval` (ciclo de vida).
  * Nunca confiamos no corpo recebido: o estado real é sempre consultado na API do Mercado Pago.
  */
 
@@ -26,7 +30,7 @@ function parseExternalReference(ref?: string | null): SubRef | null {
 /** Valida a assinatura x-signature quando MERCADOPAGO_WEBHOOK_SECRET estiver configurado. */
 function isSignatureValid(req: NextRequest, dataId: string | null): boolean {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
-  if (!secret) return true; // validação opcional: o estado é reconsultado na API do MP
+  if (!secret) return true;
   const signature = req.headers.get('x-signature');
   const requestId = req.headers.get('x-request-id') || '';
   if (!signature || !dataId) return false;
@@ -57,6 +61,26 @@ async function handleApprovedPayment(paymentId: string, ref: SubRef, preapproval
     const [marker, userSnap] = await Promise.all([tx.get(markerRef), tx.get(userRef)]);
     if (marker.exists) return; // idempotência: pagamento já processado
 
+    const userData = userSnap.data() || {};
+    const lastActivatedMs = toMillis(userData.lastSubscriptionActivatedAt);
+    const isInitialChargeAlreadyCredited =
+      preapprovalId &&
+      userData.subscriptionId === preapprovalId &&
+      lastActivatedMs !== null &&
+      Date.now() - lastActivatedMs < 24 * 3600_000;
+
+    if (isInitialChargeAlreadyCredited) {
+      // A ativação transparente imediata já creditou o ciclo inicial; apenas registra o paymentId
+      tx.set(markerRef, {
+        uid: ref.uid,
+        plan: ref.plan,
+        preapprovalId,
+        note: 'initial_charge_already_credited',
+        processedAt: Timestamp.now(),
+      });
+      return;
+    }
+
     const renewsAt = Timestamp.fromMillis(Date.now() + BILLING_CYCLE_DAYS * 86_400_000);
     tx.set(
       userRef,
@@ -64,8 +88,9 @@ async function handleApprovedPayment(paymentId: string, ref: SubRef, preapproval
         isSubscriber: true,
         subscriptionPlan: ref.plan,
         subscriptionStatus: 'active',
-        subscriptionId: preapprovalId || userSnap.data()?.subscriptionId || '',
+        subscriptionId: preapprovalId || userData.subscriptionId || '',
         subscriptionRenewsAt: renewsAt,
+        subscriptionExpiresAt: renewsAt,
         monthlyCredits: plan.credits,
         availableCredits: plan.credits,
       },
@@ -81,9 +106,7 @@ async function markCanceled(uid: string, expectedSubscriptionId?: string) {
     const snap = await tx.get(userRef);
     const data = snap.data();
     if (!data) return;
-    // Ignora eventos de assinaturas antigas que não são mais a vigente
     if (expectedSubscriptionId && data.subscriptionId && data.subscriptionId !== expectedSubscriptionId) return;
-    // Mantém isSubscriber até subscriptionRenewsAt: o acesso expira na data final (ver hasActiveEntitlement)
     tx.set(userRef, { subscriptionStatus: 'canceled' }, { merge: true });
   });
 }
@@ -93,9 +116,17 @@ export async function POST(req: NextRequest) {
     const url = new URL(req.url);
     const body = await req.json().catch(() => ({}));
 
-    const type: string | undefined = body?.type || body?.topic || url.searchParams.get('type') || url.searchParams.get('topic') || undefined;
+    const type: string | undefined =
+      body?.type ||
+      body?.topic ||
+      url.searchParams.get('type') ||
+      url.searchParams.get('topic') ||
+      undefined;
     const dataId: string | null =
-      body?.data?.id?.toString() || url.searchParams.get('data.id') || url.searchParams.get('id') || (body?.id ? String(body.id) : null);
+      body?.data?.id?.toString() ||
+      url.searchParams.get('data.id') ||
+      url.searchParams.get('id') ||
+      (body?.id ? String(body.id) : null);
 
     if (!type || !dataId) return NextResponse.json({ ignored: true });
     if (!isSignatureValid(req, url.searchParams.get('data.id') || dataId)) {
@@ -123,7 +154,6 @@ export async function POST(req: NextRequest) {
           await userRef.set({ subscriptionStatus: 'paused' }, { merge: true });
         }
       } else if (pre.status === 'authorized') {
-        // Vincula a assinatura ao usuário; os créditos só são liberados no pagamento aprovado.
         const userRef = adminDb.collection('users').doc(ref.uid);
         await userRef.set(
           {
@@ -138,9 +168,20 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true });
     }
 
-    // ── Cobranças recorrentes ──────────────────────────────────────────────────
+    // ── Cobranças recorrentes ou Passe Pix de 30 Dias ──────────────────────────
     if (type === 'payment') {
       const payment = await new Payment(client).get({ id: dataId });
+
+      // 1) Verifica se é um Passe de 30 Dias pago via Pix
+      const passInfo = extractSubscriptionPassInfo(payment);
+      if (passInfo) {
+        if (payment.status === 'approved') {
+          await activatePixSubscriptionPass(String(payment.id ?? dataId), passInfo);
+        }
+        return NextResponse.json({ received: true, subscriptionPass: true });
+      }
+
+      // 2) Cobrança recorrente de cartão (PreApproval)
       const preapprovalId: string | undefined = (payment as any).metadata?.preapproval_id || undefined;
 
       let ref = parseExternalReference(payment.external_reference);
@@ -148,7 +189,6 @@ export async function POST(req: NextRequest) {
         const pre = await new PreApproval(client).get({ id: preapprovalId });
         ref = parseExternalReference(pre.external_reference);
       }
-      // Pagamento avulso comum: tratado em /api/checkout/pix/webhook
       if (!ref) return NextResponse.json({ ignored: true });
 
       if (payment.status === 'approved') {
@@ -162,7 +202,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ignored: true });
   } catch (error: any) {
     console.error('[Webhook Sub] erro:', error?.message);
-    // 500 faz o Mercado Pago reenviar a notificação
     return NextResponse.json({ error: 'Erro interno' }, { status: 500 });
   }
 }

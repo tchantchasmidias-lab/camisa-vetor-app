@@ -22,6 +22,8 @@ export interface SubscriptionFields {
   subscriptionId?: string;
   /** Firestore Timestamp: próxima renovação / fim do período já pago */
   subscriptionRenewsAt?: unknown;
+  /** Firestore Timestamp: data de expiração do passe/ciclo (30 dias) */
+  subscriptionExpiresAt?: unknown;
   monthlyCredits?: number;
   availableCredits?: number;
   downloadHistory?: DownloadHistoryEntry[];
@@ -73,19 +75,20 @@ export function toMillis(value: unknown): number | null {
 
 /**
  * Indica se a assinatura ainda dá direito a usar créditos agora.
+ * Considera subscriptionExpiresAt ou subscriptionRenewsAt.
  * - active: precisa estar dentro do ciclo (+ tolerância de webhook)
  * - canceled: mantém acesso somente até a data final já paga
  * - paused: sem acesso
  */
 export function hasActiveEntitlement(user: SubscriptionFields | null | undefined, now = Date.now()): boolean {
   if (!user || user.isSubscriber !== true) return false;
-  const renewsAt = toMillis(user.subscriptionRenewsAt);
-  if (!renewsAt) return false;
+  const expiresAt = toMillis(user.subscriptionExpiresAt) ?? toMillis(user.subscriptionRenewsAt);
+  if (!expiresAt) return false;
   if (user.subscriptionStatus === 'active') {
-    return renewsAt + RENEWAL_GRACE_DAYS * 86_400_000 > now;
+    return expiresAt + RENEWAL_GRACE_DAYS * 86_400_000 > now;
   }
   if (user.subscriptionStatus === 'canceled') {
-    return renewsAt > now;
+    return expiresAt > now;
   }
   return false;
 }

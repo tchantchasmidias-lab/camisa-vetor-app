@@ -3,6 +3,10 @@ import { adminDb } from "@/lib/firebaseAdmin";
 import { MercadoPagoConfig, Payment } from "mercadopago";
 import { Resend } from "resend";
 import { sendCriticalErrorAlert } from "@/lib/errorNotifier";
+import {
+  activatePixSubscriptionPass,
+  extractSubscriptionPassInfo,
+} from "@/lib/subscriptionServer";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,6 +37,21 @@ export async function POST(req: NextRequest) {
 
     if (result.status !== "approved") {
       return NextResponse.json({ message: "Pagamento nao aprovado, ignorado." });
+    }
+
+    // 1.b Verificar se é um Passe de 30 Dias (Assinatura via Pix)
+    const passInfo = extractSubscriptionPassInfo(result);
+    if (passInfo) {
+      const outcome = await activatePixSubscriptionPass(String(result.id ?? paymentId), passInfo);
+      console.log(
+        `[Webhook MP] Passe de 30 dias (${passInfo.planId}) ativado para user ${passInfo.userId}. Créditos: ${outcome.availableCredits}`
+      );
+      return NextResponse.json({
+        success: true,
+        subscriptionPass: true,
+        alreadyProcessed: outcome.alreadyProcessed,
+        availableCredits: outcome.availableCredits,
+      });
     }
 
     const transactionId = result.external_reference;

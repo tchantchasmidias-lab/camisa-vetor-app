@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { db } from '@/lib/firebase';
 import {
   collection, getDocs, query,
-  orderBy, doc, getDoc, setDoc, serverTimestamp
+  orderBy, doc, getDoc, setDoc, serverTimestamp, onSnapshot
 } from 'firebase/firestore';
 import { auth } from '@/lib/firebase';
 import { onAuthStateChanged, User } from 'firebase/auth';
@@ -196,14 +196,15 @@ export default function ProductDetailView({ product }: { product: any }) {
     return () => unsubscribe();
   }, []);
 
-  // Dados de assinatura (somente leitura no client; débito de crédito é feito no servidor)
+  // Dados de assinatura em tempo real (somente leitura no client; débito de crédito é feito no servidor)
   useEffect(() => {
     if (!user) { setSubData(null); return; }
-    let cancelled = false;
-    getDoc(doc(db, 'users', user.uid))
-      .then((snap) => { if (!cancelled) setSubData(snap.exists() ? (snap.data() as SubscriptionFields) : null); })
-      .catch(() => { if (!cancelled) setSubData(null); });
-    return () => { cancelled = true; };
+    const unsub = onSnapshot(
+      doc(db, 'users', user.uid),
+      (snap) => setSubData(snap.exists() ? (snap.data() as SubscriptionFields) : null),
+      () => setSubData(null)
+    );
+    return () => unsub();
   }, [user]);
 
   useEffect(() => {
@@ -930,7 +931,13 @@ export default function ProductDetailView({ product }: { product: any }) {
                       if (entitled && credits <= 0) {
                         return (
                           <div className="w-full max-w-md mx-auto md:mx-0 rounded-2xl border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-[13px] text-[#9a3412] text-center md:text-left">
-                            Seus créditos PRO deste ciclo acabaram. Eles serão renovados na próxima cobrança.
+                            Seus créditos PRO deste ciclo acabaram.{' '}
+                            <Link
+                              href={`/planos?redirect=${encodeURIComponent(`/product/${product.slug || product.id}`)}`}
+                              className="font-bold text-[#fe7302] underline underline-offset-2 hover:text-[#202124]"
+                            >
+                              [Recarregar com Passe ou Upgrade]
+                            </Link>
                           </div>
                         );
                       }
@@ -939,7 +946,10 @@ export default function ProductDetailView({ product }: { product: any }) {
                         <div className="w-full max-w-md mx-auto md:mx-0 rounded-2xl border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-[13px] text-[#9a3412] flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-1">
                           <Crown size={16} className="text-[#fe7302] shrink-0" />
                           <span>Ou baixe com o <strong>Clube PRO ({proPerArt}/arte)</strong></span>
-                          <Link href="/planos" className="font-bold text-[#fe7302] underline underline-offset-2 hover:text-[#202124]">
+                          <Link
+                            href={`/planos?redirect=${encodeURIComponent(`/product/${product.slug || product.id}`)}`}
+                            className="font-bold text-[#fe7302] underline underline-offset-2 hover:text-[#202124]"
+                          >
                             [Ver Planos]
                           </Link>
                         </div>
