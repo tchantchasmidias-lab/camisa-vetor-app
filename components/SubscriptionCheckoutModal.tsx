@@ -385,9 +385,9 @@ export default function SubscriptionCheckoutModal({
     >
       <div className="relative w-full max-w-lg rounded-3xl bg-white border border-[#dadce0] shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
         {/* Cabeçalho */}
-        <div className="flex items-center justify-between border-b border-[#f1f3f4] bg-[#0f172a] px-6 py-5 text-white">
+        <div className="flex items-center justify-between border-b border-zinc-800/85 bg-[#0f172a]/95 backdrop-blur-md px-6 py-5 text-white">
           <div>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-[#fe7302]">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-orange-500/70">
               <Sparkles size={13} /> Checkout Transparente
             </span>
             <h2 id="checkout-modal-title" className="mt-0.5 text-lg font-extrabold tracking-tight">
