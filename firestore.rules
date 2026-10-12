@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Regras para PRODUTOS
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == "camisavetor@gmail.com";
+    }
+
+    // Regras para CATEGORIAS
+    match /categories/{catId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == "camisavetor@gmail.com";
+    }
+
+    // Regras para CONFIGURAÇÕES (Banner)
+    match /configuracoes/{configId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.email == "camisavetor@gmail.com";
+    }
+
+    // Regras para PEDIDOS
+    match /pedidos/{orderId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth != null && request.auth.token.email == "camisavetor@gmail.com";
+    }
+
+    // Regras para USUÁRIOS
+    // Campos de assinatura/créditos só podem ser alterados pelo backend (Firebase Admin SDK,
+    // que ignora estas regras). O próprio usuário nunca pode criá-los nem editá-los.
+    match /users/{userId} {
+      function isOwner() {
+        return request.auth != null && request.auth.uid == userId;
+      }
+
+      function protectedFields() {
+        return [
+          'isSubscriber',
+          'subscriptionPlan',
+          'subscriptionStatus',
+          'subscriptionId',
+          'availableCredits',
+          'monthlyCredits',
+          'subscriptionRenewsAt',
+          'downloadHistory'
+        ];
+      }
+
+      allow read: if isOwner();
+
+      // Criação permitida, mas sem injetar campos de assinatura/créditos
+      allow create: if isOwner()
+        && !request.resource.data.keys().hasAny(protectedFields());
+
+      // Atualização não pode tocar (adicionar, alterar ou remover) os campos protegidos
+      allow update: if isOwner()
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(protectedFields());
+
+      // Exclusão apenas via backend
+      allow delete: if false;
+    }
+  }
+}
