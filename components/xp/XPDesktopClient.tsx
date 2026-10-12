@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import Image from 'next/image';
 import { 
   Folder, Image as ImageIcon, ShoppingCart, FileText, 
-  HardDrive 
+  HardDrive, Star 
 } from 'lucide-react';
 import type { Product } from '@/components/HomeClient';
 import { useXPSounds } from '@/components/xp/useXPSounds';
@@ -16,6 +16,7 @@ import XPImageViewer from '@/components/xp/XPImageViewer';
 import XPCartWindow from '@/components/xp/XPCartWindow';
 import XPNotepad from '@/components/xp/XPNotepad';
 import XPShutdownDialog from '@/components/xp/XPShutdownDialog';
+import XPClubWindow from '@/components/xp/XPClubWindow';
 
 export type SocialNetwork = 'instagram' | 'tiktok' | 'youtube' | 'pinterest' | 'linkedin';
 
@@ -99,6 +100,19 @@ const DESKTOP_ICONS: DesktopIconDef[] = [
     image: '/icon.png',
     defaultX: 16,
     defaultY: 280,
+  },
+  {
+    id: 'club',
+    title: 'Clube de Assinantes',
+    type: 'system',
+    defaultX: 16,
+    defaultY: 368,
+    systemIcon: (
+      <div className="relative w-10 h-10 rounded bg-amber-100 border border-amber-500 flex items-center justify-center shadow-md group-hover:scale-105 transition-transform">
+        <Folder size={26} className="fill-[#f5a623] text-[#c77d00]" />
+        <Star size={14} className="absolute fill-[#fff3a0] text-[#b45309]" />
+      </div>
+    ),
   },
 
   // ── Coluna 2: Redes Sociais da pasta public/ (left: 110px) ──
@@ -194,6 +208,15 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
       isMinimized: false,
       isMaximized: false,
       zIndex: 13,
+    },
+    club: {
+      id: 'club',
+      title: 'Clube de Assinantes - Camisa Vetor',
+      icon: <Star size={14} className="fill-[#f5a623] text-[#f5a623]" />,
+      isOpen: false,
+      isMinimized: false,
+      isMaximized: false,
+      zIndex: 14,
     },
   });
 
@@ -423,6 +446,15 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         isMaximized: false,
         zIndex: 13,
       },
+      club: {
+        id: 'club',
+        title: 'Clube de Assinantes - Camisa Vetor',
+        icon: <Star size={14} className="fill-[#f5a623] text-[#f5a623]" />,
+        isOpen: false,
+        isMinimized: false,
+        isMaximized: false,
+        zIndex: 14,
+      },
     });
 
     const initialPos: Record<string, { x: number; y: number }> = {};
@@ -449,6 +481,8 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
       openWindow('explorer');
     } else if (icon.id === 'cart') {
       openWindow('cart');
+    } else if (icon.id === 'club') {
+      openWindow('club');
     } else if (icon.id === 'store') {
       sounds.playBeep();
       window.location.href = '/';
@@ -721,6 +755,27 @@ export default function XPDesktopClient({ initialProducts }: XPDesktopClientProp
         statusBarText="Ln 1, Col 1 • UTF-8 • Windows (CRLF)"
       >
         <XPNotepad />
+      </XPWindow>
+
+      {/* ── JANELA 5: CLUBE DE ASSINANTES ── */}
+      <XPWindow
+        id="club"
+        title={windows.club.title}
+        icon={windows.club.icon}
+        isOpen={windows.club.isOpen}
+        isMinimized={windows.club.isMinimized}
+        isMaximized={windows.club.isMaximized}
+        isActive={activeWindowId === 'club'}
+        zIndex={windows.club.zIndex}
+        onClose={() => closeWindow('club')}
+        onMinimize={() => minimizeWindow('club')}
+        onMaximize={() => toggleMaximizeWindow('club')}
+        onFocus={() => focusWindow('club')}
+        initialPosition={{ x: 240, y: 60 }}
+        initialSize={{ width: 480, height: 520 }}
+        statusBarText="Clube PRO • Pagamento seguro via Mercado Pago"
+      >
+        <XPClubWindow onPlayClick={sounds.playClick} onPlayNotify={sounds.playNotify} />
       </XPWindow>
 
       {/* ── DIÁLOGO DE DESLIGAR O COMPUTADOR ── */}

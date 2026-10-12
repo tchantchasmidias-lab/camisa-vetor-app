@@ -12,7 +12,7 @@ import {
   Star, Shirt, Info, Loader2, Search, MessageCircle,
   ChevronDown, ChevronUp, FileText, Zap, Package,
   CheckCircle2, Download, X, ChevronLeft, ChevronRight, Maximize2, Play,
-  ZoomIn, ZoomOut, RotateCcw
+  ZoomIn, ZoomOut, RotateCcw, Crown
 } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -22,6 +22,10 @@ import { useGeo } from '@/lib/i18n/GeoContext';
 import { formatTitleCase } from '@/lib/stringUtils';
 import { safeLocalStorage } from '@/lib/safeStorage';
 import { getYouTubeId } from '@/lib/youtubeUtils';
+import {
+  hasActiveEntitlement, hasRedeemed, formatBRL, pricePerArt, PLANS,
+  type SubscriptionFields,
+} from '@/lib/subscriptions';
 
 const RelatedProducts = dynamic(() => import('@/components/RelatedProducts'), {
   loading: () => <div className="h-48" />,
@@ -165,6 +169,8 @@ export default function ProductDetailView({ product }: { product: any }) {
   const [hoverRating, setHoverRating] = useState<number>(0);
   const [isSubmittingRating, setIsSubmittingRating] = useState(false);
   const [isFreeDownloading, setIsFreeDownloading] = useState(false);
+  const [subData, setSubData] = useState<SubscriptionFields | null>(null);
+  const [isCreditDownloading, setIsCreditDownloading] = useState(false);
 
   const { t, tp, formatPrice } = useGeo();
   const router = useRouter();
@@ -189,6 +195,16 @@ export default function ProductDetailView({ product }: { product: any }) {
     const unsubscribe = onAuthStateChanged(auth, (u) => setUser(u));
     return () => unsubscribe();
   }, []);
+
+  // Dados de assinatura (somente leitura no client; débito de crédito é feito no servidor)
+  useEffect(() => {
+    if (!user) { setSubData(null); return; }
+    let cancelled = false;
+    getDoc(doc(db, 'users', user.uid))
+      .then((snap) => { if (!cancelled) setSubData(snap.exists() ? (snap.data() as SubscriptionFields) : null); })
+      .catch(() => { if (!cancelled) setSubData(null); });
+    return () => { cancelled = true; };
+  }, [user]);
 
   useEffect(() => {
     if (!product?.id) return;
@@ -308,6 +324,44 @@ export default function ProductDetailView({ product }: { product: any }) {
     }
   };
 
+
+  // Download via Clube PRO: o servidor valida, debita 1 crédito atomicamente e devolve URL assinada (5 min)
+  const handleCreditDownload = async () => {
+    if (!user) {
+      router.push(`/login?redirect=/product/${product.slug || product.id}`);
+      return;
+    }
+    setIsCreditDownloading(true);
+    try {
+      const token = await user.getIdToken();
+      const res = await fetch(`/api/products/${product.id}/download`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.downloadUrl) {
+        alert(data.error || 'Não foi possível liberar o download. Tente novamente.');
+        return;
+      }
+      window.open(data.downloadUrl, '_blank');
+      // Atualiza saldo e histórico localmente conforme resposta do servidor
+      if (data.method === 'credit' && data.charged) {
+        setSubData((prev) => prev ? {
+          ...prev,
+          availableCredits: data.remainingCredits,
+          downloadHistory: [
+            ...(prev.downloadHistory ?? []),
+            { productId: product.id, downloadedAt: new Date(), method: 'credit' },
+          ],
+        } : prev);
+      }
+    } catch (err) {
+      console.error('Erro no download com crédito:', err);
+      alert('Erro ao processar o download. Tente novamente.');
+    } finally {
+      setIsCreditDownloading(false);
+    }
+  };
 
   const handlePrevLightbox = () => {
     const currentIndex = galleryImages.indexOf(selectedImage);
@@ -843,6 +897,54 @@ export default function ProductDetailView({ product }: { product: any }) {
                         ) : t('addToCart')}
                       </button>
                     )}
+
+                    {/* Clube PRO — compra avulsa acima permanece como ação primária */}
+                    {!isFree && (() => {
+                      const entitled = hasActiveEntitlement(subData);
+                      const credits = Number(subData?.availableCredits) || 0;
+                      const redeemed = entitled && hasRedeemed(subData, product.id);
+                      const proPerArt = formatBRL(pricePerArt('pro'));
+
+                      if (entitled && (redeemed || credits > 0)) {
+                        return (
+                          <button
+                            onClick={handleCreditDownload}
+                            disabled={isCreditDownloading}
+                            className={`w-full max-w-md mx-auto md:mx-0 font-bold py-4 min-h-[48px] rounded-2xl flex items-center justify-center transition-all shadow-lg text-[12px] uppercase tracking-[0.15em] ${
+                              redeemed
+                                ? 'bg-[#0f172a] text-white hover:bg-[#1e293b]'
+                                : 'bg-gradient-to-r from-[#fe7302] to-[#f59e0b] text-white hover:brightness-95'
+                            } ${isCreditDownloading ? 'opacity-70 cursor-wait' : ''}`}
+                          >
+                            {isCreditDownloading ? (
+                              <><Loader2 size={18} className="animate-spin mr-3" />Liberando...</>
+                            ) : redeemed ? (
+                              <><Download size={18} className="mr-3" />Baixar Novamente (Já resgatado)</>
+                            ) : (
+                              <><Download size={18} className="mr-3" />Baixar com 1 Crédito PRO (Saldo: {credits} {credits === 1 ? 'crédito' : 'créditos'})</>
+                            )}
+                          </button>
+                        );
+                      }
+
+                      if (entitled && credits <= 0) {
+                        return (
+                          <div className="w-full max-w-md mx-auto md:mx-0 rounded-2xl border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-[13px] text-[#9a3412] text-center md:text-left">
+                            Seus créditos PRO deste ciclo acabaram. Eles serão renovados na próxima cobrança.
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="w-full max-w-md mx-auto md:mx-0 rounded-2xl border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-[13px] text-[#9a3412] flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-1">
+                          <Crown size={16} className="text-[#fe7302] shrink-0" />
+                          <span>Ou baixe com o <strong>Clube PRO ({proPerArt}/arte)</strong></span>
+                          <Link href="/planos" className="font-bold text-[#fe7302] underline underline-offset-2 hover:text-[#202124]">
+                            [Ver Planos]
+                          </Link>
+                        </div>
+                      );
+                    })()}
                   </>
                 );
               })()}
