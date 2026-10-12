@@ -8,3 +8,7 @@ runConfig:
 env:
   - variable: PAYPAL_MODE
     value: live
+  - variable: MERCADOPAGO_ACCESS_TOKEN
+    secret: MERCADOPAGO_ACCESS_TOKEN
+  - variable: MERCADOPAGO_WEBHOOK_SECRET
+    secret: MERCADOPAGO_WEBHOOK_SECRET
