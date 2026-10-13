@@ -255,13 +255,11 @@ export default function ProductDetailView({ product }: { product: any }) {
     if (product?.urls?.destaque) setSelectedImage(product.urls.destaque);
   }, [product]);
 
-  if (!product) return null;
-
-  const productName = formatTitleCase(tp(product.name) || product.name || '');
-  const productCategory = product.category || '';
+  const productName = formatTitleCase(tp(product?.name) || product?.name || '');
+  const productCategory = product?.category || '';
 
   const galleryImages = Array.from(
-    new Set([product.urls?.destaque, ...(product.urls?.galeria || [])].filter(Boolean))
+    new Set([product?.urls?.destaque, ...(product?.urls?.galeria || [])].filter(Boolean))
   );
 
   // Troca direta e instantânea no clique (0ms de delay)
@@ -708,6 +706,8 @@ export default function ProductDetailView({ product }: { product: any }) {
       document.body.style.overflow = 'unset';
     };
   }, [isLightboxOpen, selectedImage, galleryImages]);
+
+  if (!product) return null;
 
   return (
     <div className="w-full bg-white font-sans text-[#4a4a4a] animate-in fade-in duration-700">

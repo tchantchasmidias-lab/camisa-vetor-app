@@ -13,18 +13,12 @@ import Link from 'next/link';
 
 
 export default function ProductClientPage({ product, categories }: any) {
+  // Estado para a galeria de imagens
+  const [selectedImage, setSelectedImage] = useState(product?.images?.[0] || { id: '0', url: '' });
+  const [isFavorite, setIsFavorite] = useState(false);
 
   // Verificação de segurança para evitar quebras de renderização
-
   if (!product) return null;
-
-
-
-  // Estado para a galeria de imagens
-
-  const [selectedImage, setSelectedImage] = useState(product.images?.[0] || { id: '0', url: '' });
-
-  const [isFavorite, setIsFavorite] = useState(false);
 
 
 

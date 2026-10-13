@@ -86,6 +86,7 @@ const RAIL_CONFIGS = [
 function HomeClientContent({ initialProducts }: HomeClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts || []);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [shuffledRails, setShuffledRails] = useState<Record<string, Product[]>>({});
   const searchParams = useSearchParams();
   const router = useRouter();
   const { t, tp } = useGeo();
@@ -171,9 +172,6 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
       return matchesSearch && matchesCategory;
     });
   }, [products, normalizedQuery, normalizedCategoryQuery, isAllSelected, isRecentSort, searchQuery]);
-
-  // Estado para armazenar produtos embaralhados das categorias temáticas no client (previne hydration mismatch)
-  const [shuffledRails, setShuffledRails] = useState<Record<string, Product[]>>({});
 
   // 3. SEGMENTOS DOS 7 TRILHOS — computados apenas na home default
   const railSegments = useMemo(() => {
