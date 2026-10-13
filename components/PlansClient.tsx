@@ -17,7 +17,8 @@ const BENEFITS = [
 export default function PlansClient() {
   const [user, setUser] = useState<User | null>(null);
   const [authReady, setAuthReady] = useState(false);
-  const [modalPlan, setModalPlan] = useState<PaidPlan | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<PaidPlan>('pro');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [redirectAfterSuccess, setRedirectAfterSuccess] = useState<string>('/');
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function PlansClient() {
     return () => unsub();
   }, []);
 
-  // Se a URL tiver ?plan=pro ou ?plan=grafica (ex.: retorno do login), abre o modal automaticamente
+  // Se a URL tiver ?plan=pro ou ?plan=grafica (ex.: retorno do login), seleciona e abre o modal automaticamente
   useEffect(() => {
     if (!authReady || typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -37,12 +38,16 @@ export default function PlansClient() {
     if (redirectParam && redirectParam.startsWith('/')) {
       setRedirectAfterSuccess(redirectParam);
     }
-    if (isPaidPlan(planParam) && user) {
-      setModalPlan(planParam);
+    if (isPaidPlan(planParam)) {
+      setSelectedPlan(planParam);
+      if (user) {
+        setIsModalOpen(true);
+      }
     }
   }, [authReady, user]);
 
   const handleOpenCheckout = (plan: PaidPlan) => {
+    setSelectedPlan(plan);
     if (!auth.currentUser) {
       const target = `/planos?plan=${plan}${
         redirectAfterSuccess && redirectAfterSuccess !== '/'
@@ -52,7 +57,7 @@ export default function PlansClient() {
       window.location.href = `/login?redirect=${encodeURIComponent(target)}`;
       return;
     }
-    setModalPlan(plan);
+    setIsModalOpen(true);
   };
 
   return (
@@ -60,17 +65,21 @@ export default function PlansClient() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {/* PRO e Gráfica */}
         {Object.values(PLANS).map((plan) => {
-          const featured = plan.id === 'pro';
+          const isSelected = selectedPlan === plan.id;
+          const isPro = plan.id === 'pro';
+
           return (
             <div
               key={plan.id}
-              className={`relative flex flex-col rounded-3xl p-6 shadow-lg ${
-                featured
-                  ? 'border-2 border-[#fe7302] bg-[#fff8f2]'
-                  : 'border border-[#dadce0] bg-white'
+              onClick={() => setSelectedPlan(plan.id)}
+              onDoubleClick={() => handleOpenCheckout(plan.id)}
+              className={`relative flex flex-col rounded-3xl p-6 cursor-pointer transition-all duration-300 ${
+                isSelected
+                  ? 'border-2 border-[#fe7302] bg-orange-500/[0.03] shadow-lg'
+                  : 'border border-zinc-200 bg-white shadow-sm hover:border-orange-500/60'
               }`}
             >
-              {featured && (
+              {isPro && (
                 <span className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-[#fe7302] px-3 py-1 text-[11px] font-bold uppercase tracking-widest text-white">
                   <Crown size={12} /> Mais popular
                 </span>
@@ -110,9 +119,14 @@ export default function PlansClient() {
 
               <button
                 type="button"
-                onClick={() => handleOpenCheckout(plan.id)}
-                className={`mt-3 flex min-h-[48px] items-center justify-center rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-colors ${
-                  featured ? 'bg-[#fe7302] hover:bg-[#202124]' : 'bg-[#202124] hover:bg-[#fe7302]'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenCheckout(plan.id);
+                }}
+                className={`mt-3 flex min-h-[48px] items-center justify-center rounded-2xl text-xs font-bold uppercase tracking-widest text-white transition-all duration-300 ${
+                  isSelected
+                    ? 'bg-[#fe7302] hover:bg-[#202124] shadow-md'
+                    : 'bg-zinc-900 hover:bg-[#fe7302]'
                 }`}
               >
                 Assinar {plan.name}
@@ -123,9 +137,9 @@ export default function PlansClient() {
       </div>
 
       <SubscriptionCheckoutModal
-        isOpen={modalPlan !== null}
-        initialPlan={modalPlan || 'pro'}
-        onClose={() => setModalPlan(null)}
+        isOpen={isModalOpen}
+        initialPlan={selectedPlan}
+        onClose={() => setIsModalOpen(false)}
         redirectUrl={redirectAfterSuccess}
       />
     </div>
