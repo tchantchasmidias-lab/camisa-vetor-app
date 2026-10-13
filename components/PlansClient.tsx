@@ -57,34 +57,7 @@ export default function PlansClient() {
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* Avulso */}
-        <div className="flex flex-col rounded-3xl border border-[#dadce0] bg-white p-6 shadow-sm">
-          <h3 className="text-sm font-bold uppercase tracking-widest text-[#475569]">Compra Avulsa</h3>
-          <p className="mt-4 text-3xl font-extrabold text-[#0f172a]">R$ 12 a R$ 15</p>
-          <p className="text-sm text-[#475569]">por arte</p>
-          <ul className="mt-6 flex-1 space-y-3 text-sm text-[#334155]">
-            <li className="flex gap-2">
-              <Check size={16} className="mt-0.5 shrink-0 text-[#16a34a]" />
-              Download vitalício individual
-            </li>
-            <li className="flex gap-2">
-              <Check size={16} className="mt-0.5 shrink-0 text-[#16a34a]" />
-              Pagamento via Pix ou cartão
-            </li>
-            <li className="flex gap-2">
-              <Check size={16} className="mt-0.5 shrink-0 text-[#16a34a]" />
-              Sem mensalidade
-            </li>
-          </ul>
-          <a
-            href="/"
-            className="mt-6 flex min-h-[48px] items-center justify-center rounded-2xl border border-[#dadce0] text-xs font-bold uppercase tracking-widest text-[#202124] transition-colors hover:bg-[#f8f9fa]"
-          >
-            Ver catálogo
-          </a>
-        </div>
-
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-4xl mx-auto">
         {/* PRO e Gráfica */}
         {Object.values(PLANS).map((plan) => {
           const featured = plan.id === 'pro';

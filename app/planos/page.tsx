@@ -40,7 +40,7 @@ export default function PlanosPage() {
           Baixe mais, pague menos por arte
         </h1>
         <p className="mx-auto mt-3 max-w-2xl text-[15px] text-[#475569]">
-          Compare: comprando avulso cada vetor custa de R$ 12 a R$ 15. Com o Clube PRO, o custo cai para
+          Compare: comprando avulso cada vetor custa de R$ 12 a R$ 30. Com o Clube PRO, o custo cai para
           cerca de <strong>R$ 2,66</strong> — e na Gráfica, para cerca de <strong>R$ 1,99</strong>.
         </p>
       </header>
