@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { db, storage, auth } from '@/lib/firebase';
 import BlogTab from './BlogTab';
+import AssinantesTab from './AssinantesTab';
 import { 
   collection, addDoc, serverTimestamp, getDocs, query, orderBy, 
   deleteDoc, doc, updateDoc, setDoc, where, collectionGroup 
@@ -18,7 +19,7 @@ import Image from 'next/image';
 import { formatTitleCase, normalizeSearchTerm } from '@/lib/stringUtils';
 
 export default function AdminPage() {
-  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos' | 'clientes' | 'blog'>('produtos');
+  const [activeTab, setActiveTab] = useState<'produtos' | 'design' | 'emails' | 'pedidos' | 'clientes' | 'blog' | 'assinantes'>('produtos');
   const [loading, setLoading] = useState(false);
   const [products, setProducts] = useState<any[]>([]);
   const [buscaProduto, setBuscaProduto] = useState('');
@@ -903,6 +904,7 @@ export default function AdminPage() {
              <button onClick={() => setActiveTab('produtos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
              <button onClick={() => setActiveTab('pedidos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pedidos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Vendas</button>
              <button onClick={() => setActiveTab('clientes')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'clientes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Clientes</button>
+             <button onClick={() => setActiveTab('assinantes')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'assinantes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Assinantes</button>
              <button onClick={() => setActiveTab('design')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
              <button onClick={() => setActiveTab('blog')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'blog' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Blog</button>
              <button onClick={() => setActiveTab('emails')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
@@ -2065,6 +2067,13 @@ export default function AdminPage() {
           {activeTab === 'blog' && (
             <div className="animate-fade-in">
               <BlogTab />
+            </div>
+          )}
+
+          {/* ABA ASSINANTES */}
+          {activeTab === 'assinantes' && (
+            <div className="animate-fade-in">
+              <AssinantesTab products={products} />
             </div>
           )}
         </div>
