@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useGeo } from '@/lib/i18n/GeoContext';
 import { safeSessionStorage } from '@/lib/safeStorage';
-import { shouldIgnoreError } from '@/lib/errorUtils';
+import { shouldIgnoreError, isBotUserAgent } from '@/lib/errorUtils';
 
 export default function Error({
   error,
@@ -15,6 +15,7 @@ export default function Error({
   const { t } = useGeo();
 
   useEffect(() => {
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
     const message = (error?.message || '').toLowerCase();
     const isChunkError =
       error?.name === 'ChunkLoadError' ||
@@ -33,8 +34,12 @@ export default function Error({
       }
     }
 
-    // Não envia alertas para erros ignorados (rede, abort, crawlers, storage sandbox)
-    if (shouldIgnoreError(error?.message) || shouldIgnoreError(error?.stack)) {
+    // Não envia alertas para erros ignorados (rede transitória, conexões fechadas, aborts, crawlers/bots)
+    if (
+      shouldIgnoreError(error?.message, userAgent) ||
+      shouldIgnoreError(error?.stack, userAgent) ||
+      isBotUserAgent(userAgent)
+    ) {
       return;
     }
 
@@ -47,6 +52,7 @@ export default function Error({
           stack: error?.stack,
           digest: error?.digest,
           pathname: typeof window !== 'undefined' ? window.location.pathname : '',
+          userAgent,
         }),
       }).catch(() => {});
     } catch {

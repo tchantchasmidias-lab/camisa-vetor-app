@@ -1,22 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { sendCriticalErrorAlert, shouldIgnoreError } from '@/lib/errorNotifier';
+import { sendCriticalErrorAlert } from '@/lib/errorNotifier';
+import { shouldIgnoreError, isBotUserAgent } from '@/lib/errorUtils';
 
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { message, stack, digest, pathname, userEmail, userId } = body || {};
+    const { message, stack, digest, pathname, userEmail, userId, userAgent: bodyUA } = body || {};
 
-    // 1. Filtra erros de rede transitórios, desconexões de crawlers, chunks e extensões
-    if (shouldIgnoreError(message) || shouldIgnoreError(stack)) {
+    const userAgent = req.headers.get('user-agent') || bodyUA || '';
+
+    // 1. Filtra erros de rede transitórios, conexões fechadas, chunks e extensões
+    if (shouldIgnoreError(message, userAgent) || shouldIgnoreError(stack, userAgent)) {
       return NextResponse.json(
-        { status: 'ignored', reason: 'Browser extension, translation or transient network artifact' },
+        { status: 'ignored', reason: 'Transient network error, connection closed, translation or browser extension' },
         { status: 200 }
       );
     }
 
-    // 2. Checagem extra de segurança para extensões de terceiros e manipulação de nós do DOM
+    // 2. Se for bot/crawler conhecido (Googlebot, bingbot, Lighthouse, etc.)
+    if (isBotUserAgent(userAgent)) {
+      console.log(`[ClientErrorRoute] Erro ignorado de crawler/bot (${userAgent}) em ${pathname}: ${message}`);
+      return NextResponse.json(
+        { status: 'ignored', reason: 'Bot/crawler automated crawl activity' },
+        { status: 200 }
+      );
+    }
+
+    // 3. Checagem extra de segurança para extensões de terceiros e manipulação de nós do DOM
     const fullText = `${message || ''} ${stack || ''}`.toLowerCase();
     if (
       fullText.includes('chrome-extension://') ||
@@ -39,7 +51,7 @@ export async function POST(req: NextRequest) {
       errorMessage: message || 'Erro não tratado no navegador',
       stack: stack || `Digest: ${digest || 'N/A'}`,
       req,
-      requestData: { pathname, digest, userEmail, userId },
+      requestData: { pathname, digest, userEmail, userId, userAgent },
       userEmail,
       userId,
       level: 'ALERTA',

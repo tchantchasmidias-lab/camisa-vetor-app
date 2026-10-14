@@ -1,8 +1,8 @@
 import { Resend } from 'resend';
 import { adminDb } from './firebaseAdmin';
-import { shouldIgnoreError, IGNORED_CLIENT_ERRORS } from './errorUtils';
+import { shouldIgnoreError, isBotUserAgent, IGNORED_CLIENT_ERRORS } from './errorUtils';
 
-export { shouldIgnoreError, IGNORED_CLIENT_ERRORS };
+export { shouldIgnoreError, isBotUserAgent, IGNORED_CLIENT_ERRORS };
 
 const ADMIN_EMAIL = 'camisavetor@gmail.com';
 const SENDER_EMAIL = 'Camisa Vetor <contato@camisavetor.com>';
@@ -66,14 +66,22 @@ export async function sendCriticalErrorAlert(params: CriticalErrorAlert): Promis
     }
   }
 
+  if (userAgent === 'Desconhecido' && requestData?.userAgent) {
+    userAgent = requestData.userAgent;
+  }
+
   // Prepara dados consolidados do erro
   const fullErrorMessage = errorMessage || error?.message || 'Erro desconhecido';
   const fullStack = stack || error?.stack || 'Nenhum stack trace disponível';
   const finalSubject = subject || `🚨 [${level}] ${context} - Camisa Vetor`;
 
   // Ignora erros normais de rede transitórios, desconexões de crawlers/Googlebot, transição de chunks pós-deploy e SecurityError
-  if (shouldIgnoreError(fullErrorMessage) || shouldIgnoreError(fullStack)) {
-    console.log(`[ErrorNotifier] Erro transitório/cliente ignorado de notificações: ${fullErrorMessage}`);
+  if (
+    shouldIgnoreError(fullErrorMessage, userAgent) ||
+    shouldIgnoreError(fullStack, userAgent) ||
+    (isBotUserAgent(userAgent) && (context.toLowerCase().includes('front-end') || context.toLowerCase().includes('interface') || context.toLowerCase().includes('client')))
+  ) {
+    console.log(`[ErrorNotifier] Erro transitório/bot ignorado de notificações: ${fullErrorMessage} (UA: ${userAgent})`);
     return;
   }
 

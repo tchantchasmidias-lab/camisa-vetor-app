@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { safeSessionStorage } from '@/lib/safeStorage';
-import { shouldIgnoreError } from '@/lib/errorUtils';
+import { shouldIgnoreError, isBotUserAgent } from '@/lib/errorUtils';
 
 export default function GlobalError({
   error,
@@ -12,6 +12,7 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    const userAgent = typeof navigator !== 'undefined' ? navigator.userAgent : '';
     const message = (error?.message || '').toLowerCase();
     const isChunkError =
       error?.name === 'ChunkLoadError' ||
@@ -30,8 +31,12 @@ export default function GlobalError({
       }
     }
 
-    // Não envia alertas para erros ignorados (rede, abort, crawlers, storage sandbox)
-    if (shouldIgnoreError(error?.message) || shouldIgnoreError(error?.stack)) {
+    // Não envia alertas para erros ignorados (rede transitória, conexões fechadas, aborts, crawlers/bots)
+    if (
+      shouldIgnoreError(error?.message, userAgent) ||
+      shouldIgnoreError(error?.stack, userAgent) ||
+      isBotUserAgent(userAgent)
+    ) {
       return;
     }
 
@@ -44,6 +49,7 @@ export default function GlobalError({
           stack: error?.stack,
           digest: error?.digest,
           pathname: typeof window !== 'undefined' ? window.location.pathname : '',
+          userAgent,
         }),
       }).catch(() => {});
     } catch {

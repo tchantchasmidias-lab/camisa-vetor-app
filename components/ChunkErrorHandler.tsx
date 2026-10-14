@@ -2,11 +2,13 @@
 
 import { useEffect } from 'react';
 import { safeSessionStorage } from '@/lib/safeStorage';
+import { shouldIgnoreError } from '@/lib/errorUtils';
 
 /**
  * Componente que intercepta ChunkLoadError no navegador (erros que ocorrem
  * quando um usuário está com uma versão antiga do site aberta e ocorre um novo deploy).
  * Recarrega a página suavemente para baixar os novos chunks sem disparar erros falsos.
+ * Também intercepta e suprime rejeições e desconexões transitórias (ex: Connection closed).
  */
 export default function ChunkErrorHandler() {
   useEffect(() => {
@@ -33,9 +35,14 @@ export default function ChunkErrorHandler() {
     };
 
     const onError = (event: ErrorEvent) => {
-      if (isChunkError(event?.message) || isChunkError(event?.error?.message)) {
+      const msg = event?.message || event?.error?.message;
+      if (isChunkError(msg)) {
         event.preventDefault?.();
         handleChunkReload();
+        return;
+      }
+      if (shouldIgnoreError(msg, navigator.userAgent)) {
+        event.preventDefault?.();
       }
     };
 
@@ -45,6 +52,10 @@ export default function ChunkErrorHandler() {
       if (isChunkError(message)) {
         event.preventDefault?.();
         handleChunkReload();
+        return;
+      }
+      if (shouldIgnoreError(message, navigator.userAgent)) {
+        event.preventDefault?.();
       }
     };
 
