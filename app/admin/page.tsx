@@ -13,7 +13,7 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithPopu
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
   Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
-  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag, Clock, Search, Calendar, Sparkles
+  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag, Clock, Search, Calendar, Sparkles, LogOut
 } from 'lucide-react';
 import Image from 'next/image';
 import { formatTitleCase, normalizeSearchTerm } from '@/lib/stringUtils';
@@ -895,21 +895,29 @@ export default function AdminPage() {
       <main className="max-w-7xl mx-auto px-4">
         
         {/* CABEÇALHO DO PAINEL */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-12 gap-6">
+        <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center mb-12 gap-6">
           <div>
             <h1 className="text-[20px] font-black text-white uppercase tracking-[0.3em] mb-2">Dashboard</h1>
             <p className="text-[9px] font-bold text-[#fe7302] uppercase tracking-[0.4em]">Gestão de Ativos Digitais</p>
           </div>
-          <div className="flex flex-wrap items-center gap-4 bg-[#111111] p-2 rounded-2xl border border-white/5">
-             <button onClick={() => setActiveTab('produtos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
-             <button onClick={() => setActiveTab('pedidos')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'pedidos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Vendas</button>
-             <button onClick={() => setActiveTab('clientes')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'clientes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Clientes</button>
-             <button onClick={() => setActiveTab('assinantes')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'assinantes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Assinantes</button>
-             <button onClick={() => setActiveTab('design')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
-             <button onClick={() => setActiveTab('blog')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'blog' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Blog</button>
-             <button onClick={() => setActiveTab('emails')} className={`px-6 md:px-8 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
-             <div className="w-[1px] h-6 bg-white/10 mx-2"></div>
-             <button onClick={handleAdminLogout} className="p-3 text-red-500/50 hover:text-red-500 transition-colors"><X size={20}/></button>
+          <div className="flex items-center gap-2 bg-[#111111] p-1.5 md:p-2 rounded-2xl border border-white/5 max-w-full overflow-x-auto scrollbar-none">
+            <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+              <button onClick={() => setActiveTab('produtos')} className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'produtos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Produtos</button>
+              <button onClick={() => setActiveTab('pedidos')} className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'pedidos' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Vendas</button>
+              <button onClick={() => setActiveTab('clientes')} className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'clientes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Clientes</button>
+              <button onClick={() => setActiveTab('assinantes')} className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'assinantes' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Assinantes</button>
+              <button onClick={() => setActiveTab('design')} className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'design' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Design</button>
+              <button onClick={() => setActiveTab('blog')} className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'blog' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>Blog</button>
+              <button onClick={() => setActiveTab('emails')} className={`px-4 md:px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${activeTab === 'emails' ? 'bg-[#fe7302] text-white shadow-lg shadow-orange-600/20' : 'text-gray-500 hover:text-white'}`}>E-mails</button>
+            </div>
+            <div className="w-[1px] h-6 bg-white/10 mx-1 md:mx-2 flex-shrink-0"></div>
+            <button
+              onClick={handleAdminLogout}
+              title="Sair da conta"
+              className="p-2 text-zinc-500 hover:text-red-400 hover:bg-zinc-800/60 rounded-lg transition-colors flex-shrink-0 flex items-center justify-center"
+            >
+              <LogOut className="w-4 h-4 md:w-5 md:h-5" />
+            </button>
           </div>
         </div>
         
