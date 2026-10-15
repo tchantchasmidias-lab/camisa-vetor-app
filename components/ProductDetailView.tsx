@@ -930,29 +930,36 @@ export default function ProductDetailView({ product }: { product: any }) {
 
                       if (entitled && credits <= 0) {
                         return (
-                          <div className="w-full max-w-md mx-auto md:mx-0 rounded-2xl border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-[13px] text-[#9a3412] text-center md:text-left">
-                            Seus créditos PRO deste ciclo acabaram.{' '}
+                          <div className="w-full max-w-md mx-auto md:mx-0 rounded-xl border border-zinc-800 bg-zinc-950 px-4 py-3 text-[13px] text-zinc-200 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5">
+                            <span>Seus créditos PRO deste ciclo acabaram.</span>
                             <Link
                               href={`/planos?redirect=${encodeURIComponent(`/product/${product.slug || product.id}`)}`}
-                              className="font-bold text-[#fe7302] underline underline-offset-2 hover:text-[#202124]"
+                              className="text-[#fe7302] hover:underline font-semibold text-[12px] bg-[#fe7302]/10 px-2.5 py-1 rounded-lg border border-[#fe7302]/20 shrink-0 whitespace-nowrap"
                             >
-                              [Recarregar com Passe ou Upgrade]
+                              [Recarregar]
                             </Link>
                           </div>
                         );
                       }
 
                       return (
-                        <div className="w-full max-w-md mx-auto md:mx-0 rounded-2xl border border-[#fed7aa] bg-[#fff7ed] px-4 py-3 text-[13px] text-[#9a3412] flex flex-wrap items-center justify-center md:justify-start gap-x-2 gap-y-1">
-                          <Crown size={16} className="text-[#fe7302] shrink-0" />
-                          <span>Ou baixe com o <strong>Clube PRO ({proPerArt}/arte)</strong></span>
-                          <Link
-                            href={`/planos?redirect=${encodeURIComponent(`/product/${product.slug || product.id}`)}`}
-                            className="font-bold text-[#fe7302] underline underline-offset-2 hover:text-[#202124]"
-                          >
+                        <Link
+                          href={`/planos?redirect=${encodeURIComponent(`/product/${product.slug || product.id}`)}`}
+                          className="w-full max-w-md mx-auto md:mx-0 rounded-xl border border-zinc-800 bg-zinc-950 hover:border-zinc-700 hover:bg-black/90 py-3 px-4 text-[13px] text-zinc-200 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 transition-all duration-200 shadow-md group cursor-pointer"
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            <Crown size={16} className="text-[#fe7302] shrink-0" />
+                            <span className="leading-snug">
+                              Ou baixe com o{' '}
+                              <strong className="text-[#fe7302] font-bold">
+                                Clube PRO ({proPerArt}/arte)
+                              </strong>
+                            </span>
+                          </div>
+                          <span className="text-[#fe7302] group-hover:underline font-semibold text-[12px] bg-[#fe7302]/10 px-2.5 py-1 rounded-lg border border-[#fe7302]/20 shrink-0 whitespace-nowrap">
                             [Ver Planos]
-                          </Link>
-                        </div>
+                          </span>
+                        </Link>
                       );
                     })()}
                   </>
