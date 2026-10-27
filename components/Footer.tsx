@@ -34,9 +34,9 @@ export default function Footer() {
               <Mail size={14} className="footer-contact-icon text-[#fe7302] stroke-[#fe7302] flex-shrink-0" />
               contato@camisavetor.com
             </a>
-            <div className="footer-address flex items-start gap-2 text-[12px] text-white font-medium">
-              <MapPin size={14} className="footer-contact-icon text-[#fe7302] stroke-[#fe7302] flex-shrink-0 mt-0.5" />
-              <span>Rua Marieta Pita, nº 09<br />Loteamento José Gerônimo<br />Pesqueira — PE, Brasil</span>
+            <div className="footer-address flex items-center gap-2 text-[12px] text-white font-medium">
+              <MapPin size={14} className="footer-contact-icon text-[#fe7302] stroke-[#fe7302] flex-shrink-0" />
+              <span>Pesqueira — PE, Brasil</span>
             </div>
           </div>
         </div>

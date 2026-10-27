@@ -208,9 +208,9 @@ export default function SobrePage() {
               <Mail size={16} className="text-[#fe7302] flex-shrink-0" />
               contato@camisavetor.com
             </a>
-            <div className="flex items-start gap-3 text-[14px] font-medium text-[#5f6368]">
-              <MapPin size={16} className="text-[#fe7302] flex-shrink-0 mt-0.5" />
-              <span>Rua Marieta Pita, nº 09, Loteamento José Gerônimo — Pesqueira, PE — Brasil</span>
+            <div className="flex items-center gap-3 text-[14px] font-medium text-[#5f6368]">
+              <MapPin size={16} className="text-[#fe7302] flex-shrink-0" />
+              <span>Pesqueira — PE, Brasil</span>
             </div>
           </div>
           <div className="mt-6 pt-5 border-t border-[#dadce0]">
