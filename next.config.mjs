@@ -63,6 +63,11 @@ const nextConfig = {
         source: '/catalog',
         destination: '/',
       },
+      // Suporte amigável para URLs no formato /categoria/:slug redirecionando/reescrevendo para /?category=:slug
+      {
+        source: '/categoria/:slug',
+        destination: '/?category=:slug',
+      },
     ];
   },
 };

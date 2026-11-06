@@ -35,7 +35,7 @@ interface HomeClientProps {
   initialProducts: Product[];
 }
 
-// Configuração dos 7 trilhos da home page
+// Configuração dos trilhos da home page
 // Cada entrada define: título exibido, slugs de categoria aceitos, e href do "Ver todos →"
 const RAIL_CONFIGS = [
   {
@@ -79,6 +79,12 @@ const RAIL_CONFIGS = [
     title: 'Terceirão',
     categoryKeys: ['terceirao', 'terceiro'],
     viewAllHref: '/catalog?category=Terceir%C3%A3o',
+    limit: 20,
+  },
+  {
+    title: 'Profissão',
+    categoryKeys: ['profissao', 'profissoes', 'profissões', 'profissao e trabalho', 'profissoes e trabalho'],
+    viewAllHref: '/catalog?category=Profiss%C3%A3o',
     limit: 20,
   },
 ] as const;
