@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -89,13 +89,47 @@ const RAIL_CONFIGS = [
   },
 ] as const;
 
-function HomeClientContent({ initialProducts }: HomeClientProps) {
+interface SearchParamsState {
+  searchQuery: string;
+  categoryParam: string | null;
+  sortParam: string | null;
+}
+
+// Subcomponente isolado com Suspense restrito:
+// Garante que o useSearchParams() NÃO cause fallback nem descarte do SSR da página inteira.
+function HomeSearchParamsWatcher({
+  onParamsChange,
+}: {
+  onParamsChange: (params: SearchParamsState) => void;
+}) {
+  const searchParams = useSearchParams();
+
+  const searchQuery = (searchParams?.get ? searchParams.get('search') : null) || '';
+  const categoryParam = searchParams?.get ? searchParams.get('category') : null;
+  const sortParam = searchParams?.get ? searchParams.get('sort') : null;
+
+  useEffect(() => {
+    onParamsChange({ searchQuery, categoryParam, sortParam });
+  }, [searchQuery, categoryParam, sortParam, onParamsChange]);
+
+  return null;
+}
+
+export default function HomeClient({ initialProducts }: HomeClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts || []);
   const [isSyncing, setIsSyncing] = useState(false);
   const [shuffledRails, setShuffledRails] = useState<Record<string, Product[]>>({});
-  const searchParams = useSearchParams();
+  const [urlParams, setUrlParams] = useState<SearchParamsState>({
+    searchQuery: '',
+    categoryParam: null,
+    sortParam: null,
+  });
   const router = useRouter();
   const { t, tp } = useGeo();
+
+  const handleParamsChange = useCallback((params: SearchParamsState) => {
+    setUrlParams(params);
+  }, []);
 
   // Sincroniza estado quando initialProducts atualizar do servidor
   useEffect(() => {
@@ -104,10 +138,10 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
     }
   }, [initialProducts]);
 
-  // 1. Captura filtros da URL em tempo real de forma defensiva
-  const searchQuery = (searchParams?.get ? searchParams.get('search') : null) || '';
-  const categoryParam = searchParams?.get ? searchParams.get('category') : null;
-  const sortParam = searchParams?.get ? searchParams.get('sort') : null;
+  // 1. Captura filtros da URL através do subcomponente observador
+  const searchQuery = urlParams.searchQuery;
+  const categoryParam = urlParams.categoryParam;
+  const sortParam = urlParams.sortParam;
   const isRecentSort = sortParam === 'recent';
   
   // Se não houver categoria na URL, ou se for a tradução de "Todos", usamos o valor padrão
@@ -225,11 +259,20 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
 
   const handleClearSearch = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    setUrlParams({ searchQuery: '', categoryParam: null, sortParam: null });
     router.push('/');
   };
 
   return (
     <div className="bg-white min-h-screen font-sans">
+      {/* 
+        Subcomponente isolado com Suspense restrito:
+        Permite a leitura reativa de searchParams no cliente sem bloquear o SSR da vitrine.
+      */}
+      <Suspense fallback={null}>
+        <HomeSearchParamsWatcher onParamsChange={handleParamsChange} />
+      </Suspense>
+
       <div className="pt-4 md:pt-4 pb-[28px] md:pb-10">
         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           
@@ -343,14 +386,4 @@ function HomeClientContent({ initialProducts }: HomeClientProps) {
   );
 }
 
-export default function HomeClient({ initialProducts }: HomeClientProps) {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#fe7302] border-t-transparent rounded-full animate-spin" />
-      </div>
-    }>
-      <HomeClientContent initialProducts={initialProducts} />
-    </Suspense>
-  );
-}
+
