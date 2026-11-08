@@ -3,8 +3,7 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import HomeClient, { Product } from '@/components/HomeClient';
 import { formatTitleCase } from '@/lib/stringUtils';
 
-export const dynamic = 'force-dynamic';
-export const revalidate = 0; // Atualização imediata em tempo real ao publicar novos produtos
+export const revalidate = 300; // ISR: revalidação a cada 5 minutos para TTFB ultrarrápido com cache de borda
 
 export const metadata: Metadata = {
   title: 'Camisa Vetor | Artes e Vetores Editáveis para Sublimação',
@@ -104,23 +103,5 @@ async function getInitialProducts(): Promise<Product[]> {
 export default async function HomePage() {
   const initialProducts = await getInitialProducts();
 
-  // Preload da imagem LCP (primeiro produto) — reduz o gap entre FCP e LCP no PageSpeed
-  const lcpImageUrl = initialProducts[0]?.urls?.capa || '';
-
-  return (
-    <>
-      {/* Hint de Preload injetado no <head> pelo Next.js App Router */}
-      {lcpImageUrl && (
-        <link
-          rel="preload"
-          as="image"
-          href={lcpImageUrl}
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore — fetchpriority é atributo HTML válido mas não tipado em React 18
-          fetchpriority="high"
-        />
-      )}
-      <HomeClient initialProducts={initialProducts} />
-    </>
-  );
+  return <HomeClient initialProducts={initialProducts} />;
 }

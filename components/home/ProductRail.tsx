@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
@@ -18,12 +18,24 @@ interface ProductRailProps {
 //   Tablet  (md ~768px)      : w-[31%]   => 3 cards visíveis com gap-3
 //   Desktop (lg ~1024px+)    : w-[calc((100%-4*1rem)/5)] => exatos 5 cards com gap-4
 
+const INITIAL_VISIBLE_COUNT = 8;
+
 export default function ProductRail({ title, products, viewAllHref, isFirst = false }: ProductRailProps) {
   const railRef = useRef<HTMLDivElement>(null);
+  const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
 
   if (!products || products.length === 0) return null;
 
+  const loadAll = () => {
+    if (visibleCount < products.length) {
+      setVisibleCount(products.length);
+    }
+  };
+
   const scroll = (direction: 'left' | 'right') => {
+    if (direction === 'right') {
+      loadAll();
+    }
     if (!railRef.current) return;
     // Avanca ~5 cards no desktop, ~3 no tablet, ~2 no mobile
     const scrollAmount = railRef.current.clientWidth;
@@ -32,6 +44,30 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
       behavior: 'smooth',
     });
   };
+
+  const handleScroll = () => {
+    if (visibleCount < products.length && railRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = railRef.current;
+      // Quando faltarem ~350px para o final do trilho visível atual, carrega o restante
+      if (scrollLeft + clientWidth >= scrollWidth - 350) {
+        loadAll();
+      }
+    }
+  };
+
+  const handleFocusCapture = (e: React.FocusEvent) => {
+    try {
+      // Só expande se o foco for originado por navegação via teclado (:focus-visible)
+      // Toque em celular ou clique de mouse NÃO disparam focus-visible e portanto não expandem o trilho
+      if (e.target && (e.target as HTMLElement).matches(':focus-visible')) {
+        loadAll();
+      }
+    } catch {
+      // Fallback defensivo
+    }
+  };
+
+  const visibleProducts = products.slice(0, visibleCount);
 
   return (
     <section className={`w-full ${isFirst ? 'pt-2 sm:pt-4' : ''}`}>
@@ -75,18 +111,20 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
         {/* Trilho Horizontal com Scroll Fluido */}
         <div
           ref={railRef}
+          onScroll={handleScroll}
+          onFocusCapture={handleFocusCapture}
           className="flex gap-3 lg:gap-4 overflow-x-auto scroll-smooth pb-3
                      [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           style={{ scrollSnapType: 'x mandatory' }}
         >
-          {products.map((product, index) => (
+          {visibleProducts.map((product, index) => (
             <div
               key={product.id}
               // Mobile: 44vw (~2.2 cards), md: ~31% (~3 cards), lg: calc 5 cards exact
               className="flex-shrink-0 w-[44vw] md:w-[31%] lg:w-[calc((100%-4*1rem)/5)]"
               style={{ scrollSnapAlign: 'start' }}
             >
-              <ProductCard product={product} priority={isFirst && index < 4} />
+              <ProductCard product={product} priority={isFirst && index < 3} />
             </div>
           ))}
         </div>

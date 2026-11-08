@@ -10,12 +10,25 @@ import { safeLocalStorage } from '@/lib/safeStorage';
 
 export default function ProductCard({ product, priority = false }: { product: any; priority?: boolean }) {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [shouldLoadSecondary, setShouldLoadSecondary] = useState(false);
+  const [isSecondaryLoaded, setIsSecondaryLoaded] = useState(false);
+  const [isLinkFocused, setIsLinkFocused] = useState(false);
   const { formatPrice, tp } = useGeo();
 
   const capaSrc = product?.urls?.capa || product?.urls?.destaque || '';
   const destaqueSrc = product?.urls?.destaque || '';
   // Só faz efeito se destaque existir e for diferente da capa
-  const hasHoverImage = destaqueSrc && destaqueSrc !== capaSrc;
+  const hasHoverImage = Boolean(destaqueSrc && destaqueSrc !== capaSrc);
+
+  const handleMouseEnter = () => {
+    // Dispositivos de toque (mobile) não possuem efeito hover; evita download inútil
+    if (typeof window !== 'undefined' && window.matchMedia && !window.matchMedia('(hover: hover)').matches) {
+      return;
+    }
+    if (hasHoverImage && !shouldLoadSecondary) {
+      setShouldLoadSecondary(true);
+    }
+  };
 
   useEffect(() => {
     try {
@@ -49,12 +62,30 @@ export default function ProductCard({ product, priority = false }: { product: an
   const semanticAlt = `Arte Vetor ${productTitle} - Camisa Editável CorelDRAW Sublimação`;
 
   return (
-    <div className="relative group transition-all duration-500">
+    <div
+      className="relative group transition-all duration-500"
+      onMouseEnter={handleMouseEnter}
+    >
       <button onClick={toggleFavorite} className="absolute top-4 right-4 z-20 transition-all active:scale-75">
         <Heart size={20} className={isFavorite ? 'fill-[#fe7302] text-[#fe7302]' : 'text-gray-300'} />
       </button>
 
-      <Link href={`/product/${product.slug || product.id}`} className="block" title={semanticAlt}>
+      <Link
+        href={`/product/${product.slug || product.id}`}
+        className="block"
+        title={semanticAlt}
+        onFocus={(e) => {
+          try {
+            if (e.target && (e.target as HTMLElement).matches(':focus-visible')) {
+              setIsLinkFocused(true);
+              if (hasHoverImage && !shouldLoadSecondary) {
+                setShouldLoadSecondary(true);
+              }
+            }
+          } catch {}
+        }}
+        onBlur={() => setIsLinkFocused(false)}
+      >
         <div className="aspect-square relative overflow-hidden rounded-xl bg-[#f8f8f8] border border-transparent group-hover:border-[#0f172a] group-hover:bg-black mb-4 group-hover:shadow-xl group-hover:shadow-black/30 transition-all duration-300">
 
           {capaSrc ? (
@@ -68,15 +99,19 @@ export default function ProductCard({ product, priority = false }: { product: an
                 priority={priority}
                 sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
                 quality={90}
-                className={`object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-transform duration-500 group-hover:scale-105 ${
-                  hasHoverImage
+                className={`object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-all duration-500 group-hover:scale-105 ${
+                  isLinkFocused ? 'scale-105' : ''
+                } ${
+                  hasHoverImage && isSecondaryLoaded && isLinkFocused
+                    ? 'opacity-0'
+                    : hasHoverImage && isSecondaryLoaded
                     ? 'group-hover:opacity-0'
                     : ''
                 }`}
               />
 
-              {/* Imagem DESTAQUE — carregada de forma lazy pois fica invisível até o hover */}
-              {hasHoverImage && (
+              {/* Imagem DESTAQUE — carregada somente sob intenção de interação, mantendo a principal visível até estar pronta */}
+              {hasHoverImage && shouldLoadSecondary && (
                 <Image
                   src={destaqueSrc}
                   alt={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
@@ -84,8 +119,16 @@ export default function ProductCard({ product, priority = false }: { product: an
                   fill
                   sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
                   quality={90}
-                  loading="lazy"
-                  className="object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-transform duration-500 opacity-0 scale-100 group-hover:opacity-100 group-hover:scale-105"
+                  onLoad={() => setIsSecondaryLoaded(true)}
+                  className={`object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-all duration-500 ${
+                    isSecondaryLoaded
+                      ? `${
+                          isLinkFocused
+                            ? 'opacity-100 scale-105'
+                            : 'opacity-0 scale-100 group-hover:opacity-100 group-hover:scale-105'
+                        }`
+                      : 'opacity-0 pointer-events-none'
+                  }`}
                 />
               )}
             </>

@@ -16,7 +16,8 @@ export function middleware(request: NextRequest) {
     host === 'camisavetor.com' ||
     host === 'www.camisavetor.com';
 
-  const isHttp = isProduction && proto === 'http';
+  const isLocalhost = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.local');
+  const isHttp = isProduction && !isLocalhost && proto === 'http';
   const hasTrailingSlash = pathname !== '/' && pathname.endsWith('/');
 
   if (isWwwOrAlternativeDomain || isHttp || hasTrailingSlash) {
