@@ -10,10 +10,14 @@ import { normalizeSearchTerm } from '@/lib/stringUtils';
 import { safeSessionStorage } from '@/lib/safeStorage';
 import Image from 'next/image';
 
-interface Category {
+export interface Category {
   id: string;
   name: string;
   imageUrl: string;
+}
+
+export interface CategoryCarouselProps {
+  initialCategories?: Category[];
 }
 
 function CategoryCard({
@@ -91,9 +95,9 @@ function CategoryCard({
   );
 }
 
-function CategoryCarouselContent() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+function CategoryCarouselContent({ initialCategories }: CategoryCarouselProps) {
+  const [categories, setCategories] = useState<Category[]>(initialCategories || []);
+  const [isLoading, setIsLoading] = useState(!initialCategories || initialCategories.length === 0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -102,6 +106,11 @@ function CategoryCarouselContent() {
   const activeCategory = (searchParams?.get ? searchParams.get('category') : null) || t('allCategories');
 
   useEffect(() => {
+    if (categories.length > 0) {
+      safeSessionStorage.setItem('cv_categories_cache', JSON.stringify(categories));
+      return;
+    }
+
     // 1. Leitura rápida do cache da sessão para renderização instantânea (0ms)
     const cached = safeSessionStorage.getItem('cv_categories_cache');
     if (cached) {
@@ -110,6 +119,7 @@ function CategoryCarouselContent() {
         if (Array.isArray(parsed) && parsed.length > 0) {
           setCategories(parsed);
           setIsLoading(false);
+          return;
         }
       } catch {}
     }
@@ -191,7 +201,7 @@ function CategoryCarouselContent() {
               key={cat.id}
               name={cat.name}
               imageUrl={cat.imageUrl}
-              priority={index < 6}
+              priority={index < 2}
               isActive={normalizeSearchTerm(activeCategory) === normalizeSearchTerm(cat.name)}
               onClick={() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -212,10 +222,10 @@ function CategoryCarouselContent() {
   );
 }
 
-export default function CategoryCarousel() {
+export default function CategoryCarousel({ initialCategories }: CategoryCarouselProps) {
   return (
     <Suspense fallback={<div className="h-[110px]" />}>
-      <CategoryCarouselContent />
+      <CategoryCarouselContent initialCategories={initialCategories} />
     </Suspense>
   );
 }

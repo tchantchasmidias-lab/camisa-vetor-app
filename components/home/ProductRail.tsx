@@ -124,7 +124,7 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
               className="flex-shrink-0 w-[44vw] md:w-[31%] lg:w-[calc((100%-4*1rem)/5)]"
               style={{ scrollSnapAlign: 'start' }}
             >
-              <ProductCard product={product} priority={isFirst && index < 3} />
+              <ProductCard product={product} priority={isFirst && index < 2} />
             </div>
           ))}
         </div>

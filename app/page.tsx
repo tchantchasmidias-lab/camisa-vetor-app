@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { adminDb } from '@/lib/firebaseAdmin';
 import HomeClient, { Product } from '@/components/HomeClient';
+import { Category } from '@/components/CategoryCarousel';
 import { formatTitleCase } from '@/lib/stringUtils';
 
 export const revalidate = 300; // ISR: revalidação a cada 5 minutos para TTFB ultrarrápido com cache de borda
@@ -100,8 +101,30 @@ async function getInitialProducts(): Promise<Product[]> {
   }
 }
 
-export default async function HomePage() {
-  const initialProducts = await getInitialProducts();
+async function getInitialCategories(): Promise<Category[]> {
+  try {
+    const snap = await adminDb.collection('categories').get();
+    const list = snap.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        name: data.name || '',
+        imageUrl: data.imageUrl || '',
+      };
+    });
+    list.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+    return JSON.parse(JSON.stringify(list));
+  } catch (error) {
+    console.error('Erro ao carregar categorias no servidor (SSR):', error);
+    return [];
+  }
+}
 
-  return <HomeClient initialProducts={initialProducts} />;
+export default async function HomePage() {
+  const [initialProducts, initialCategories] = await Promise.all([
+    getInitialProducts(),
+    getInitialCategories(),
+  ]);
+
+  return <HomeClient initialProducts={initialProducts} initialCategories={initialCategories} />;
 }

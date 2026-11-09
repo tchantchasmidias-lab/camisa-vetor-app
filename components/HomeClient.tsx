@@ -8,7 +8,7 @@ import { useGeo } from '@/lib/i18n/GeoContext';
 import { normalizeSearchTerm } from '@/lib/stringUtils';
 
 import ProductCard from '@/components/ProductCard';
-import CategoryCarousel from '@/components/CategoryCarousel';
+import CategoryCarousel, { Category } from '@/components/CategoryCarousel';
 import ProductRail from '@/components/home/ProductRail';
 
 const ReviewsSection = dynamic(() => import('@/components/ReviewsSection'), {
@@ -32,6 +32,7 @@ export interface Product {
 
 interface HomeClientProps {
   initialProducts: Product[];
+  initialCategories?: Category[];
 }
 
 // Configuração dos trilhos da home page
@@ -114,7 +115,7 @@ function HomeSearchParamsWatcher({
   return null;
 }
 
-export default function HomeClient({ initialProducts }: HomeClientProps) {
+export default function HomeClient({ initialProducts, initialCategories }: HomeClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts || []);
   const [isSyncing, setIsSyncing] = useState(false);
   const [urlParams, setUrlParams] = useState<SearchParamsState>({
@@ -256,7 +257,7 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Carrossel de Categorias */}
-          <CategoryCarousel />
+          <CategoryCarousel initialCategories={initialCategories} />
 
           {/* ── HOME DEFAULT: Trilhos de Produtos com Ordem e Chaves Estáveis ── */}
           {isDefaultHome && (
