@@ -6,7 +6,6 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useGeo } from '@/lib/i18n/GeoContext';
 import { normalizeSearchTerm } from '@/lib/stringUtils';
-import { shuffleArray } from '@/lib/arrayUtils';
 
 import ProductCard from '@/components/ProductCard';
 import CategoryCarousel from '@/components/CategoryCarousel';
@@ -118,7 +117,6 @@ function HomeSearchParamsWatcher({
 export default function HomeClient({ initialProducts }: HomeClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts || []);
   const [isSyncing, setIsSyncing] = useState(false);
-  const [shuffledRails, setShuffledRails] = useState<Record<string, Product[]>>({});
   const [urlParams, setUrlParams] = useState<SearchParamsState>({
     searchQuery: '',
     categoryParam: null,
@@ -238,25 +236,6 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
     });
   }, [products, isDefaultHome]);
 
-  // Embaralha as categorias temáticas no client após a montagem (evita hydration mismatch)
-  // A seção "Novidades" é mantida estritamente com ordenação cronológica decrescente
-  useEffect(() => {
-    if (!isDefaultHome || products.length === 0) return;
-
-    const randomized: Record<string, Product[]> = {};
-    for (const rail of RAIL_CONFIGS) {
-      if (rail.categoryKeys !== null) {
-        const matching = products.filter(p => {
-          if (!p?.category) return false;
-          const normCat = normalizeSearchTerm(p.category).replace(/-/g, ' ');
-          return rail.categoryKeys!.some(key => normCat === key.replace(/-/g, ' '));
-        });
-        randomized[rail.title] = shuffleArray(matching).slice(0, rail.limit);
-      }
-    }
-    setShuffledRails(randomized);
-  }, [products, isDefaultHome]);
-
   const handleClearSearch = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setUrlParams({ searchQuery: '', categoryParam: null, sortParam: null });
@@ -279,17 +258,13 @@ export default function HomeClient({ initialProducts }: HomeClientProps) {
           {/* Carrossel de Categorias */}
           <CategoryCarousel />
 
-          {/* ── HOME DEFAULT: 7 Trilhos de Produtos ── */}
+          {/* ── HOME DEFAULT: Trilhos de Produtos com Ordem e Chaves Estáveis ── */}
           {isDefaultHome && (
             <div className="mt-4">
               {(() => {
                 let renderedCount = 0;
                 return railSegments.map(rail => {
-                  // Novidades: NÃO embaralhar. Rigorosamente por ordem de criação (createdAt decrescente)
-                  // Demais categorias: produtos embaralhados aleatoriamente
-                  const railProducts = rail.categoryKeys === null
-                    ? rail.products
-                    : (shuffledRails[rail.title] || rail.products);
+                  const railProducts = rail.products;
 
                   if (!railProducts || railProducts.length === 0) return null;
 
