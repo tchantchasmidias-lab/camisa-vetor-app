@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Star, ChevronLeft, ChevronRight, BadgeCheck } from 'lucide-react';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, limit, query } from 'firebase/firestore';
@@ -65,26 +66,30 @@ function StarRow({ rating = 5 }: { rating?: number }) {
   );
 }
 
-function ReviewCard({ review }: { review: Review }) {
+function ReviewCard({ review, shouldLoadImage = false }: { review: Review; shouldLoadImage?: boolean }) {
   const productHref = `/product/${review.productSlug || ''}`;
 
   return (
     <div className="flex-shrink-0 w-[288px] sm:w-auto flex items-start gap-3.5 p-4 bg-[#f8fafc] border border-[#e2e8f0] rounded-xl transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md hover:shadow-black/5 snap-start">
-      {/* ── Miniatura do Produto Clicável ── */}
+      {/* ── Miniatura do Produto Clicável (Responsiva, Otimizada e Adiada) ── */}
       <Link
         href={productHref}
-        className="review-thumb-link"
+        className="review-thumb-link relative overflow-hidden"
         title={review.productName}
       >
-        <img
-          src={review.productImage || '/logo-icon.png'}
-          alt={review.productName}
-          className="review-thumb-img"
-          loading="lazy"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = '/logo-icon.png';
-          }}
-        />
+        {shouldLoadImage && review.productImage ? (
+          <Image
+            src={review.productImage}
+            alt={review.productName}
+            width={58}
+            height={58}
+            sizes="58px"
+            quality={80}
+            className="review-thumb-img object-cover w-full h-full"
+          />
+        ) : (
+          <div className="w-full h-full bg-[#f1f5f9]" />
+        )}
       </Link>
 
       {/* ── Conteúdo da Avaliação ── */}
@@ -130,8 +135,36 @@ export default function ReviewsSection({
   reviews: customReviews,
   title = 'O que nossos clientes dizem',
 }: ReviewsSectionProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [catalogProducts, setCatalogProducts] = useState<any[]>(initialProducts || []);
+  const [shouldLoadImages, setShouldLoadImages] = useState(false);
+
+  useEffect(() => {
+    if (shouldLoadImages) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setShouldLoadImages(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setShouldLoadImages(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px 0px' }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [shouldLoadImages]);
 
   // Busca produtos reais do Firestore se não foram passados via props
   useEffect(() => {
@@ -194,7 +227,7 @@ export default function ReviewsSection({
   ).toFixed(1);
 
   return (
-    <section className="reviews-section w-full bg-white py-8 sm:py-12 px-4 md:px-6">
+    <section ref={sectionRef} className="reviews-section w-full bg-white py-8 sm:py-12 px-4 md:px-6">
       {/* Título */}
       <div className="flex flex-col items-center justify-center gap-1 mb-8">
         <div className="flex items-center gap-2">
@@ -212,7 +245,7 @@ export default function ReviewsSection({
       {/* ── DESKTOP: Grid ── */}
       <div className="hidden md:grid grid-cols-2 lg:grid-cols-3 gap-4 max-w-5xl mx-auto">
         {activeReviews.map((r) => (
-          <ReviewCard key={r.id} review={r} />
+          <ReviewCard key={r.id} review={r} shouldLoadImage={shouldLoadImages} />
         ))}
       </div>
 
@@ -231,7 +264,7 @@ export default function ReviewsSection({
           className="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-smooth no-scrollbar px-6 pb-2"
         >
           {activeReviews.map((r) => (
-            <ReviewCard key={r.id} review={r} />
+            <ReviewCard key={r.id} review={r} shouldLoadImage={shouldLoadImages} />
           ))}
         </div>
 
