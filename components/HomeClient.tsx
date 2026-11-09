@@ -257,7 +257,7 @@ export default function HomeClient({ initialProducts, initialCategories }: HomeC
         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           
           {/* Carrossel de Categorias */}
-          <CategoryCarousel initialCategories={initialCategories} />
+          <CategoryCarousel initialCategories={initialCategories} selectedCategory={urlParams.categoryParam || undefined} />
 
           {/* ── HOME DEFAULT: Trilhos de Produtos com Ordem e Chaves Estáveis ── */}
           {isDefaultHome && (

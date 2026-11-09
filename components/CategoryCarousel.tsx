@@ -2,7 +2,7 @@
 
 import { useRef, useEffect, useState, Suspense } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useGeo } from '@/lib/i18n/GeoContext';
@@ -18,6 +18,7 @@ export interface Category {
 
 export interface CategoryCarouselProps {
   initialCategories?: Category[];
+  selectedCategory?: string;
 }
 
 function CategoryCard({
@@ -95,15 +96,14 @@ function CategoryCard({
   );
 }
 
-function CategoryCarouselContent({ initialCategories }: CategoryCarouselProps) {
+function CategoryCarouselContent({ initialCategories, selectedCategory }: CategoryCarouselProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories || []);
   const [isLoading, setIsLoading] = useState(!initialCategories || initialCategories.length === 0);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const searchParams = useSearchParams();
   const router = useRouter();
   
   const { t } = useGeo();
-  const activeCategory = (searchParams?.get ? searchParams.get('category') : null) || t('allCategories');
+  const activeCategory = selectedCategory || t('allCategories');
 
   useEffect(() => {
     if (categories.length > 0) {
@@ -222,10 +222,6 @@ function CategoryCarouselContent({ initialCategories }: CategoryCarouselProps) {
   );
 }
 
-export default function CategoryCarousel({ initialCategories }: CategoryCarouselProps) {
-  return (
-    <Suspense fallback={<div className="h-[110px]" />}>
-      <CategoryCarouselContent initialCategories={initialCategories} />
-    </Suspense>
-  );
+export default function CategoryCarousel({ initialCategories, selectedCategory }: CategoryCarouselProps) {
+  return <CategoryCarouselContent initialCategories={initialCategories} selectedCategory={selectedCategory} />;
 }
