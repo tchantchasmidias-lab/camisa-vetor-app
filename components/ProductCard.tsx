@@ -8,7 +8,15 @@ import { useGeo } from '@/lib/i18n/GeoContext';
 import { formatTitleCase } from '@/lib/stringUtils';
 import { safeLocalStorage } from '@/lib/safeStorage';
 
-export default function ProductCard({ product, priority = false }: { product: any; priority?: boolean }) {
+export default function ProductCard({
+  product,
+  priority = false,
+  deferImage = false,
+}: {
+  product: any;
+  priority?: boolean;
+  deferImage?: boolean;
+}) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [shouldLoadSecondary, setShouldLoadSecondary] = useState(false);
   const [isSecondaryLoaded, setIsSecondaryLoaded] = useState(false);
@@ -88,7 +96,7 @@ export default function ProductCard({ product, priority = false }: { product: an
       >
         <div className="aspect-square relative overflow-hidden rounded-xl bg-[#f8f8f8] border border-transparent group-hover:border-[#0f172a] group-hover:bg-black mb-4 group-hover:shadow-xl group-hover:shadow-black/30 transition-all duration-300">
 
-          {capaSrc ? (
+          {capaSrc && !deferImage ? (
             <>
               {/* Imagem CAPA — prioridade de carregamento para LCP nos primeiros cards */}
               <Image
@@ -131,6 +139,18 @@ export default function ProductCard({ product, priority = false }: { product: an
                   }`}
                 />
               )}
+            </>
+          ) : capaSrc && deferImage ? (
+            <>
+              <div className="w-full h-full bg-[#f8f8f8]" />
+              <noscript>
+                <img
+                  src={capaSrc}
+                  alt={semanticAlt}
+                  className="object-contain w-full h-full"
+                  loading="lazy"
+                />
+              </noscript>
             </>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-200">

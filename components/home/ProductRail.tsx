@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
@@ -11,6 +11,7 @@ interface ProductRailProps {
   products: Product[];
   viewAllHref: string;
   isFirst?: boolean;
+  deferImages?: boolean;
 }
 
 // Larguras dos cards:
@@ -20,19 +21,76 @@ interface ProductRailProps {
 
 const INITIAL_VISIBLE_COUNT = 8;
 
-export default function ProductRail({ title, products, viewAllHref, isFirst = false }: ProductRailProps) {
+export default function ProductRail({
+  title,
+  products,
+  viewAllHref,
+  isFirst = false,
+  deferImages = false,
+}: ProductRailProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
   const [visibleCount, setVisibleCount] = useState(INITIAL_VISIBLE_COUNT);
+  const [shouldLoadImages, setShouldLoadImages] = useState(!deferImages);
+
+  useEffect(() => {
+    if (!deferImages || shouldLoadImages) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setShouldLoadImages(true);
+      return;
+    }
+
+    let observer: IntersectionObserver | null = null;
+    const setupObserver = () => {
+      observer = new IntersectionObserver(
+        (entries) => {
+          const [entry] = entries;
+          if (entry.isIntersecting) {
+            setShouldLoadImages(true);
+            observer?.disconnect();
+          }
+        },
+        { rootMargin: '200px 0px' }
+      );
+      if (sectionRef.current) {
+        observer.observe(sectionRef.current);
+      }
+    };
+
+    // Use requestIdleCallback / setTimeout to ensure hydration completes 100% without observer overhead
+    let idleId: any;
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleId = (window as any).requestIdleCallback(setupObserver, { timeout: 3000 });
+    } else {
+      idleId = setTimeout(setupObserver, 1200);
+    }
+
+    return () => {
+      if (observer) observer.disconnect();
+      if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        (window as any).cancelIdleCallback(idleId);
+      } else {
+        clearTimeout(idleId);
+      }
+    };
+  }, [deferImages, shouldLoadImages]);
 
   if (!products || products.length === 0) return null;
 
   const loadAll = () => {
+    if (!shouldLoadImages) {
+      setShouldLoadImages(true);
+    }
     if (visibleCount < products.length) {
       setVisibleCount(products.length);
     }
   };
 
   const scroll = (direction: 'left' | 'right') => {
+    if (!shouldLoadImages) {
+      setShouldLoadImages(true);
+    }
     if (direction === 'right') {
       loadAll();
     }
@@ -46,6 +104,9 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
   };
 
   const handleScroll = () => {
+    if (!shouldLoadImages) {
+      setShouldLoadImages(true);
+    }
     if (visibleCount < products.length && railRef.current) {
       const { scrollLeft, scrollWidth, clientWidth } = railRef.current;
       // Quando faltarem ~350px para o final do trilho visível atual, carrega o restante
@@ -56,6 +117,9 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
   };
 
   const handleFocusCapture = (e: React.FocusEvent) => {
+    if (!shouldLoadImages) {
+      setShouldLoadImages(true);
+    }
     try {
       // Só expande se o foco for originado por navegação via teclado (:focus-visible)
       // Toque em celular ou clique de mouse NÃO disparam focus-visible e portanto não expandem o trilho
@@ -70,7 +134,7 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
   const visibleProducts = products.slice(0, visibleCount);
 
   return (
-    <section className={`w-full ${isFirst ? 'pt-2 sm:pt-4' : ''}`}>
+    <section ref={sectionRef} className={`w-full ${isFirst ? 'pt-2 sm:pt-4' : ''}`}>
       {/* Linha divisória suave e tracejada na cor laranja entre os trilhos */}
       {!isFirst && (
         <div className="w-full my-8 sm:my-10">
@@ -124,7 +188,7 @@ export default function ProductRail({ title, products, viewAllHref, isFirst = fa
               className="flex-shrink-0 w-[44vw] md:w-[31%] lg:w-[calc((100%-4*1rem)/5)]"
               style={{ scrollSnapAlign: 'start' }}
             >
-              <ProductCard product={product} priority={isFirst && index < 2} />
+              <ProductCard product={product} priority={isFirst && index < 2} deferImage={!shouldLoadImages} />
             </div>
           ))}
         </div>

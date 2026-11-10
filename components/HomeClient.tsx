@@ -270,6 +270,8 @@ export default function HomeClient({ initialProducts, initialCategories }: HomeC
                   if (!railProducts || railProducts.length === 0) return null;
 
                   const isFirst = renderedCount === 0;
+                  // Rails 1 e 2 estão na primeira tela / transição da dobra; diferir imagens apenas para Rails 3+
+                  const deferImages = renderedCount >= 2;
                   renderedCount++;
 
                   return (
@@ -279,6 +281,7 @@ export default function HomeClient({ initialProducts, initialCategories }: HomeC
                       products={railProducts}
                       viewAllHref={rail.viewAllHref}
                       isFirst={isFirst}
+                      deferImages={deferImages}
                     />
                   );
                 });
