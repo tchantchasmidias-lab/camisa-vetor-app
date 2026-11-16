@@ -17,10 +17,24 @@ export default function PwaInstallBanner() {
   const [visible, setVisible] = useState(false);
   const [installing, setInstalling] = useState(false);
   const [isMobile, setIsMobile] = useState(true);
+  const [footerInView, setFooterInView] = useState(false);
 
   useEffect(() => {
     // Determina se é dispositivo móvel
     setIsMobile(window.innerWidth <= 768);
+
+    // Observa visibilidade do rodapé para recolher o banner e evitar sobreposição
+    let observer: IntersectionObserver | null = null;
+    const footer = document.querySelector('footer');
+    if (footer && typeof IntersectionObserver !== 'undefined') {
+      observer = new IntersectionObserver(
+        ([entry]) => {
+          setFooterInView(entry.isIntersecting);
+        },
+        { rootMargin: '0px 0px 40px 0px', threshold: 0 }
+      );
+      observer.observe(footer);
+    }
 
     // Não mostra se já foi dispensado
     if (safeLocalStorage.getItem(DISMISSED_KEY)) return;
@@ -53,6 +67,7 @@ export default function PwaInstallBanner() {
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('cv-pwa-prompt-available', checkGlobalPrompt);
+      if (observer) observer.disconnect();
     };
   }, []);
 
@@ -78,56 +93,60 @@ export default function PwaInstallBanner() {
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 md:right-4 md:left-auto md:mx-0 z-[200] mx-auto max-w-sm animate-in slide-in-from-bottom-4 fade-in duration-500"
+      className={`fixed bottom-20 lg:bottom-4 left-4 right-4 md:right-4 md:left-auto md:mx-0 z-[200] mx-auto max-w-xs md:max-w-[300px] transition-all duration-300 ease-in-out ${
+        footerInView
+          ? 'translate-y-36 opacity-0 pointer-events-none'
+          : 'translate-y-0 opacity-100'
+      }`}
       role="dialog"
       aria-label="Instalar app Camisa Vetor"
     >
-      <div className="bg-white rounded-3xl shadow-[0_20px_60px_rgba(0,0,0,0.15)] border border-gray-100 overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-[0_12px_36px_rgba(0,0,0,0.18)] border border-gray-100 overflow-hidden">
         {/* Barra laranja decorativa */}
-        <div className="h-1 bg-gradient-to-r from-[#fe7302] to-[#ff9a3c]" />
+        <div className="h-0.5 bg-gradient-to-r from-[#fe7302] to-[#ff9a3c]" />
 
-        <div className="p-5">
-          <div className="flex items-center gap-4">
+        <div className="p-3 sm:p-3.5">
+          <div className="flex items-center gap-3">
             {/* Ícone do app */}
-            <div className="flex-shrink-0 w-14 h-14 rounded-2xl overflow-hidden shadow-md">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-sm">
               <Image
                 src="/icon.png"
                 alt="Camisa Vetor"
-                width={56}
-                height={56}
+                width={40}
+                height={40}
                 className="w-full h-full object-cover"
               />
             </div>
 
             {/* Texto */}
             <div className="flex-1 min-w-0">
-              <p className="text-[13px] font-black text-gray-900 uppercase tracking-tight">
+              <p className="text-[12px] font-black text-gray-900 uppercase tracking-tight">
                 Instalar App
               </p>
-              <p className="text-[11px] text-gray-500 font-medium leading-tight mt-0.5">
+              <p className="text-[10px] text-gray-500 font-medium leading-tight mt-0.5 line-clamp-2">
                 {isMobile 
-                  ? 'Acesse a Camisa Vetor direto da tela inicial do seu celular' 
-                  : 'Acesse a Camisa Vetor direto da área de trabalho do seu computador'}
+                  ? 'Acesse direto da tela inicial do celular' 
+                  : 'Acesse direto da área de trabalho do computador'}
               </p>
             </div>
 
             {/* Botão fechar */}
             <button
               onClick={handleDismiss}
-              className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 transition-colors"
+              className="flex-shrink-0 w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 hover:bg-gray-200 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fe7302]"
               aria-label="Fechar"
             >
-              <X size={14} />
+              <X size={13} />
             </button>
           </div>
 
-          {/* Botão de instalação */}
+          {/* Botão de instalação compacto */}
           <button
             onClick={handleInstall}
             disabled={installing}
-            className="mt-4 w-full bg-[#fe7302] text-white font-black text-[12px] uppercase tracking-widest py-3.5 rounded-2xl flex items-center justify-center gap-2 hover:bg-[#e56600] active:scale-[0.98] transition-all shadow-lg shadow-orange-500/20 disabled:opacity-70"
+            className="mt-2.5 w-full bg-[#fe7302] text-white font-bold text-[11px] uppercase tracking-wider py-2 rounded-xl flex items-center justify-center gap-1.5 hover:bg-[#e56600] active:scale-[0.98] transition-all shadow-md shadow-orange-500/20 disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#fe7302]"
           >
-            <Download size={16} />
+            <Download size={14} />
             {installing ? 'Instalando...' : (isMobile ? 'Adicionar à Tela Inicial' : 'Instalar no Computador')}
           </button>
         </div>
