@@ -7,11 +7,13 @@ import ProductCard from '@/components/ProductCard';
 import type { Product } from '@/components/HomeClient';
 
 interface ProductRailProps {
+  id?: string;
   title: string;
   products: Product[];
   viewAllHref: string;
   isFirst?: boolean;
   deferImages?: boolean;
+  cardsPerRowDesktop?: 4 | 5;
 }
 
 // Larguras dos cards:
@@ -22,11 +24,13 @@ interface ProductRailProps {
 const INITIAL_VISIBLE_COUNT = 8;
 
 export default function ProductRail({
+  id,
   title,
   products,
   viewAllHref,
   isFirst = false,
   deferImages = false,
+  cardsPerRowDesktop = 5,
 }: ProductRailProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const railRef = useRef<HTMLDivElement>(null);
@@ -41,38 +45,23 @@ export default function ProductRail({
       return;
     }
 
-    let observer: IntersectionObserver | null = null;
-    const setupObserver = () => {
-      observer = new IntersectionObserver(
-        (entries) => {
-          const [entry] = entries;
-          if (entry.isIntersecting) {
-            setShouldLoadImages(true);
-            observer?.disconnect();
-          }
-        },
-        { rootMargin: '200px 0px' }
-      );
-      if (sectionRef.current) {
-        observer.observe(sectionRef.current);
-      }
-    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting) {
+          setShouldLoadImages(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '450px 0px' }
+    );
 
-    // Use requestIdleCallback / setTimeout to ensure hydration completes 100% without observer overhead
-    let idleId: any;
-    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
-      idleId = (window as any).requestIdleCallback(setupObserver, { timeout: 3000 });
-    } else {
-      idleId = setTimeout(setupObserver, 1200);
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
     }
 
     return () => {
-      if (observer) observer.disconnect();
-      if (typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
-        (window as any).cancelIdleCallback(idleId);
-      } else {
-        clearTimeout(idleId);
-      }
+      observer.disconnect();
     };
   }, [deferImages, shouldLoadImages]);
 
@@ -133,8 +122,12 @@ export default function ProductRail({
 
   const visibleProducts = products.slice(0, visibleCount);
 
+  const cardWidthClass = cardsPerRowDesktop === 4
+    ? "flex-shrink-0 w-[calc(50%-0.375rem)] md:w-[31%] lg:w-[calc((100%-3*1rem)/4)]"
+    : "flex-shrink-0 w-[44vw] md:w-[31%] lg:w-[calc((100%-4*1rem)/5)]";
+
   return (
-    <section ref={sectionRef} className={`w-full ${isFirst ? 'pt-2 sm:pt-4' : ''}`}>
+    <section id={id} ref={sectionRef} className={`w-full ${isFirst ? 'pt-2 sm:pt-4' : ''}`}>
       {/* Linha divisória suave e tracejada na cor laranja entre os trilhos */}
       {!isFirst && (
         <div className="w-full my-8 sm:my-10">
@@ -143,17 +136,17 @@ export default function ProductRail({
       )}
 
       {/* Cabecalho da Secao */}
-      <div className="flex items-center justify-between mb-4 sm:mb-6 px-0">
-        <h2 className="text-xl sm:text-2xl font-black text-[#0f172a] uppercase tracking-wider leading-tight">
+      <div className="flex items-center justify-between mb-3.5 sm:mb-5 px-0">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-tight">
           {title}
         </h2>
         <Link
           href={viewAllHref}
           scroll={true}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="text-sm sm:text-base font-semibold text-[#fe7302] hover:text-[#c85c00] hover:underline transition-colors flex items-center gap-1 shrink-0 ml-4"
+          className="text-xs sm:text-sm font-semibold text-[#fe7302] hover:text-[#c85c00] hover:underline transition-colors flex items-center gap-1 shrink-0 ml-4"
         >
-          Ver todos <span className="text-base leading-none">→</span>
+          Ver todas <span className="text-sm leading-none">→</span>
         </Link>
       </div>
 
@@ -184,8 +177,7 @@ export default function ProductRail({
           {visibleProducts.map((product, index) => (
             <div
               key={product.id}
-              // Mobile: 44vw (~2.2 cards), md: ~31% (~3 cards), lg: calc 5 cards exact
-              className="flex-shrink-0 w-[44vw] md:w-[31%] lg:w-[calc((100%-4*1rem)/5)]"
+              className={cardWidthClass}
               style={{ scrollSnapAlign: 'start' }}
             >
               <ProductCard product={product} priority={isFirst && index < 2} deferImage={!shouldLoadImages} />

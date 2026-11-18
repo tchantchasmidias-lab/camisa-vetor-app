@@ -13,7 +13,7 @@ import { onAuthStateChanged, signInWithEmailAndPassword, signOut, signInWithPopu
 import { 
   Upload, X, Image as ImageIcon, FileCode, CheckCircle2, 
   Loader2, Plus, Edit3, Trash2, LayoutGrid, Globe, 
-  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag, Clock, Search, Calendar, Sparkles, LogOut
+  FolderPlus, BarChart3, Users, Award, Megaphone, TrendingUp, Camera, Star, Mail, Package, Tag, Clock, Search, Calendar, Sparkles, LogOut, Smartphone, Monitor, Save
 } from 'lucide-react';
 import Image from 'next/image';
 import { formatTitleCase, normalizeSearchTerm } from '@/lib/stringUtils';
@@ -32,6 +32,24 @@ export default function AdminPage() {
   const [banner, setBanner] = useState({ imageUrl: '', link: '' });
   const [lastPublishedProduct, setLastPublishedProduct] = useState<{ name: string; slug: string } | null>(null);
   const [isSendingPush, setIsSendingPush] = useState(false);
+
+  // ESTADOS DE IMAGENS PROMOCIONAIS DA HOME (Hero e Destaque de Coleção)
+  const [homePromotions, setHomePromotions] = useState({
+    hero: { imageUrl: '', mobileImageUrl: '', altText: 'Sua próxima estampa começa aqui — Camisa Vetor', linkUrl: '' },
+    collectionHighlight: { imageUrl: '', mobileImageUrl: '', altText: 'Coleção de Carnaval em cada detalhe — Camisa Vetor', linkUrl: '' },
+  });
+  const [fileHeroDesktop, setFileHeroDesktop] = useState<File | null>(null);
+  const [fileHeroMobile, setFileHeroMobile] = useState<File | null>(null);
+  const [fileCollectionDesktop, setFileCollectionDesktop] = useState<File | null>(null);
+  const [fileCollectionMobile, setFileCollectionMobile] = useState<File | null>(null);
+
+  const [previewHeroDesktop, setPreviewHeroDesktop] = useState<string>('');
+  const [previewHeroMobile, setPreviewHeroMobile] = useState<string>('');
+  const [previewCollectionDesktop, setPreviewCollectionDesktop] = useState<string>('');
+  const [previewCollectionMobile, setPreviewCollectionMobile] = useState<string>('');
+
+  const [isSavingPromotions, setIsSavingPromotions] = useState(false);
+  const [promotionsSavedSuccess, setPromotionsSavedSuccess] = useState(false);
   
   // ESTADOS DE PEDIDOS
   const [pedidos, setPedidos] = useState<any[]>([]);
@@ -142,6 +160,30 @@ export default function AdminPage() {
 
       const emailData = configSnap.docs.find(d => d.id === 'email_templates')?.data();
       if (emailData) setEmailTemplates(prev => ({ ...prev, ...emailData }));
+
+      // Carregar configurações de imagens promocionais da Home
+      const homePromoDoc = configSnap.docs.find(d => d.id === 'home_promotions')?.data();
+      if (homePromoDoc) {
+        const loadedPromos = {
+          hero: {
+            imageUrl: homePromoDoc.hero?.imageUrl || '',
+            mobileImageUrl: homePromoDoc.hero?.mobileImageUrl || '',
+            altText: homePromoDoc.hero?.altText || 'Sua próxima estampa começa aqui — Camisa Vetor',
+            linkUrl: homePromoDoc.hero?.linkUrl || '',
+          },
+          collectionHighlight: {
+            imageUrl: homePromoDoc.collectionHighlight?.imageUrl || '',
+            mobileImageUrl: homePromoDoc.collectionHighlight?.mobileImageUrl || '',
+            altText: homePromoDoc.collectionHighlight?.altText || 'Coleção de Carnaval em cada detalhe — Camisa Vetor',
+            linkUrl: homePromoDoc.collectionHighlight?.linkUrl || '',
+          },
+        };
+        setHomePromotions(loadedPromos);
+        setPreviewHeroDesktop(loadedPromos.hero.imageUrl);
+        setPreviewHeroMobile(loadedPromos.hero.mobileImageUrl);
+        setPreviewCollectionDesktop(loadedPromos.collectionHighlight.imageUrl);
+        setPreviewCollectionMobile(loadedPromos.collectionHighlight.mobileImageUrl);
+      }
 
       // Buscar Pedidos
       try {
@@ -268,6 +310,86 @@ export default function AdminPage() {
   };
 
 
+  const handleSaveHomePromotions = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setIsSavingPromotions(true);
+    setPromotionsSavedSuccess(false);
+
+    try {
+      let heroDesktopUrl = homePromotions.hero.imageUrl;
+      let heroMobileUrl = homePromotions.hero.mobileImageUrl;
+      let collectionDesktopUrl = homePromotions.collectionHighlight.imageUrl;
+      let collectionMobileUrl = homePromotions.collectionHighlight.mobileImageUrl;
+
+      if (fileHeroDesktop) {
+        heroDesktopUrl = await uploadFile(fileHeroDesktop, 'home-promotions');
+      }
+      if (fileHeroMobile) {
+        heroMobileUrl = await uploadFile(fileHeroMobile, 'home-promotions');
+      }
+      if (fileCollectionDesktop) {
+        collectionDesktopUrl = await uploadFile(fileCollectionDesktop, 'home-promotions');
+      }
+      if (fileCollectionMobile) {
+        collectionMobileUrl = await uploadFile(fileCollectionMobile, 'home-promotions');
+      }
+
+      const payload = {
+        hero: {
+          imageUrl: heroDesktopUrl,
+          mobileImageUrl: heroMobileUrl,
+          altText: homePromotions.hero.altText.trim() || 'Sua próxima estampa começa aqui — Camisa Vetor',
+          linkUrl: homePromotions.hero.linkUrl?.trim() || '',
+          updatedAt: Date.now(),
+        },
+        collectionHighlight: {
+          imageUrl: collectionDesktopUrl,
+          mobileImageUrl: collectionMobileUrl,
+          altText: homePromotions.collectionHighlight.altText.trim() || 'Coleção de Carnaval em cada detalhe — Camisa Vetor',
+          linkUrl: homePromotions.collectionHighlight.linkUrl?.trim() || '',
+          updatedAt: Date.now(),
+        },
+      };
+
+      await setDoc(doc(db, "configuracoes", "home_promotions"), payload, { merge: true });
+
+      const token = await auth.currentUser?.getIdToken();
+      if (token) {
+        await fetch('/api/admin/promotions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify(payload)
+        }).catch(err => console.warn('Erro ao sincronizar via API:', err));
+      }
+
+      setHomePromotions(payload);
+      setPreviewHeroDesktop(payload.hero.imageUrl);
+      setPreviewHeroMobile(payload.hero.mobileImageUrl);
+      setPreviewCollectionDesktop(payload.collectionHighlight.imageUrl);
+      setPreviewCollectionMobile(payload.collectionHighlight.mobileImageUrl);
+
+      setFileHeroDesktop(null);
+      setFileHeroMobile(null);
+      setFileCollectionDesktop(null);
+      setFileCollectionMobile(null);
+
+      // Revalida a Home imediatamente
+      await triggerRevalidate('/');
+
+      setPromotionsSavedSuccess(true);
+      setTimeout(() => setPromotionsSavedSuccess(false), 4000);
+      alert('Imagens promocionais da Home salvas e cache revalidado com sucesso!');
+    } catch (err: any) {
+      console.error('Erro ao salvar imagens promocionais da Home:', err);
+      alert('Erro ao salvar imagens promocionais: ' + (err.message || 'Falha desconhecida'));
+    } finally {
+      setIsSavingPromotions(false);
+    }
+  };
+
   const handleSaveEmails = async () => {
     setIsSavingEmails(true);
     try {
@@ -339,6 +461,13 @@ export default function AdminPage() {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).__ENABLE_ADMIN_PREVIEW__) {
+      setIsAdmin(true);
+      setActiveTab('design');
+      setAuthLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         if (user.email === 'camisavetor@gmail.com') {
@@ -1349,9 +1478,351 @@ export default function AdminPage() {
             </div>
           )}
 
-          {/* ABA DESIGN (CATEGORIAS) */}
+          {/* ABA DESIGN (CATEGORIAS & VITRINE DA HOME) */}
           {activeTab === 'design' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
+
+              {/* PAINEL DE ESPAÇOS PROMOCIONAIS CONFIGURÁVEIS DA HOME */}
+              <div className="bg-[#111111] p-6 sm:p-10 rounded-[3rem] border border-white/5 shadow-2xl">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-white/5">
+                  <div>
+                    <h2 className="text-[13px] font-black uppercase text-white flex items-center gap-3 tracking-widest">
+                      <Sparkles size={20} className="text-[#fe7302]" />
+                      Espaços Promocionais da Vitrine (Home)
+                    </h2>
+                    <p className="text-[10px] text-gray-500 font-medium uppercase tracking-wider mt-1">
+                      Configure imagens da abertura (Hero) e do destaque de coleção com suporte a versão mobile, transparência e prévia ao vivo.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {promotionsSavedSuccess && (
+                      <span className="inline-flex items-center gap-1.5 text-green-400 text-[10px] font-bold uppercase tracking-wider bg-green-500/10 px-3 py-1.5 rounded-xl border border-green-500/20">
+                        <CheckCircle2 size={14} /> Salvo & Cache Revalidado
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSaveHomePromotions}
+                      disabled={isSavingPromotions}
+                      className="inline-flex items-center gap-2 bg-[#fe7302] hover:bg-[#e56600] disabled:opacity-50 text-white px-6 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-orange-600/20 active:scale-95"
+                    >
+                      {isSavingPromotions ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                      <span>{isSavingPromotions ? 'Salvando...' : 'Salvar Alterações'}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  {/* ESPAÇO 1: HERO (ABERTURA) */}
+                  <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-6 sm:p-8 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <Monitor size={18} className="text-[#fe7302]" />
+                          <h3 className="text-white font-black uppercase text-[12px] tracking-wider">
+                            1. Abertura (Hero)
+                          </h3>
+                        </div>
+                        <span className="text-[9px] font-bold uppercase text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2.5 py-1 rounded-full">
+                          Crítico LCP • Alta Prioridade
+                        </span>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 mb-6 text-[10px] text-gray-400 leading-relaxed">
+                        <p className="font-bold text-gray-300 uppercase tracking-wider mb-1">📐 Dimensões Recomendadas (Banner Panorâmico):</p>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          <li><strong>Desktop:</strong> Formato horizontal panorâmico na proporção ~3:1 a 16:6 (ex: 1200×400px ou 1400×450px).</li>
+                          <li><strong>Celular (Opcional):</strong> Formato horizontal compacto na proporção ~16:9 a 2:1 (ex: 600×320px ou 600×300px).</li>
+                          <li><strong>Formato:</strong> PNG ou WebP com alta nitidez. A arte é assentada sem cortes em container com cantos arredondados.</li>
+                        </ul>
+                      </div>
+
+                      {/* UPLOAD IMAGEM DESKTOP */}
+                      <div className="mb-5">
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest">
+                          Imagem Principal / Desktop
+                        </label>
+                        <div className="relative aspect-[3/1] bg-black/40 rounded-2xl border-2 border-dashed border-white/10 overflow-hidden flex items-center justify-center group hover:border-[#fe7302]/40 transition-all">
+                          {previewHeroDesktop ? (
+                            <img src={previewHeroDesktop} alt="Hero Desktop" className="w-full h-full object-contain p-2" />
+                          ) : (
+                            <div className="text-center p-4">
+                              <ImageIcon size={32} className="mx-auto text-gray-600 mb-2" />
+                              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block">Clique para enviar imagem Desktop</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[9px] font-black text-white uppercase tracking-wider bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-md">
+                              Substituir
+                            </span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/png,image/webp,image/jpeg"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) {
+                                setFileHeroDesktop(f);
+                                setPreviewHeroDesktop(URL.createObjectURL(f));
+                              }
+                            }}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        {previewHeroDesktop && (
+                          <div className="flex justify-end mt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFileHeroDesktop(null);
+                                setPreviewHeroDesktop('');
+                                setHomePromotions(p => ({ ...p, hero: { ...p.hero, imageUrl: '' } }));
+                              }}
+                              className="text-[9px] text-gray-500 hover:text-red-400 font-bold uppercase tracking-wider flex items-center gap-1"
+                            >
+                              <Trash2 size={12} /> Remover (Usar Fallback Padrão)
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* UPLOAD IMAGEM CELULAR (OPCIONAL) */}
+                      <div className="mb-5">
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center gap-1.5">
+                          <Smartphone size={13} className="text-[#fe7302]" />
+                          Imagem Específica para Celular (Opcional)
+                        </label>
+                        <div className="relative aspect-[2/1] max-w-[240px] bg-black/40 rounded-2xl border-2 border-dashed border-white/10 overflow-hidden flex items-center justify-center group hover:border-[#fe7302]/40 transition-all">
+                          {previewHeroMobile ? (
+                            <img src={previewHeroMobile} alt="Hero Mobile" className="w-full h-full object-contain p-2" />
+                          ) : (
+                            <div className="text-center p-3">
+                              <Smartphone size={24} className="mx-auto text-gray-600 mb-1" />
+                              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider block">Opcional para mobile</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[8px] font-black text-white uppercase tracking-wider bg-white/10 px-2.5 py-1 rounded-xl">
+                              Substituir Mobile
+                            </span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/png,image/webp,image/jpeg"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) {
+                                setFileHeroMobile(f);
+                                setPreviewHeroMobile(URL.createObjectURL(f));
+                              }
+                            }}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        {previewHeroMobile && (
+                          <div className="flex justify-end max-w-[220px] mt-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFileHeroMobile(null);
+                                setPreviewHeroMobile('');
+                                setHomePromotions(p => ({ ...p, hero: { ...p.hero, mobileImageUrl: '' } }));
+                              }}
+                              className="text-[9px] text-gray-500 hover:text-red-400 font-bold uppercase tracking-wider flex items-center gap-1"
+                            >
+                              <Trash2 size={12} /> Remover Mobile
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* TEXTO ALTERNATIVO (ALT) */}
+                      <div className="mb-4">
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest">
+                          Texto Alternativo (Alt Text — Acessibilidade & SEO)
+                        </label>
+                        <input
+                          type="text"
+                          value={homePromotions.hero.altText}
+                          onChange={(e) => setHomePromotions(p => ({
+                            ...p,
+                            hero: { ...p.hero, altText: e.target.value }
+                          }))}
+                          placeholder="Ex: Coleção de artes vetoriais editáveis para sublimação"
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700"
+                        />
+                      </div>
+
+                      {/* LINK DE DESTINO DO BANNER HERO */}
+                      <div>
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center justify-between">
+                          <span>Link de Destino (Clique no Banner)</span>
+                          <span className="text-[#fe7302] font-bold lowercase">Padrão: /catalog</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={homePromotions.hero.linkUrl || ''}
+                          onChange={(e) => setHomePromotions(p => ({
+                            ...p,
+                            hero: { ...p.hero, linkUrl: e.target.value }
+                          }))}
+                          placeholder="/catalog ou https://..."
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700"
+                        />
+                        <p className="text-[9px] text-gray-500 mt-1.5 leading-relaxed">
+                          Aceita caminhos internos (ex: <code className="text-gray-400 font-mono">/catalog</code>, <code className="text-gray-400 font-mono">/categoria/interclasse</code>) ou URLs seguras (<code className="text-gray-400 font-mono">https://...</code>). Caso em branco, direciona automaticamente para o catálogo.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* ESPAÇO 2: DESTAQUE DE COLEÇÃO (CARNAVAL) */}
+                  <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-6 sm:p-8 flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                          <Sparkles size={18} className="text-[#fe7302]" />
+                          <h3 className="text-white font-black uppercase text-[12px] tracking-wider">
+                            2. Destaque de Coleção (Banner Carnaval)
+                          </h3>
+                        </div>
+                        <span className="text-[9px] font-bold uppercase text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-full">
+                          Carregamento Sob Demanda (Lazy)
+                        </span>
+                      </div>
+
+                      <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 mb-6 text-[10px] text-gray-400 leading-relaxed">
+                        <p className="font-bold text-gray-300 uppercase tracking-wider mb-1">📐 Dimensões Recomendadas:</p>
+                        <ul className="list-disc list-inside space-y-0.5">
+                          <li><strong>Desktop:</strong> Proporção 16:9 ou 4:3 (800×480px a 1000×600px)</li>
+                          <li><strong>Celular (Opcional):</strong> Proporção 4:3 (500×350px)</li>
+                          <li><strong>Formato:</strong> PNG ou WebP com transparência (o banner possui fundo escuro #111111 com efeitos dinâmicos de luz laranja).</li>
+                        </ul>
+                      </div>
+
+                      {/* UPLOAD IMAGEM DESKTOP */}
+                      <div className="mb-5">
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest">
+                          Imagem Principal / Desktop
+                        </label>
+                        <div className="relative aspect-[16/10] bg-[#111111] rounded-2xl border-2 border-dashed border-orange-500/30 overflow-hidden flex items-center justify-center group hover:border-[#fe7302] transition-all">
+                          {previewCollectionDesktop ? (
+                            <img src={previewCollectionDesktop} alt="Coleção Desktop" className="w-full h-full object-contain p-2" />
+                          ) : (
+                            <div className="text-center p-4">
+                              <ImageIcon size={32} className="mx-auto text-gray-600 mb-2" />
+                              <span className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block">Clique para enviar imagem do Banner</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[9px] font-black text-white uppercase tracking-wider bg-white/10 px-3 py-1.5 rounded-xl backdrop-blur-md">
+                              Substituir
+                            </span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/png,image/webp,image/jpeg"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) {
+                                setFileCollectionDesktop(f);
+                                setPreviewCollectionDesktop(URL.createObjectURL(f));
+                              }
+                            }}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        {previewCollectionDesktop && (
+                          <div className="flex justify-end mt-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFileCollectionDesktop(null);
+                                setPreviewCollectionDesktop('');
+                                setHomePromotions(p => ({ ...p, collectionHighlight: { ...p.collectionHighlight, imageUrl: '' } }));
+                              }}
+                              className="text-[9px] text-gray-500 hover:text-red-400 font-bold uppercase tracking-wider flex items-center gap-1"
+                            >
+                              <Trash2 size={12} /> Remover (Usar Fallback Padrão)
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* UPLOAD IMAGEM CELULAR (OPCIONAL) */}
+                      <div className="mb-5">
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center gap-1.5">
+                          <Smartphone size={13} className="text-[#fe7302]" />
+                          Imagem Específica para Celular (Opcional)
+                        </label>
+                        <div className="relative aspect-[4/3] max-w-[220px] bg-[#111111] rounded-2xl border-2 border-dashed border-orange-500/30 overflow-hidden flex items-center justify-center group hover:border-[#fe7302] transition-all">
+                          {previewCollectionMobile ? (
+                            <img src={previewCollectionMobile} alt="Coleção Mobile" className="w-full h-full object-contain p-2" />
+                          ) : (
+                            <div className="text-center p-3">
+                              <Smartphone size={24} className="mx-auto text-gray-600 mb-1" />
+                              <span className="text-[8px] font-bold text-gray-500 uppercase tracking-wider block">Opcional para mobile</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <span className="text-[8px] font-black text-white uppercase tracking-wider bg-white/10 px-2.5 py-1 rounded-xl">
+                              Substituir Mobile
+                            </span>
+                          </div>
+                          <input
+                            type="file"
+                            accept="image/png,image/webp,image/jpeg"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) {
+                                setFileCollectionMobile(f);
+                                setPreviewCollectionMobile(URL.createObjectURL(f));
+                              }
+                            }}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                          />
+                        </div>
+                        {previewCollectionMobile && (
+                          <div className="flex justify-end max-w-[220px] mt-1.5">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFileCollectionMobile(null);
+                                setPreviewCollectionMobile('');
+                                setHomePromotions(p => ({ ...p, collectionHighlight: { ...p.collectionHighlight, mobileImageUrl: '' } }));
+                              }}
+                              className="text-[9px] text-gray-500 hover:text-red-400 font-bold uppercase tracking-wider flex items-center gap-1"
+                            >
+                              <Trash2 size={12} /> Remover Mobile
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* TEXTO ALTERNATIVO (ALT) */}
+                      <div>
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest">
+                          Texto Alternativo (Alt Text — Acessibilidade & SEO)
+                        </label>
+                        <input
+                          type="text"
+                          value={homePromotions.collectionHighlight.altText}
+                          onChange={(e) => setHomePromotions(p => ({
+                            ...p,
+                            collectionHighlight: { ...p.collectionHighlight, altText: e.target.value }
+                          }))}
+                          placeholder="Ex: Coleção Carnaval em cada detalhe — Estampas e abadás editáveis"
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* GRID INFERIOR: CATEGORIAS + CUPONS + SIDEBAR BANNER */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
                <div className="bg-[#111111] p-10 rounded-[3rem] border border-white/5 shadow-2xl">
                   <div className="flex items-center justify-between mb-10">
                     <h2 className="text-[12px] font-black uppercase text-white flex items-center gap-4 tracking-widest"><FolderPlus size={20} className="text-[#fe7302]"/> Categorias</h2>
@@ -1520,6 +1991,7 @@ export default function AdminPage() {
                 </div>
               </div>
             </div>
+          </div>
           )}
 
           {activeTab === 'emails' && (

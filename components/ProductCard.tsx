@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Heart } from 'lucide-react';
 import { useGeo } from '@/lib/i18n/GeoContext';
-import { formatTitleCase } from '@/lib/stringUtils';
+import { formatTitleCase, formatDisplayTitle } from '@/lib/stringUtils';
 import { safeLocalStorage } from '@/lib/safeStorage';
 
 export default function ProductCard({
@@ -66,22 +66,28 @@ export default function ProductCard({
     }
   };
 
-  const productTitle = formatTitleCase(product.name || product.title || 'Vetor para Camiseta');
+  const rawTitle = product.name || product.title || 'Vetor para Camiseta';
+  const productTitle = formatTitleCase(rawTitle);
+  const displayTitle = formatDisplayTitle(tp(rawTitle));
   const semanticAlt = `Arte Vetor ${productTitle} - Camisa Editável CorelDRAW Sublimação`;
 
   return (
     <div
-      className="relative group transition-all duration-500"
+      className="relative group transition-all duration-300"
       onMouseEnter={handleMouseEnter}
     >
-      <button onClick={toggleFavorite} className="absolute top-4 right-4 z-20 transition-all active:scale-75">
-        <Heart size={20} className={isFavorite ? 'fill-[#fe7302] text-[#fe7302]' : 'text-gray-300'} />
+      <button
+        onClick={toggleFavorite}
+        className="absolute top-3 right-3 z-20 p-1.5 rounded-full bg-white/80 backdrop-blur-sm shadow-sm hover:bg-white hover:scale-110 transition-all active:scale-75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fe7302]"
+        aria-label={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+      >
+        <Heart size={18} className={isFavorite ? 'fill-[#fe7302] text-[#fe7302]' : 'text-slate-400 group-hover:text-slate-600'} />
       </button>
 
       <Link
         href={`/product/${product.slug || product.id}`}
-        className="block"
-        title={semanticAlt}
+        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#fe7302] focus-visible:ring-offset-2 rounded-2xl"
+        title={productTitle}
         onFocus={(e) => {
           try {
             if (e.target && (e.target as HTMLElement).matches(':focus-visible')) {
@@ -94,7 +100,7 @@ export default function ProductCard({
         }}
         onBlur={() => setIsLinkFocused(false)}
       >
-        <div className="aspect-square relative overflow-hidden rounded-xl bg-[#f8f8f8] border border-transparent group-hover:border-[#0f172a] group-hover:bg-black mb-4 group-hover:shadow-xl group-hover:shadow-black/30 transition-all duration-300">
+        <div className="aspect-square relative overflow-hidden rounded-xl bg-[#f8f8f8] border border-slate-200/70 group-hover:border-slate-300 group-hover:shadow-md transition-all duration-300 mb-2.5">
 
           {capaSrc && !deferImage ? (
             <>
@@ -102,12 +108,12 @@ export default function ProductCard({
               <Image
                 src={capaSrc}
                 alt={semanticAlt}
-                title={semanticAlt}
+                title={productTitle}
                 fill
                 priority={priority}
                 sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
                 quality={90}
-                className={`object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-all duration-500 group-hover:scale-105 ${
+                className={`object-contain w-full h-full p-2 [image-rendering:-webkit-optimize-contrast] transition-all duration-500 group-hover:scale-105 ${
                   isLinkFocused ? 'scale-105' : ''
                 } ${
                   hasHoverImage && isSecondaryLoaded && isLinkFocused
@@ -118,17 +124,17 @@ export default function ProductCard({
                 }`}
               />
 
-              {/* Imagem DESTAQUE — carregada somente sob intenção de interação, mantendo a principal visível até estar pronta */}
+              {/* Imagem DESTAQUE — carregada somente sob intenção de interação */}
               {hasHoverImage && shouldLoadSecondary && (
                 <Image
                   src={destaqueSrc}
                   alt={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
-                  title={`Detalhes da Arte Vetor ${productTitle} - Estampa Sublimação CorelDRAW`}
+                  title={productTitle}
                   fill
                   sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
                   quality={90}
                   onLoad={() => setIsSecondaryLoaded(true)}
-                  className={`object-contain w-full h-full [image-rendering:-webkit-optimize-contrast] transition-all duration-500 ${
+                  className={`object-contain w-full h-full p-2 [image-rendering:-webkit-optimize-contrast] transition-all duration-500 ${
                     isSecondaryLoaded
                       ? `${
                           isLinkFocused
@@ -147,26 +153,44 @@ export default function ProductCard({
                 <img
                   src={capaSrc}
                   alt={semanticAlt}
-                  className="object-contain w-full h-full"
+                  className="object-contain w-full h-full p-2"
                   loading="lazy"
                 />
               </noscript>
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gray-200">
+            <div className="w-full h-full flex items-center justify-center bg-gray-100">
               <span className="text-gray-400 text-xs">Sem Imagem</span>
             </div>
           )}
         </div>
 
-        <div className="text-center px-2">
-          <h3 className="product-card-title text-[13.5px] md:text-[13px] font-medium text-[#1e293b] leading-[1.35] line-clamp-2 min-h-[2.7em] mb-1">
-            {formatTitleCase(tp(product.name))}
+        <div className="text-left px-0.5">
+          {/* Nome visual curto */}
+          <h3
+            className="product-card-title text-[13px] md:text-[13.5px] font-semibold text-slate-800 leading-[1.3] line-clamp-1 group-hover:text-[#fe7302] transition-colors"
+            title={productTitle}
+          >
+            {displayTitle}
           </h3>
+
+          {/* Linha secundária: Arquivo digital + formato confirmado */}
+          {(() => {
+            const formatText = Array.isArray(product?.formats) && product.formats.length > 0
+              ? product.formats.join(', ')
+              : null;
+            return (
+              <p className="text-[11px] text-slate-400 font-normal leading-tight mt-0.5 truncate">
+                Arquivo digital{formatText ? ` • ${formatText}` : ''}
+              </p>
+            );
+          })()}
+
+          {/* Preço em laranja (#fe7302) ou GRÁTIS em verde */}
           {(() => {
             const isFree = Boolean(product?.isFree) || Number(product?.price) === 0;
             return (
-              <span className={`product-card-price text-[15px] font-bold tracking-tight block mt-[4px] ${isFree ? 'text-[#16a34a]' : 'text-[#0f172a]'}`}>
+              <span className={`product-card-price text-[14px] md:text-[15px] font-bold tracking-tight block mt-1 ${isFree ? 'text-[#16a34a]' : 'text-[#fe7302]'}`}>
                 {isFree ? 'GRÁTIS' : formatPrice(product.price)}
               </span>
             );
