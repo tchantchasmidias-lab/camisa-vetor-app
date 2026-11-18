@@ -61,7 +61,7 @@ export const DEFAULT_HOME_PROMOTIONS: HomePromotions = {
     imageUrl: '/images/derivatives/carnaval-transparent.png',
     mobileImageUrl: '',
     altText: 'Coleção Carnaval em Cada Detalhe — Camisa Vetor',
-    linkUrl: '',
+    linkUrl: '/catalog?category=carnaval',
   },
 };
 

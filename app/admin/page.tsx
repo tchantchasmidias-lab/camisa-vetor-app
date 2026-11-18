@@ -1677,14 +1677,14 @@ export default function AdminPage() {
                     </div>
                   </div>
 
-                  {/* ESPAÇO 2: DESTAQUE DE COLEÇÃO (CARNAVAL) */}
+                  {/* ESPAÇO 2: DESTAQUE DE COLEÇÃO (BANNER INTERMEDIÁRIO) */}
                   <div className="bg-white/[0.02] border border-white/5 rounded-[2.5rem] p-6 sm:p-8 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-2">
                           <Sparkles size={18} className="text-[#fe7302]" />
                           <h3 className="text-white font-black uppercase text-[12px] tracking-wider">
-                            2. Destaque de Coleção (Banner Carnaval)
+                            2. Destaque de Coleção (Banner Intermediário)
                           </h3>
                         </div>
                         <span className="text-[9px] font-bold uppercase text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-full">
@@ -1695,9 +1695,10 @@ export default function AdminPage() {
                       <div className="bg-white/5 border border-white/10 rounded-2xl p-3.5 mb-6 text-[10px] text-gray-400 leading-relaxed">
                         <p className="font-bold text-gray-300 uppercase tracking-wider mb-1">📐 Dimensões Recomendadas:</p>
                         <ul className="list-disc list-inside space-y-0.5">
-                          <li><strong>Desktop:</strong> Proporção 16:9 ou 4:3 (800×480px a 1000×600px)</li>
-                          <li><strong>Celular (Opcional):</strong> Proporção 4:3 (500×350px)</li>
-                          <li><strong>Formato:</strong> PNG ou WebP com transparência (o banner possui fundo escuro #111111 com efeitos dinâmicos de luz laranja).</li>
+                          <li><strong>Arte Completa:</strong> Banner full image, com textos, títulos e elementos visuais incorporados à arte (mesmo comportamento do Hero).</li>
+                          <li><strong>Desktop:</strong> Proporção 3.11:1 (recomendado: <strong>1400 × 450 px</strong>). Preenche 100% da largura útil sem cortes ou faixas laterais.</li>
+                          <li><strong>Celular (Opcional):</strong> Proporção adaptada para telas verticais (ex: 800 × 600 px ou 600 × 450 px).</li>
+                          <li><strong>Formato:</strong> PNG, WebP ou JPEG em alta qualidade.</li>
                         </ul>
                       </div>
 
@@ -1708,7 +1709,7 @@ export default function AdminPage() {
                         </label>
                         <div className="relative aspect-[16/10] bg-[#111111] rounded-2xl border-2 border-dashed border-orange-500/30 overflow-hidden flex items-center justify-center group hover:border-[#fe7302] transition-all">
                           {previewCollectionDesktop ? (
-                            <img src={previewCollectionDesktop} alt="Coleção Desktop" className="w-full h-full object-contain p-2" />
+                            <img src={previewCollectionDesktop} alt="Coleção Desktop" className="w-full h-full object-contain" />
                           ) : (
                             <div className="text-center p-4">
                               <ImageIcon size={32} className="mx-auto text-gray-600 mb-2" />
@@ -1758,7 +1759,7 @@ export default function AdminPage() {
                         </label>
                         <div className="relative aspect-[4/3] max-w-[220px] bg-[#111111] rounded-2xl border-2 border-dashed border-orange-500/30 overflow-hidden flex items-center justify-center group hover:border-[#fe7302] transition-all">
                           {previewCollectionMobile ? (
-                            <img src={previewCollectionMobile} alt="Coleção Mobile" className="w-full h-full object-contain p-2" />
+                            <img src={previewCollectionMobile} alt="Coleção Mobile" className="w-full h-full object-contain" />
                           ) : (
                             <div className="text-center p-3">
                               <Smartphone size={24} className="mx-auto text-gray-600 mb-1" />
@@ -1815,6 +1816,27 @@ export default function AdminPage() {
                           placeholder="Ex: Coleção Carnaval em cada detalhe — Estampas e abadás editáveis"
                           className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700"
                         />
+                      </div>
+
+                      {/* LINK DE DESTINO DO BANNER DE COLEÇÃO */}
+                      <div className="mt-5">
+                        <label className="block text-[9px] font-black uppercase text-gray-400 mb-2 tracking-widest flex items-center justify-between">
+                          <span>Link de Destino (Clique no Banner)</span>
+                          <span className="text-[#fe7302] font-bold lowercase">Padrão: /catalog?category=carnaval</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={homePromotions.collectionHighlight.linkUrl || ''}
+                          onChange={(e) => setHomePromotions(p => ({
+                            ...p,
+                            collectionHighlight: { ...p.collectionHighlight, linkUrl: e.target.value }
+                          }))}
+                          placeholder="/catalog?category=carnaval ou https://..."
+                          className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3.5 text-[11px] text-white outline-none focus:border-[#fe7302]/50 transition-all placeholder:text-gray-700"
+                        />
+                        <p className="text-[9px] text-gray-500 mt-1.5 leading-relaxed">
+                          Aceita caminhos internos (ex: <code className="text-gray-400 font-mono">/catalog?category=carnaval</code>) ou URLs seguras (<code className="text-gray-400 font-mono">https://...</code>). Caso em branco, direciona automaticamente para a coleção de Carnaval.
+                        </p>
                       </div>
                     </div>
                   </div>
