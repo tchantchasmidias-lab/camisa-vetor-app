@@ -418,7 +418,7 @@ export default function HomeClient({ initialProducts, initialCategories, homePro
                       key={product.id}
                       product={product}
                       priority={index < 4}
-                      imagePadding="p-[2px] sm:p-1"
+                      imagePadding="p-0"
                     />
                   ))}
                 </div>

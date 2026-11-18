@@ -184,7 +184,7 @@ export default function ProductRail({
                 product={product}
                 priority={isFirst && index < 2}
                 deferImage={!shouldLoadImages}
-                imagePadding="p-[2px] sm:p-1"
+                imagePadding="p-0"
               />
             </div>
           ))}
