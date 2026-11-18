@@ -13,8 +13,10 @@ export interface HomePromotions {
 
 /**
  * Valida e sanitiza links promocionais:
- * - Aceita caminhos internos válidos (ex: /catalog, /categoria/carnaval, /#novidades)
+ * - Aceita caminhos internos válidos (ex: /catalog, /?category=comemorativas, /#novidades)
  * - Aceita URLs absolutas HTTP ou HTTPS válidas
+ * - Se a URL apontar para o próprio domínio do site (camisavetor.com.br ou localhost),
+ *   normaliza para o caminho interno correspondente, viabilizando navegação na mesma aba.
  * - Rejeita protocolos inseguros (javascript:, data:, vbscript:, etc.) e URLs malformadas
  */
 export function sanitizePromotionalLink(url?: string, defaultUrl: string = '/catalog'): string {
@@ -31,6 +33,15 @@ export function sanitizePromotionalLink(url?: string, defaultUrl: string = '/cat
   try {
     const parsed = new URL(trimmed);
     if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+      const hostname = parsed.hostname.toLowerCase();
+      if (
+        hostname === 'camisavetor.com.br' ||
+        hostname === 'www.camisavetor.com.br' ||
+        hostname === 'localhost' ||
+        hostname === '127.0.0.1'
+      ) {
+        return (parsed.pathname || '/') + parsed.search + parsed.hash;
+      }
       return trimmed;
     }
   } catch {}

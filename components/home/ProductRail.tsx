@@ -180,7 +180,12 @@ export default function ProductRail({
               className={cardWidthClass}
               style={{ scrollSnapAlign: 'start' }}
             >
-              <ProductCard product={product} priority={isFirst && index < 2} deferImage={!shouldLoadImages} />
+              <ProductCard
+                product={product}
+                priority={isFirst && index < 2}
+                deferImage={!shouldLoadImages}
+                imagePadding="p-[2px] sm:p-1"
+              />
             </div>
           ))}
         </div>

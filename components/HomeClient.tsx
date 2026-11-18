@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useGeo } from '@/lib/i18n/GeoContext';
@@ -13,7 +13,6 @@ import ProductRail from '@/components/home/ProductRail';
 import HomeHero from '@/components/home/HomeHero';
 import DigitalNoticeBar from '@/components/home/DigitalNoticeBar';
 import CarnavalBanner from '@/components/home/CarnavalBanner';
-import HowItWorksSection from '@/components/home/HowItWorksSection';
 import type { HomePromotions } from '@/lib/promotions';
 
 const ReviewsSection = dynamic(() => import('@/components/ReviewsSection'), {
@@ -198,8 +197,10 @@ export default function HomeClient({ initialProducts, initialCategories, homePro
     }
   }, [categoryParam, normalizedCategoryQuery, isAllSelected, products]);
 
-  // Detecta se a home está em modo "default" (sem busca, filtro ou ordenação recente)
-  const isDefaultHome = !searchQuery && isAllSelected && !isRecentSort;
+  const pathname = usePathname();
+  const isHomeRoute = !pathname || pathname === '/';
+  // Detecta se a home está em modo "default" (está na rota raiz "/" e sem busca, filtro ou ordenação recente)
+  const isDefaultHome = isHomeRoute && !searchQuery && isAllSelected && !isRecentSort;
 
   // 2. FILTRO REATIVO NORMALIZADO (sem acentos e case-insensitive) — usado quando há busca/filtro ativo
   const filteredProducts = useMemo(() => {
@@ -291,66 +292,65 @@ export default function HomeClient({ initialProducts, initialCategories, homePro
       <div className="pt-2 sm:pt-4 pb-2 sm:pb-4">
         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* 3. CATEGORIAS: Padronizadas, 6 destaques iniciais e acesso a todas */}
-          <CategoryCarousel initialCategories={initialCategories} selectedCategory={urlParams.categoryParam || undefined} />
-
-          {/* ── HOME DEFAULT: Vitrine Reorganizada ── */}
+          {/* ── HOME DEFAULT: Categorias e Vitrine Reorganizada ── */}
           {isDefaultHome && (
-            <div className="mt-2 sm:mt-4">
-              {(() => {
-                const novidadesRail = railSegments[0];
-                const otherRails = railSegments.slice(1);
+            <>
+              {/* 3. CATEGORIAS: Renderizadas SOMENTE na Home default */}
+              <CategoryCarousel initialCategories={initialCategories} selectedCategory={urlParams.categoryParam || undefined} />
 
-                return (
-                  <>
-                    {/* 4. NOVIDADES: 4 cards no desktop, 2 no mobile */}
-                    {novidadesRail && novidadesRail.products.length > 0 && (
-                      <ProductRail
-                        id={novidadesRail.id}
-                        key={novidadesRail.title}
-                        title={novidadesRail.title}
-                        products={novidadesRail.products}
-                        viewAllHref={novidadesRail.viewAllHref}
-                        isFirst={true}
-                        deferImages={false}
-                        cardsPerRowDesktop={novidadesRail.cardsPerRowDesktop}
-                      />
-                    )}
+              <div className="mt-2 sm:mt-4">
+                {(() => {
+                  const novidadesRail = railSegments[0];
+                  const otherRails = railSegments.slice(1);
 
-                    {/* 6. DESTAQUE DE COLEÇÃO: Banner Editorial de Carnaval */}
-                    <CarnavalBanner
-                      promotionalSpace={homePromotions?.collectionHighlight}
-                      products={products}
-                    />
-
-                    {/* 7. CONTINUAÇÃO DA VITRINE: Interclasse em destaque e demais trilhos */}
-                    {otherRails.map((rail, idx) => {
-                      const railProducts = rail.products;
-                      if (!railProducts || railProducts.length === 0) return null;
-
-                      // Interclasse (idx === 0) carrega imagens com antecedência; demais diferem
-                      const deferImages = idx > 0;
-
-                      return (
+                  return (
+                    <>
+                      {/* 4. NOVIDADES: 4 cards no desktop, 2 no mobile */}
+                      {novidadesRail && novidadesRail.products.length > 0 && (
                         <ProductRail
-                          id={rail.id}
-                          key={rail.title}
-                          title={rail.title}
-                          products={railProducts}
-                          viewAllHref={rail.viewAllHref}
-                          isFirst={false}
-                          deferImages={deferImages}
-                          cardsPerRowDesktop={rail.cardsPerRowDesktop}
+                          id={novidadesRail.id}
+                          key={novidadesRail.title}
+                          title={novidadesRail.title}
+                          products={novidadesRail.products}
+                          viewAllHref={novidadesRail.viewAllHref}
+                          isFirst={true}
+                          deferImages={false}
+                          cardsPerRowDesktop={novidadesRail.cardsPerRowDesktop}
                         />
-                      );
-                    })}
+                      )}
 
-                    {/* 8. EXPLICAÇÃO DA COMPRA: Escolha. Personalize. Produza. */}
-                    <HowItWorksSection />
-                  </>
-                );
-              })()}
-            </div>
+                      {/* 6. DESTAQUE DE COLEÇÃO: Banner Editorial de Carnaval */}
+                      <CarnavalBanner
+                        promotionalSpace={homePromotions?.collectionHighlight}
+                        products={products}
+                      />
+
+                      {/* 7. CONTINUAÇÃO DA VITRINE: Interclasse em destaque e demais trilhos */}
+                      {otherRails.map((rail, idx) => {
+                        const railProducts = rail.products;
+                        if (!railProducts || railProducts.length === 0) return null;
+
+                        // Interclasse (idx === 0) carrega imagens com antecedência; demais diferem
+                        const deferImages = idx > 0;
+
+                        return (
+                          <ProductRail
+                            id={rail.id}
+                            key={rail.title}
+                            title={rail.title}
+                            products={railProducts}
+                            viewAllHref={rail.viewAllHref}
+                            isFirst={false}
+                            deferImages={deferImages}
+                            cardsPerRowDesktop={rail.cardsPerRowDesktop}
+                          />
+                        );
+                      })}
+                    </>
+                  );
+                })()}
+              </div>
+            </>
           )}
 
           {/* ── MODO BUSCA/FILTRO ── */}
@@ -414,7 +414,12 @@ export default function HomeClient({ initialProducts, initialCategories, homePro
                 {/* Grid de Produtos SSR */}
                 <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
                   {filteredProducts.map((product, index) => (
-                    <ProductCard key={product.id} product={product} priority={index < 4} />
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      priority={index < 4}
+                      imagePadding="p-[2px] sm:p-1"
+                    />
                   ))}
                 </div>
               </section>
@@ -423,8 +428,8 @@ export default function HomeClient({ initialProducts, initialCategories, homePro
         </div>
       </div>
 
-      {/* ── PROVA SOCIAL ── */}
-      <ReviewsSection products={products} />
+      {/* ── PROVA SOCIAL: Aproximada da vitrine com separação confortável ── */}
+      <ReviewsSection products={products} className="pt-4 sm:pt-6 pb-8 sm:pb-12" />
     </div>
   );
 }

@@ -12,10 +12,12 @@ export default function ProductCard({
   product,
   priority = false,
   deferImage = false,
+  imagePadding = 'p-2',
 }: {
   product: any;
   priority?: boolean;
   deferImage?: boolean;
+  imagePadding?: string;
 }) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [shouldLoadSecondary, setShouldLoadSecondary] = useState(false);
@@ -113,7 +115,7 @@ export default function ProductCard({
                 priority={priority}
                 sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
                 quality={90}
-                className={`object-contain w-full h-full p-2 [image-rendering:-webkit-optimize-contrast] transition-all duration-500 group-hover:scale-105 ${
+                className={`object-contain w-full h-full ${imagePadding} [image-rendering:-webkit-optimize-contrast] transition-all duration-500 group-hover:scale-105 ${
                   isLinkFocused ? 'scale-105' : ''
                 } ${
                   hasHoverImage && isSecondaryLoaded && isLinkFocused
@@ -134,7 +136,7 @@ export default function ProductCard({
                   sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 260px"
                   quality={90}
                   onLoad={() => setIsSecondaryLoaded(true)}
-                  className={`object-contain w-full h-full p-2 [image-rendering:-webkit-optimize-contrast] transition-all duration-500 ${
+                  className={`object-contain w-full h-full ${imagePadding} [image-rendering:-webkit-optimize-contrast] transition-all duration-500 ${
                     isSecondaryLoaded
                       ? `${
                           isLinkFocused
@@ -153,7 +155,7 @@ export default function ProductCard({
                 <img
                   src={capaSrc}
                   alt={semanticAlt}
-                  className="object-contain w-full h-full p-2"
+                  className={`object-contain w-full h-full ${imagePadding}`}
                   loading="lazy"
                 />
               </noscript>

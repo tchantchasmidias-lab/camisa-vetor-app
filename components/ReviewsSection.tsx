@@ -128,12 +128,14 @@ interface ReviewsSectionProps {
   products?: any[];
   reviews?: Review[];
   title?: string;
+  className?: string;
 }
 
 export default function ReviewsSection({
   products: initialProducts,
   reviews: customReviews,
   title = 'O que nossos clientes dizem',
+  className = '',
 }: ReviewsSectionProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -227,7 +229,7 @@ export default function ReviewsSection({
   ).toFixed(1);
 
   return (
-    <section ref={sectionRef} className="reviews-section w-full bg-white py-8 sm:py-12 px-4 md:px-6">
+    <section ref={sectionRef} className={`reviews-section w-full bg-white px-4 md:px-6 ${className || 'py-8 sm:py-12'}`}>
       {/* Título */}
       <div className="flex flex-col items-center justify-center gap-1 mb-8">
         <div className="flex items-center gap-2">
