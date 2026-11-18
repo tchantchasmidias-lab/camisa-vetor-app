@@ -10,6 +10,11 @@ import { normalizeSearchTerm } from '@/lib/stringUtils';
 import ProductCard from '@/components/ProductCard';
 import CategoryCarousel, { Category } from '@/components/CategoryCarousel';
 import ProductRail from '@/components/home/ProductRail';
+import HomeHero from '@/components/home/HomeHero';
+import DigitalNoticeBar from '@/components/home/DigitalNoticeBar';
+import CarnavalBanner from '@/components/home/CarnavalBanner';
+import HowItWorksSection from '@/components/home/HowItWorksSection';
+import type { HomePromotions } from '@/lib/promotions';
 
 const ReviewsSection = dynamic(() => import('@/components/ReviewsSection'), {
   loading: () => <div className="h-48" />,
@@ -24,6 +29,7 @@ export interface Product {
   category: string;
   slug?: string;
   createdAt?: number;
+  formats?: string[];
   urls: {
     capa: string;
     destaque: string;
@@ -33,59 +39,76 @@ export interface Product {
 interface HomeClientProps {
   initialProducts: Product[];
   initialCategories?: Category[];
+  homePromotions?: HomePromotions;
 }
 
 // Configuração dos trilhos da home page
 // Cada entrada define: título exibido, slugs de categoria aceitos, e href do "Ver todos →"
 const RAIL_CONFIGS = [
   {
+    id: 'novidades',
     title: 'Novidades',
     // Novidades: todos os produtos, ordenados por createdAt desc — feito na função de filtro
     categoryKeys: null as string[] | null,
     viewAllHref: '/catalog?sort=recent',
     limit: 20,
+    cardsPerRowDesktop: 4 as const,
   },
   {
-    title: 'Interclasse',
+    id: 'interclasse',
+    title: 'Interclasse em destaque',
     categoryKeys: ['interclasse'],
     viewAllHref: '/catalog?category=Interclasse',
     limit: 20,
+    cardsPerRowDesktop: 5 as const,
   },
   {
+    id: 'cavalgada',
     title: 'Cavalgada',
     categoryKeys: ['cavalgada'],
     viewAllHref: '/catalog?category=Cavalgada',
     limit: 20,
+    cardsPerRowDesktop: 5 as const,
   },
   {
+    id: 'crista',
     title: 'Cristã',
     categoryKeys: ['crista', 'cristas'],
     viewAllHref: '/catalog?category=Crist%C3%A3',
     limit: 20,
+    cardsPerRowDesktop: 5 as const,
   },
   {
+    id: 'catolica',
     title: 'Católica',
     categoryKeys: ['catolica', 'catolicismo'],
     viewAllHref: '/catalog?category=Cat%C3%B3lica',
     limit: 20,
+    cardsPerRowDesktop: 5 as const,
   },
   {
+    id: 'caca-esportiva',
     title: 'Caça Esportiva',
     categoryKeys: ['caca esportiva', 'cacaesportiva', 'caca'],
     viewAllHref: '/catalog?category=Ca%C3%A7a+Esportiva',
     limit: 20,
+    cardsPerRowDesktop: 5 as const,
   },
   {
+    id: 'terceirao',
     title: 'Terceirão',
     categoryKeys: ['terceirao', 'terceiro'],
     viewAllHref: '/catalog?category=Terceir%C3%A3o',
     limit: 20,
+    cardsPerRowDesktop: 5 as const,
   },
   {
+    id: 'profissao',
     title: 'Profissão',
     categoryKeys: ['profissao', 'profissoes', 'profissões', 'profissao e trabalho', 'profissoes e trabalho'],
     viewAllHref: '/catalog?category=Profiss%C3%A3o',
     limit: 20,
+    cardsPerRowDesktop: 5 as const,
   },
 ] as const;
 
@@ -115,7 +138,7 @@ function HomeSearchParamsWatcher({
   return null;
 }
 
-export default function HomeClient({ initialProducts, initialCategories }: HomeClientProps) {
+export default function HomeClient({ initialProducts, initialCategories, homePromotions }: HomeClientProps) {
   const [products, setProducts] = useState<Product[]>(initialProducts || []);
   const [isSyncing, setIsSyncing] = useState(false);
   const [urlParams, setUrlParams] = useState<SearchParamsState>({
@@ -253,38 +276,79 @@ export default function HomeClient({ initialProducts, initialCategories }: HomeC
         <HomeSearchParamsWatcher onParamsChange={handleParamsChange} />
       </Suspense>
 
-      <div className="pt-4 md:pt-4 pb-[28px] md:pb-10">
+      {/* 1. AVISO SUPERIOR & BANNER PRINCIPAL (Exibidos apenas na Home padrão) */}
+      {isDefaultHome && (
+        <>
+          <DigitalNoticeBar />
+          <HomeHero
+            promotionalSpace={homePromotions?.hero}
+            featuredProducts={products.slice(0, 4)}
+            allProducts={products}
+          />
+        </>
+      )}
+
+      <div className="pt-2 sm:pt-4 pb-2 sm:pb-4">
         <div className="w-full max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          {/* Carrossel de Categorias */}
+          {/* 3. CATEGORIAS: Padronizadas, 6 destaques iniciais e acesso a todas */}
           <CategoryCarousel initialCategories={initialCategories} selectedCategory={urlParams.categoryParam || undefined} />
 
-          {/* ── HOME DEFAULT: Trilhos de Produtos com Ordem e Chaves Estáveis ── */}
+          {/* ── HOME DEFAULT: Vitrine Reorganizada ── */}
           {isDefaultHome && (
-            <div className="mt-4">
+            <div className="mt-2 sm:mt-4">
               {(() => {
-                let renderedCount = 0;
-                return railSegments.map(rail => {
-                  const railProducts = rail.products;
+                const novidadesRail = railSegments[0];
+                const otherRails = railSegments.slice(1);
 
-                  if (!railProducts || railProducts.length === 0) return null;
+                return (
+                  <>
+                    {/* 4. NOVIDADES: 4 cards no desktop, 2 no mobile */}
+                    {novidadesRail && novidadesRail.products.length > 0 && (
+                      <ProductRail
+                        id={novidadesRail.id}
+                        key={novidadesRail.title}
+                        title={novidadesRail.title}
+                        products={novidadesRail.products}
+                        viewAllHref={novidadesRail.viewAllHref}
+                        isFirst={true}
+                        deferImages={false}
+                        cardsPerRowDesktop={novidadesRail.cardsPerRowDesktop}
+                      />
+                    )}
 
-                  const isFirst = renderedCount === 0;
-                  // Rails 1 e 2 estão na primeira tela / transição da dobra; diferir imagens apenas para Rails 3+
-                  const deferImages = renderedCount >= 2;
-                  renderedCount++;
-
-                  return (
-                    <ProductRail
-                      key={rail.title}
-                      title={rail.title}
-                      products={railProducts}
-                      viewAllHref={rail.viewAllHref}
-                      isFirst={isFirst}
-                      deferImages={deferImages}
+                    {/* 6. DESTAQUE DE COLEÇÃO: Banner Editorial de Carnaval */}
+                    <CarnavalBanner
+                      promotionalSpace={homePromotions?.collectionHighlight}
+                      products={products}
                     />
-                  );
-                });
+
+                    {/* 7. CONTINUAÇÃO DA VITRINE: Interclasse em destaque e demais trilhos */}
+                    {otherRails.map((rail, idx) => {
+                      const railProducts = rail.products;
+                      if (!railProducts || railProducts.length === 0) return null;
+
+                      // Interclasse (idx === 0) carrega imagens com antecedência; demais diferem
+                      const deferImages = idx > 0;
+
+                      return (
+                        <ProductRail
+                          id={rail.id}
+                          key={rail.title}
+                          title={rail.title}
+                          products={railProducts}
+                          viewAllHref={rail.viewAllHref}
+                          isFirst={false}
+                          deferImages={deferImages}
+                          cardsPerRowDesktop={rail.cardsPerRowDesktop}
+                        />
+                      );
+                    })}
+
+                    {/* 8. EXPLICAÇÃO DA COMPRA: Escolha. Personalize. Produza. */}
+                    <HowItWorksSection />
+                  </>
+                );
               })()}
             </div>
           )}

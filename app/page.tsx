@@ -3,6 +3,7 @@ import { adminDb } from '@/lib/firebaseAdmin';
 import HomeClient, { Product } from '@/components/HomeClient';
 import { Category } from '@/components/CategoryCarousel';
 import { formatTitleCase } from '@/lib/stringUtils';
+import { HomePromotions, DEFAULT_HOME_PROMOTIONS } from '@/lib/promotions';
 
 export const revalidate = 300; // ISR: revalidação a cada 5 minutos para TTFB ultrarrápido com cache de borda
 
@@ -75,6 +76,12 @@ async function getInitialProducts(): Promise<Product[]> {
         createdTime = Date.now();
       }
 
+      const formatsList: string[] = Array.isArray(data.formats)
+        ? data.formats.map((f: any) => String(f).toUpperCase())
+        : data.format
+        ? [String(data.format).toUpperCase()]
+        : [];
+
       return {
         id: doc.id,
         name: formatTitleCase(data.name || 'Sem nome'),
@@ -83,6 +90,7 @@ async function getInitialProducts(): Promise<Product[]> {
         category: data.category || 'Geral',
         slug: data.slug || doc.id,
         createdAt: createdTime,
+        formats: formatsList,
         urls: {
           capa: data.urls?.capa || data.urls?.destaque || '',
           destaque: data.urls?.destaque || '',
@@ -120,11 +128,45 @@ async function getInitialCategories(): Promise<Category[]> {
   }
 }
 
+async function getHomePromotions(): Promise<HomePromotions> {
+  try {
+    const docSnap = await adminDb.collection('configuracoes').doc('home_promotions').get();
+    if (docSnap.exists) {
+      const data = docSnap.data();
+      // Retorna estritamente dados públicos e sanitizados para o cliente
+      return {
+        hero: {
+          imageUrl: data?.hero?.imageUrl || '',
+          mobileImageUrl: data?.hero?.mobileImageUrl || '',
+          altText: data?.hero?.altText || 'Sua próxima estampa começa aqui — Camisa Vetor',
+          linkUrl: data?.hero?.linkUrl || '',
+        },
+        collectionHighlight: {
+          imageUrl: data?.collectionHighlight?.imageUrl || '',
+          mobileImageUrl: data?.collectionHighlight?.mobileImageUrl || '',
+          altText: data?.collectionHighlight?.altText || 'Coleção de Carnaval em cada detalhe — Camisa Vetor',
+          linkUrl: data?.collectionHighlight?.linkUrl || '',
+        },
+      };
+    }
+  } catch (error) {
+    console.warn('Configurações de promoções da home não encontradas ou erro no SSR, usando fallback:', error);
+  }
+  return DEFAULT_HOME_PROMOTIONS;
+}
+
 export default async function HomePage() {
-  const [initialProducts, initialCategories] = await Promise.all([
+  const [initialProducts, initialCategories, homePromotions] = await Promise.all([
     getInitialProducts(),
     getInitialCategories(),
+    getHomePromotions(),
   ]);
 
-  return <HomeClient initialProducts={initialProducts} initialCategories={initialCategories} />;
+  return (
+    <HomeClient
+      initialProducts={initialProducts}
+      initialCategories={initialCategories}
+      homePromotions={homePromotions}
+    />
+  );
 }

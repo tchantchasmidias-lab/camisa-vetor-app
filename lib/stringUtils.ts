@@ -68,3 +68,35 @@ export function formatTitleCase(str: string | undefined | null): string {
     })
     .join(' ');
 }
+
+/**
+ * Gera um título de exibição limpo para os cards da vitrine, removendo prefixos repetitivos
+ * ("Vetor Camisa", "Arte Camisa Vetor", "Vetor Premium") e sufixos técnicos repetitivos
+ * ("| Arte Editável Coreldraw", "- Arte Editável CorelDRAW", "para Estamparia"),
+ * preservando o nome original com fallback seguro caso a limpeza resulte vazia.
+ */
+export function formatDisplayTitle(rawTitle: string | undefined | null): string {
+  if (!rawTitle) return '';
+  let clean = rawTitle;
+
+  // Remove sufixos comuns repetitivos
+  clean = clean.replace(
+    /\s*[\|\-:]\s*(ARTE\s+)?(CAT[ÓO]LICA\s+)?(EDIT[ÁA]VEL)?\s*(PARA\s+ESTAMPARIA.*|DESIGN\s+EDIT[ÁA]VEL.*|ESTAMPA\s+EXCLUSIVA.*|COREL(DRAW)?.*|FESTA\s+JUNINA.*|ESCOLAR.*)$/gi,
+    ''
+  );
+  clean = clean.replace(
+    /\s*[\|\-:]\s*Arte\s*(Edit[áa]vel)?\s*(Coreldraw|Photoshop|Illustrator|PDF|CDR)?\s*$/gi,
+    ''
+  );
+
+  // Remove prefixos comuns repetitivos
+  clean = clean.replace(
+    /^(VETOR\s+PREMIUM(\s+(PARA\s+CAMISA|ARTE\s+CAMISA|CAMISA|PARA))?|VETOR\s+CAMISA|ARTE\s+CAMISA\s+VETOR|ARTE\s+VETOR|ARTE\s+CAMISA|CAMISA\s+VETOR)\s*[:\-]?\s*/gi,
+    ''
+  );
+
+  clean = clean.trim();
+  const result = clean ? formatTitleCase(clean) : formatTitleCase(rawTitle);
+  return result || formatTitleCase(rawTitle);
+}
+

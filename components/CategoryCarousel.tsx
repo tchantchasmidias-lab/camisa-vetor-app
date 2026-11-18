@@ -1,12 +1,12 @@
 'use client';
 
-import { useRef, useEffect, useState, Suspense } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useRef, useEffect, useState } from 'react';
+import { ChevronDown, ChevronUp, Layers } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { useGeo } from '@/lib/i18n/GeoContext';
-import { normalizeSearchTerm } from '@/lib/stringUtils';
+import { normalizeSearchTerm, formatTitleCase } from '@/lib/stringUtils';
 import { safeSessionStorage } from '@/lib/safeStorage';
 import Image from 'next/image';
 
@@ -19,6 +19,30 @@ export interface Category {
 export interface CategoryCarouselProps {
   initialCategories?: Category[];
   selectedCategory?: string;
+}
+
+const HIGHLIGHTED_SLUGS = ['interclasse', 'carnaval', 'crista', 'agro', 'profissao', 'corrida'];
+
+// Padronização rigorosa dos nomes visuais das categorias
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  interclasse: 'Interclasse',
+  carnaval: 'Carnaval',
+  crista: 'Cristã',
+  cristas: 'Cristã',
+  agro: 'Agro',
+  profissao: 'Profissões',
+  profissoes: 'Profissões',
+  'profissao e trabalho': 'Profissões',
+  'profissoes e trabalho': 'Profissões',
+  corrida: 'Corrida',
+};
+
+function formatCategoryDisplayName(rawName: string): string {
+  const norm = normalizeSearchTerm(rawName).replace(/-/g, ' ');
+  if (CATEGORY_DISPLAY_NAMES[norm]) {
+    return CATEGORY_DISPLAY_NAMES[norm];
+  }
+  return formatTitleCase(rawName);
 }
 
 function CategoryCard({
@@ -41,55 +65,41 @@ function CategoryCard({
     <button
       onClick={onClick}
       className={`
-        flex-shrink-0 relative overflow-hidden rounded-2xl transition-all duration-300
-        w-[145px] h-[82px] md:w-[185px] md:h-[100px]
-        group outline-none
+        relative overflow-hidden rounded-xl sm:rounded-2xl transition-all duration-300
+        w-full aspect-square
+        group outline-none border
         ${isActive
-          ? 'ring-2 ring-[#fe7302] ring-offset-2 ring-offset-white shadow-lg shadow-orange-200/40 scale-[1.03]'
-          : 'hover:scale-[1.02] hover:shadow-xl'}
+          ? 'border-[#fe7302] ring-2 ring-[#fe7302] ring-offset-2 ring-offset-white shadow-md scale-[1.02]'
+          : 'border-slate-200/80 hover:border-[#fe7302]/60 hover:shadow-md hover:scale-[1.02]'}
       `}
     >
-      {/* Background */}
-      <div className="absolute inset-0 bg-[#111]">
+      {/* Background Image */}
+      <div className="absolute inset-0 bg-[#0f172a]">
         {hasImage && (
           <Image
             src={imageUrl}
             alt={`Categoria ${name}`}
             fill
             priority={priority}
-            quality={75}
-            sizes="(max-width: 768px) 150px, 200px"
+            quality={80}
+            sizes="(max-width: 640px) 110px, (max-width: 1024px) 140px, 180px"
             className="object-cover transition-transform duration-500 group-hover:scale-110"
           />
         )}
       </div>
 
-      {/* Overlay escuro por padrão, some no hover/ativo (apenas para cards com imagem) */}
-      {hasImage ? (
-        <div
-          className={`absolute inset-0 bg-black transition-opacity duration-300
-            ${isActive ? 'opacity-0' : 'opacity-55 group-hover:opacity-0'}
-          `}
-        />
-      ) : null}
-
-      {/* Gradient base — sempre presente para legibilidade do texto */}
-      <div className={`absolute inset-0 bg-gradient-to-t transition-opacity duration-300
-        ${hasImage
-          ? `from-black/80 via-black/20 to-transparent ${isActive ? 'opacity-70' : 'opacity-100 group-hover:opacity-60'}`
-          : 'from-black/75 via-black/25 to-black/10 opacity-100'
-        }`}
+      {/* Overlays para contraste de texto */}
+      <div
+        className={`absolute inset-0 bg-black transition-opacity duration-300
+          ${isActive ? 'opacity-25' : 'opacity-40 group-hover:opacity-20'}
+        `}
       />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
-      {/* Active ring glow */}
-      {isActive && (
-        <div className="absolute inset-0 bg-[#fe7302]/8 rounded-2xl" />
-      )}
-
-      {/* Category name */}
-      <div className="absolute inset-0 flex items-center justify-center px-3">
-        <span className="category-pill-label category-badge text-white font-bold text-[12.5px] tracking-[0.03em] uppercase text-center leading-tight drop-shadow-lg">
-          {tp(name)}
+      {/* Category Name */}
+      <div className="absolute inset-x-0 bottom-0 pb-2 sm:pb-3 px-1.5 flex items-center justify-center text-center">
+        <span className="text-white font-extrabold text-[11px] sm:text-[12.5px] lg:text-[13.5px] tracking-wide leading-tight drop-shadow-md group-hover:text-orange-200 transition-colors">
+          {formatCategoryDisplayName(tp(name))}
         </span>
       </div>
     </button>
@@ -98,11 +108,10 @@ function CategoryCard({
 
 function CategoryCarouselContent({ initialCategories, selectedCategory }: CategoryCarouselProps) {
   const [categories, setCategories] = useState<Category[]>(initialCategories || []);
-  const [isLoading, setIsLoading] = useState(!initialCategories || initialCategories.length === 0);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [showAll, setShowAll] = useState(false);
   const router = useRouter();
-  
   const { t } = useGeo();
+
   const activeCategory = selectedCategory || t('allCategories');
 
   useEffect(() => {
@@ -111,14 +120,12 @@ function CategoryCarouselContent({ initialCategories, selectedCategory }: Catego
       return;
     }
 
-    // 1. Leitura rápida do cache da sessão para renderização instantânea (0ms)
     const cached = safeSessionStorage.getItem('cv_categories_cache');
     if (cached) {
       try {
         const parsed = JSON.parse(cached);
         if (Array.isArray(parsed) && parsed.length > 0) {
           setCategories(parsed);
-          setIsLoading(false);
           return;
         }
       } catch {}
@@ -138,86 +145,105 @@ function CategoryCarouselContent({ initialCategories, selectedCategory }: Catego
         safeSessionStorage.setItem('cv_categories_cache', JSON.stringify(list));
       } catch (err) {
         console.error('Erro ao carregar categorias:', err);
-      } finally {
-        setIsLoading(false);
       }
     };
     fetchCategories();
-  }, []);
-
-  const scroll = (offset: number) => {
-    scrollRef.current?.scrollBy({ left: offset, behavior: 'smooth' });
-  };
-
-  if (isLoading) {
-    return (
-      <section className="w-full py-3">
-        <div className="flex gap-3 overflow-hidden">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex-shrink-0 w-[145px] h-[82px] md:w-[185px] md:h-[100px] bg-gray-100 rounded-2xl animate-pulse" />
-          ))}
-        </div>
-      </section>
-    );
-  }
+  }, [categories.length]);
 
   if (categories.length === 0) return null;
 
+  // Organiza: 6 categorias em destaque inicial
+  const highlightedCategories: Category[] = [];
+  const remainingCategories: Category[] = [];
+
+  // Mapeia na ordem estrita solicitada: Interclasse, Carnaval, Cristã, Agro, Profissões e Corrida
+  HIGHLIGHTED_SLUGS.forEach(slug => {
+    const found = categories.find(c => {
+      const norm = normalizeSearchTerm(c.name).replace(/-/g, ' ');
+      return norm === slug || norm.startsWith(slug);
+    });
+    if (found && !highlightedCategories.some(h => h.id === found.id)) {
+      highlightedCategories.push(found);
+    }
+  });
+
+  // Demais categorias
+  categories.forEach(c => {
+    if (!highlightedCategories.some(h => h.id === c.id)) {
+      remainingCategories.push(c);
+    }
+  });
+
+  const handleCategoryClick = (catName: string) => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (catName === t('allCategories')) {
+      router.push('/');
+    } else {
+      router.push(`/?category=${encodeURIComponent(catName)}`);
+    }
+  };
+
   return (
-    <section className="w-full select-none overflow-hidden py-1 animate-in fade-in duration-700">
-      <div className="relative group/carousel pl-0 md:pl-0">
+    <section className="w-full pt-3 pb-4 sm:pt-4 sm:pb-6">
+      {/* Cabeçalho da Seção de Categorias: linha própria no celular, lado a lado em telas maiores */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 mb-3 sm:mb-4">
+        <h2 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight leading-tight">
+          Explore por categoria
+        </h2>
 
-        {/* Left arrow */}
-        <button
-          onClick={() => scroll(-600)}
-          aria-label="Scroll esquerda"
-          className="hidden md:flex items-center justify-center absolute left-2 top-1/2 -translate-y-1/2 z-20
-            w-9 h-9 bg-white shadow-xl rounded-full border border-gray-100 text-gray-700
-            opacity-0 group-hover/carousel:opacity-100 hover:bg-[#fe7302] hover:text-white hover:scale-110
-            transition-all duration-200"
-        >
-          <ChevronLeft size={20} />
-        </button>
-
-        {/* Right arrow */}
-        <button
-          onClick={() => scroll(600)}
-          aria-label="Scroll direita"
-          className="hidden md:flex items-center justify-center absolute right-2 top-1/2 -translate-y-1/2 z-20
-            w-9 h-9 bg-white shadow-xl rounded-full border border-gray-100 text-gray-700
-            opacity-0 group-hover/carousel:opacity-100 hover:bg-[#fe7302] hover:text-white hover:scale-110
-            transition-all duration-200"
-        >
-          <ChevronRight size={20} />
-        </button>
-
-        {/* Scrollable row */}
-        <div
-          ref={scrollRef}
-          className="flex gap-3 overflow-x-auto scroll-smooth no-scrollbar px-1 py-2"
-        >
-          {categories.map((cat, index) => (
-            <CategoryCard
-              key={cat.id}
-              name={cat.name}
-              imageUrl={cat.imageUrl}
-              priority={index < 2}
-              isActive={normalizeSearchTerm(activeCategory) === normalizeSearchTerm(cat.name)}
-              onClick={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                cat.name === t('allCategories')
-                  ? router.push('/')
-                  : router.push(`/?category=${encodeURIComponent(cat.name)}`);
-              }}
-            />
-          ))}
-        </div>
+        {remainingCategories.length > 0 && (
+          <div className="flex items-center sm:justify-end">
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="group inline-flex items-center gap-1 text-xs sm:text-sm font-bold text-[#fe7302] hover:text-[#e56600] transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#fe7302] rounded px-1.5 py-0.5 -ml-1.5 sm:ml-0"
+              aria-expanded={showAll}
+            >
+              <span>{showAll ? 'Ver menos' : 'Ver todas'}</span>
+              {!showAll && (
+                <span className="whitespace-nowrap font-bold">({categories.length})</span>
+              )}
+              <span className="text-sm font-semibold leading-none group-hover:translate-x-0.5 transition-transform">
+                {showAll ? '↑' : '→'}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
-      <style jsx global>{`
-        .no-scrollbar::-webkit-scrollbar { display: none !important; }
-        .no-scrollbar { -ms-overflow-style: none !important; scrollbar-width: none !important; }
-      `}</style>
+      {/* Grid das 6 categorias principais: 3 colunas no mobile (2 linhas) e 6 no tablet/desktop (1 linha) */}
+      <div className="grid grid-cols-3 sm:grid-cols-6 md:grid-cols-6 gap-2.5 sm:gap-3.5">
+        {highlightedCategories.map((cat, index) => (
+          <CategoryCard
+            key={cat.id}
+            name={cat.name}
+            imageUrl={cat.imageUrl}
+            priority={index < 6}
+            isActive={normalizeSearchTerm(activeCategory) === normalizeSearchTerm(cat.name)}
+            onClick={() => handleCategoryClick(cat.name)}
+          />
+        ))}
+      </div>
+
+      {/* Grid expansível com as demais categorias */}
+      {showAll && remainingCategories.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
+          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2.5">
+            Mais categorias
+          </p>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2.5 sm:gap-3.5">
+            {remainingCategories.map((cat) => (
+              <CategoryCard
+                key={cat.id}
+                name={cat.name}
+                imageUrl={cat.imageUrl}
+                priority={false}
+                isActive={normalizeSearchTerm(activeCategory) === normalizeSearchTerm(cat.name)}
+                onClick={() => handleCategoryClick(cat.name)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </section>
   );
 }
